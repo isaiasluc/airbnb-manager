@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { google } from 'googleapis'
-import type { OAuth2Client } from 'googleapis-common';
+import type { OAuth2Client } from 'googleapis-common'
 import type { CreateReservationInput } from '../types'
 import { reservationExistsByEmailId } from '../repositories/reservation.repository'
 import { createReservation } from './reservation.service'
@@ -75,28 +75,41 @@ function parseHostPayout(text: string): number {
   return parseFloat(normalized)
 }
 
+function splitGuestName(fullName: string): { first_name: string; last_name: string } {
+  const parts = fullName.trim().split(/\s+/)
+  const [first_name, ...lastNameParts] = parts
+
+  return {
+    first_name,
+    last_name: lastNameParts.join(' '),
+  }
+}
+
+function getNamePattern(): string {
+  const capitalizedNameToken = String.raw`[A-ZÀ-Ý][\p{L}'’-]*`
+  const nameParticle = String.raw`(?:d[aeo]s?|de|del|di|la|las|los|van|von)`
+  return `${capitalizedNameToken}(?:\\s+(?:${nameParticle}|${capitalizedNameToken}))*`
+}
+
 function parseGuestName(text: string): { first_name: string; last_name: string } {
-  // Formato novo: "Marcos Soares Identity verified"
-  const fullNameMatch = text.match(/([A-ZÀ-ÚA-Za-zà-ú][a-zà-ú]+)\s+([A-ZÀ-Ú][a-zà-ú]+)\s+Identity verified/)
-  if (fullNameMatch) {
-    return { first_name: fullNameMatch[1], last_name: fullNameMatch[2] }
+  const fullNamePattern = getNamePattern()
+
+  const identityVerifiedIndex = text.indexOf('Identity verified')
+  if (identityVerifiedIndex >= 0) {
+    const beforeIdentityVerified = text.slice(0, identityVerifiedIndex).trim()
+    const identityVerifiedMatch = beforeIdentityVerified.match(new RegExp(`(${fullNamePattern})$`, 'iu'))
+    if (identityVerifiedMatch) {
+      return splitGuestName(identityVerifiedMatch[1])
+    }
   }
 
-  // Formato antigo: "Jessyka Identity verified" (só primeiro nome)
-  const singleNameMatch = text.match(/([A-ZÀ-Ú][a-zà-ú]+)\s+Identity verified/)
-  if (singleNameMatch) {
-    return { first_name: singleNameMatch[1], last_name: '' }
-  }
-
-  // Fallback: pega nome do subject "Jessyka arrives"
-  const arrivesMatch = text.match(/booking confirmed!\s+([A-ZÀ-Ú][a-zà-ú]+)\s+arrives/)
+  const arrivesMatch = text.match(new RegExp(`booking confirmed!\\s+(${fullNamePattern})\\s+arrives`, 'iu'))
   if (arrivesMatch) {
-    return { first_name: arrivesMatch[1], last_name: '' }
+    return splitGuestName(arrivesMatch[1])
   }
 
   throw new Error('Nome do hóspede não encontrado')
 }
-
 
 function parseEmail(rawText: string): Omit<CreateReservationInput, 'source_email_id'> {
   const text = extractText(rawText)

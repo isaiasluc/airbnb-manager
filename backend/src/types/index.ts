@@ -16,6 +16,7 @@ export interface Reservation {
   host_payout: number
   currency: string
   source_email_id: string
+  email_sent: boolean
   status: 'confirmed' | 'cancelled' | 'completed'
   created_at: Date
   updated_at: Date
@@ -33,6 +34,7 @@ export type CreateReservationInput = {
   host_payout: number
   currency?: string
   source_email_id: string
+  email_sent?: boolean
 }
 
 export interface ReservationWithGuest extends Reservation {

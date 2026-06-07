@@ -29,6 +29,7 @@ export async function createReservation(
     host_payout:       input.host_payout,
     currency:          input.currency ?? 'BRL',
     source_email_id:   input.source_email_id,
+    email_sent:        input.email_sent ?? false,
     status:            'confirmed',
   })
 }
