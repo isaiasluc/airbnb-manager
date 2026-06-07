@@ -23,7 +23,6 @@ export async function createReservation(
   return ReservationRepo.createReservation({
     confirmation_code: input.confirmation_code,
     guest_id:          guest.id,
-    listing_name:      input.listing_name,
     checkin_at:        input.checkin_at,
     checkout_at:       input.checkout_at,
     guests_count:      input.guests_count,
