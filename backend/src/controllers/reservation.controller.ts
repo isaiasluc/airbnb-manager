@@ -1,9 +1,22 @@
 import type { Request, Response } from 'express'
 import * as ReservationService from '../services/reservation.service'
+import type { ReservationListFilters } from '../types'
+
+const DATE_PARAM_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+function getDateParam(value: unknown): string | undefined {
+  return typeof value === 'string' && DATE_PARAM_PATTERN.test(value)
+    ? value
+    : undefined
+}
 
 export async function list(req: Request, res: Response) {
   try {
-    const reservations = await ReservationService.listReservations()
+    const filters: ReservationListFilters = {
+      from: getDateParam(req.query.from),
+      to: getDateParam(req.query.to),
+    }
+    const reservations = await ReservationService.listReservations(filters)
     res.json(reservations)
   } catch (err) {
     res.status(500).json({ error: (err as Error).message })

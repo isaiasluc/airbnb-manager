@@ -1,14 +1,26 @@
 import db from '../db'
-import type { Reservation, ReservationWithGuest } from '../types'
+import type { Reservation, ReservationListFilters, ReservationWithGuest } from '../types'
 
-export async function listReservations(): Promise<ReservationWithGuest[]> {
-  return db('reservations as r')
+export async function listReservations(
+  filters: ReservationListFilters = {}
+): Promise<ReservationWithGuest[]> {
+  const query = db('reservations as r')
     .join('guests as g', 'g.id', 'r.guest_id')
     .select(
       'r.*',
       'g.first_name as guest_first_name',
       'g.last_name  as guest_last_name'
     )
+
+  if (filters.from) {
+    query.where('r.checkin_at', '>=', filters.from)
+  }
+
+  if (filters.to) {
+    query.where('r.checkin_at', '<=', filters.to)
+  }
+
+  return query
     .orderBy('r.checkin_at', 'desc')
 }
 

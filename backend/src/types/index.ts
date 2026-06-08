@@ -43,3 +43,8 @@ export interface ReservationWithGuest extends Reservation {
   guest_first_name: string
   guest_last_name: string
 }
+
+export interface ReservationListFilters {
+  from?: string
+  to?: string
+}

@@ -1,6 +1,6 @@
 import * as GuestRepo from '../repositories/guest.repository'
 import * as ReservationRepo from '../repositories/reservation.repository'
-import type { CreateReservationInput, ReservationWithGuest, Reservation } from '../types'
+import type { CreateReservationInput, ReservationListFilters, ReservationWithGuest, Reservation } from '../types'
 
 const HOST_SERVICE_RATE_CHANGE_DATE = '2026-02-08'
 
@@ -14,8 +14,10 @@ function calculateHostServiceFee(host_payout: number, checkin_at: Date | string)
   return Math.round(host_payout * rate * 100) / 100
 }
 
-export async function listReservations(): Promise<ReservationWithGuest[]> {
-  return ReservationRepo.listReservations()
+export async function listReservations(
+  filters: ReservationListFilters = {}
+): Promise<ReservationWithGuest[]> {
+  return ReservationRepo.listReservations(filters)
 }
 
 export async function getReservation(id: number): Promise<ReservationWithGuest> {

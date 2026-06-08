@@ -94,10 +94,14 @@ export default function ReservationDetail() {
   const nights = nightsCount(reservation.checkin_at, reservation.checkout_at)
   const dashboardPage = searchParams.get('dashboardPage')
   const dashboardFilter = searchParams.get('dashboardFilter')
+  const dashboardFrom = searchParams.get('dashboardFrom')
+  const dashboardTo = searchParams.get('dashboardTo')
   const dashboardParams = new URLSearchParams()
 
   if (dashboardPage) dashboardParams.set('page', dashboardPage)
   if (dashboardFilter) dashboardParams.set('filter', dashboardFilter)
+  if (dashboardFrom) dashboardParams.set('from', dashboardFrom)
+  if (dashboardTo) dashboardParams.set('to', dashboardTo)
 
   const backToDashboardPath = dashboardParams.size
     ? `/?${dashboardParams.toString()}`

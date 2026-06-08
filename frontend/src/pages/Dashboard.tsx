@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Reservation, SyncResult, SyncStatus } from "../lib/types";
-import { fetchReservations, fetchSyncStatus, syncEmails } from "../lib/api";
+import {
+  fetchReservations,
+  fetchSyncStatus,
+  syncEmails,
+  type ReservationDateFilters,
+} from "../lib/api";
 import {
   formatDate,
   formatCurrency,
@@ -17,6 +22,7 @@ const PAGE_SIZE = 10;
 const SYNC_MODAL_ANIMATION_MS = 180;
 const FILTERS = ["all", "confirmed", "completed", "cancelled"] as const;
 type ReservationFilter = (typeof FILTERS)[number];
+const DATE_PARAM_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function getInitialPage(value: string | null) {
   const page = Number(value);
@@ -27,6 +33,37 @@ function getInitialFilter(value: string | null): ReservationFilter {
   return FILTERS.includes(value as ReservationFilter)
     ? (value as ReservationFilter)
     : "all";
+}
+
+function getInitialDate(value: string | null) {
+  return value && DATE_PARAM_PATTERN.test(value) ? value : "";
+}
+
+function formatInputDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getCurrentMonthRange() {
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), 1);
+  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  return {
+    from: formatInputDate(start),
+    to: formatInputDate(end),
+  };
+}
+
+function getNext30DaysRange() {
+  const start = new Date();
+  const end = new Date(start);
+  end.setDate(start.getDate() + 30);
+  return {
+    from: formatInputDate(start),
+    to: formatInputDate(end),
+  };
 }
 
 function formatLastSync(value: string | null) {
@@ -206,7 +243,7 @@ function SyncResultModal({
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -221,14 +258,25 @@ export default function Dashboard() {
   const [page, setPage] = useState(() =>
     getInitialPage(searchParams.get("page")),
   );
+  const [dateFrom, setDateFrom] = useState(() =>
+    getInitialDate(searchParams.get("from")),
+  );
+  const [dateTo, setDateTo] = useState(() =>
+    getInitialDate(searchParams.get("to")),
+  );
 
   useEffect(() => {
     let isMounted = true;
+    const dateFilters: ReservationDateFilters = {
+      from: dateFrom || undefined,
+      to: dateTo || undefined,
+    };
 
     async function loadInitialReservations() {
+      setLoading(true);
       try {
         const [data, status] = await Promise.all([
-          fetchReservations(),
+          fetchReservations(dateFilters),
           fetchSyncStatus().catch(() => null),
         ]);
         if (isMounted) {
@@ -245,7 +293,45 @@ export default function Dashboard() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [dateFrom, dateTo]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (page > 1) params.set("page", String(page));
+    if (filter !== "all") params.set("filter", filter);
+    if (dateFrom) params.set("from", dateFrom);
+    if (dateTo) params.set("to", dateTo);
+    setSearchParams(params, { replace: true });
+  }, [dateFrom, dateTo, filter, page, setSearchParams]);
+
+  function getDateFilters(): ReservationDateFilters {
+    return {
+      from: dateFrom || undefined,
+      to: dateTo || undefined,
+    };
+  }
+
+  function applyDateRange(filters: Required<ReservationDateFilters>) {
+    setDateFrom(filters.from);
+    setDateTo(filters.to);
+    setPage(1);
+  }
+
+  function clearDateRange() {
+    setDateFrom("");
+    setDateTo("");
+    setPage(1);
+  }
+
+  function buildReservationPath(id: number) {
+    const params = new URLSearchParams({
+      dashboardPage: String(currentPage),
+      dashboardFilter: filter,
+    });
+    if (dateFrom) params.set("dashboardFrom", dateFrom);
+    if (dateTo) params.set("dashboardTo", dateTo);
+    return `/reservations/${id}?${params.toString()}`;
+  }
 
   async function handleSync() {
     setSyncing(true);
@@ -261,7 +347,7 @@ export default function Dashboard() {
         `${result.imported} importada(s) · ${result.skipped} ignorada(s) · ${result.errors.length} erro(s)`,
       );
       if (result.imported > 0) {
-        const data = await fetchReservations();
+        const data = await fetchReservations(getDateFilters());
         setReservations(data);
         setPage(1);
       }
@@ -275,6 +361,8 @@ export default function Dashboard() {
   async function handleHomeClick() {
     navigate("/", { replace: true });
     setFilter("all");
+    setDateFrom("");
+    setDateTo("");
     setPage(1);
     setLoading(true);
     setSyncMsg(null);
@@ -316,7 +404,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-stone-50 font-sans">
       {/* Header */}
       <header className="bg-white border-b border-stone-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <button
             type="button"
             onClick={handleHomeClick}
@@ -329,26 +417,77 @@ export default function Dashboard() {
               Apê dos sonhos em Ponta Negra
             </p>
           </button>
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="flex items-center gap-2 bg-stone-900 hover:bg-stone-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            <svg
-              className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            {syncing ? "Sincronizando..." : "Sincronizar Gmail"}
-          </button>
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+              <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400">
+                Início
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(event) => {
+                    setDateFrom(event.target.value);
+                    setPage(1);
+                  }}
+                  className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-stone-700 outline-none transition-colors focus:border-stone-500"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400">
+                Fim
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(event) => {
+                    setDateTo(event.target.value);
+                    setPage(1);
+                  }}
+                  className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-stone-700 outline-none transition-colors focus:border-stone-500"
+                />
+              </label>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => applyDateRange(getCurrentMonthRange())}
+                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400"
+              >
+                Este mês
+              </button>
+              <button
+                type="button"
+                onClick={() => applyDateRange(getNext30DaysRange())}
+                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400"
+              >
+                Próximos 30 dias
+              </button>
+              <button
+                type="button"
+                onClick={clearDateRange}
+                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400"
+              >
+                Todos
+              </button>
+              <button
+                onClick={handleSync}
+                disabled={syncing}
+                className="flex h-9 items-center gap-2 rounded-lg bg-stone-900 px-4 text-sm font-medium text-white transition-colors hover:bg-stone-700 disabled:opacity-50"
+              >
+                <svg
+                  className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                {syncing ? "Sincronizando..." : "Sincronizar Gmail"}
+              </button>
+            </div>
+          </div>
         </div>
         <div className="max-w-6xl mx-auto px-6 pb-3">
           <p className="text-xs text-stone-400">
@@ -493,11 +632,7 @@ export default function Dashboard() {
                 {paginated.map((r) => (
                   <tr
                     key={r.id}
-                    onClick={() =>
-                      navigate(
-                        `/reservations/${r.id}?dashboardPage=${currentPage}&dashboardFilter=${filter}`,
-                      )
-                    }
+                    onClick={() => navigate(buildReservationPath(r.id))}
                     className="hover:bg-stone-50 cursor-pointer transition-colors group"
                   >
                     <td className="px-5 py-3.5">
