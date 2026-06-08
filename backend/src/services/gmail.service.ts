@@ -100,30 +100,11 @@ function splitGuestName(fullName: string): { first_name: string; last_name: stri
   }
 }
 
-function getNamePattern(): string {
-  const capitalizedNameToken = String.raw`[A-ZÀ-Ý][\p{L}'’-]*`
-  const nameParticle = String.raw`(?:d[aeo]s?|de|del|di|la|las|los|van|von)`
-  return `${capitalizedNameToken}(?:\\s+(?:${nameParticle}|${capitalizedNameToken}))*`
-}
+function parseGuestNameFromSubject(subject: string): { first_name: string; last_name: string } {
+  const match = subject.match(/^Reservation confirmed\s+-\s+(.+?)\s+arrives\s+[A-Za-z]{3,}\s+\d{1,2}/i)
+  if (!match) throw new Error('Nome do hóspede não encontrado no assunto do email')
 
-function parseGuestName(text: string): { first_name: string; last_name: string } {
-  const fullNamePattern = getNamePattern()
-
-  const identityVerifiedIndex = text.indexOf('Identity verified')
-  if (identityVerifiedIndex >= 0) {
-    const beforeIdentityVerified = text.slice(0, identityVerifiedIndex).trim()
-    const identityVerifiedMatch = beforeIdentityVerified.match(new RegExp(`(${fullNamePattern})$`, 'iu'))
-    if (identityVerifiedMatch) {
-      return splitGuestName(identityVerifiedMatch[1])
-    }
-  }
-
-  const arrivesMatch = text.match(new RegExp(`booking confirmed!\\s+(${fullNamePattern})\\s+arrives`, 'iu'))
-  if (arrivesMatch) {
-    return splitGuestName(arrivesMatch[1])
-  }
-
-  throw new Error('Nome do hóspede não encontrado')
+  return splitGuestName(match[1])
 }
 
 const airbnbDatePattern = String.raw`(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+[A-Za-z]+\s+\d{1,2}(?:,\s+\d{4})?`
@@ -157,10 +138,10 @@ function parseReservationDates(text: string): { checkin_at: Date; checkout_at: D
   throw new Error('Datas de check-in/checkout não encontradas')
 }
 
-export function parseEmail(rawText: string): Omit<CreateReservationInput, 'source_email_id'> {
+export function parseEmail(rawText: string, subject: string): Omit<CreateReservationInput, 'source_email_id'> {
   const text = extractText(rawText)
 
-  const { first_name, last_name } = parseGuestName(text)
+  const { first_name, last_name } = parseGuestNameFromSubject(subject)
 
   const codeMatch = text.match(/Confirmation code\s+([A-Z0-9]{8,12})/)
   if (!codeMatch) throw new Error('Código de confirmação não encontrado')
@@ -223,6 +204,8 @@ export async function syncGmailReservations(): Promise<SyncResult> {
       })
 
       const parts    = full.data.payload?.parts ?? []
+      const headers  = full.data.payload?.headers ?? []
+      const subject  = headers.find((h: any) => h.name?.toLowerCase() === 'subject')?.value ?? ''
       const htmlPart = parts.find((p: any) => p.mimeType === 'text/html')
       const textPart = parts.find((p: any) => p.mimeType === 'text/plain')
       const bodyData = (htmlPart ?? textPart)?.body?.data
@@ -233,7 +216,7 @@ export async function syncGmailReservations(): Promise<SyncResult> {
       }
 
       const decoded = Buffer.from(bodyData, 'base64url').toString('utf-8')
-      const parsed  = parseEmail(decoded)
+      const parsed  = parseEmail(decoded, subject)
 
       await createReservation({ ...parsed, source_email_id: emailId })
       result.imported++
