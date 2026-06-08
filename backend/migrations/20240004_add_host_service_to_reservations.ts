@@ -3,7 +3,7 @@ import type { Knex } from 'knex'
 export async function up(knex: Knex): Promise<void> {
   await knex.schema.alterTable('reservations', (t) => {
     t.decimal('host_service_fee', 10, 2).notNullable().defaultTo(0)
-    t.enum('host_service_status', ['pending', 'paid']).notNullable().defaultTo('pending')
+    t.enum('host_service_status', ['pending', 'paid', 'cancelled']).notNullable().defaultTo('pending')
   })
 
   await knex.raw(`
