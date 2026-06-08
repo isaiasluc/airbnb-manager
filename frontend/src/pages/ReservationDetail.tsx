@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import type { Reservation } from '../lib/types'
 import { fetchReservation, updateReservation, deleteReservation } from '../lib/api'
 import {
@@ -16,6 +16,7 @@ import {
 export default function ReservationDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -68,7 +69,7 @@ export default function ReservationDetail() {
     setDeleting(true)
     try {
       await deleteReservation(reservation.id)
-      navigate('/')
+      navigate(backToDashboardPath)
     } finally {
       setDeleting(false)
     }
@@ -91,6 +92,16 @@ export default function ReservationDetail() {
   }
 
   const nights = nightsCount(reservation.checkin_at, reservation.checkout_at)
+  const dashboardPage = searchParams.get('dashboardPage')
+  const dashboardFilter = searchParams.get('dashboardFilter')
+  const dashboardParams = new URLSearchParams()
+
+  if (dashboardPage) dashboardParams.set('page', dashboardPage)
+  if (dashboardFilter) dashboardParams.set('filter', dashboardFilter)
+
+  const backToDashboardPath = dashboardParams.size
+    ? `/?${dashboardParams.toString()}`
+    : '/'
 
   return (
     <div className="min-h-screen bg-stone-50 font-sans">
@@ -98,7 +109,7 @@ export default function ReservationDetail() {
       <header className="bg-white border-b border-stone-200 sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(backToDashboardPath)}
             className="text-stone-400 hover:text-stone-700 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

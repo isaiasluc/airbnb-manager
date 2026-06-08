@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Reservation } from "../lib/types";
 import { fetchReservations, syncEmails } from "../lib/api";
 import {
@@ -13,15 +13,34 @@ import {
   hostServiceStatusColor,
 } from "../lib/utils";
 
+const PAGE_SIZE = 10;
+const FILTERS = ["all", "confirmed", "completed", "cancelled"] as const;
+type ReservationFilter = (typeof FILTERS)[number];
+
+function getInitialPage(value: string | null) {
+  const page = Number(value);
+  return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
+function getInitialFilter(value: string | null): ReservationFilter {
+  return FILTERS.includes(value as ReservationFilter)
+    ? (value as ReservationFilter)
+    : "all";
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
-  const [filter, setFilter] = useState<
-    "all" | "confirmed" | "completed" | "cancelled"
-  >("all");
+  const [filter, setFilter] = useState<ReservationFilter>(() =>
+    getInitialFilter(searchParams.get("filter")),
+  );
+  const [page, setPage] = useState(() =>
+    getInitialPage(searchParams.get("page")),
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -29,7 +48,9 @@ export default function Dashboard() {
     async function loadInitialReservations() {
       try {
         const data = await fetchReservations();
-        if (isMounted) setReservations(data);
+        if (isMounted) {
+          setReservations(data);
+        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -53,6 +74,7 @@ export default function Dashboard() {
       if (result.imported > 0) {
         const data = await fetchReservations();
         setReservations(data);
+        setPage(1);
       }
     } catch {
       setSyncMsg("Erro ao sincronizar.");
@@ -65,6 +87,12 @@ export default function Dashboard() {
     filter === "all"
       ? reservations
       : reservations.filter((r) => r.status === filter);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const paginated = filtered.slice(pageStart, pageStart + PAGE_SIZE);
+  const showingStart = filtered.length === 0 ? 0 : pageStart + 1;
+  const showingEnd = Math.min(pageStart + PAGE_SIZE, filtered.length);
 
   return (
     <div className="min-h-screen bg-stone-50 font-sans">
@@ -151,11 +179,13 @@ export default function Dashboard() {
 
         {/* Filtros */}
         <div className="flex gap-2 mb-5">
-          {(["all", "confirmed", "completed", "cancelled"] as const).map(
-            (f) => (
+          {FILTERS.map((f) => (
               <button
                 key={f}
-                onClick={() => setFilter(f)}
+                onClick={() => {
+                  setFilter(f);
+                  setPage(1);
+                }}
                 className={`text-sm px-3 py-1.5 rounded-lg transition-colors font-medium ${
                   filter === f
                     ? "bg-stone-900 text-white"
@@ -164,8 +194,7 @@ export default function Dashboard() {
               >
                 {f === "all" ? "Todas" : statusLabel[f]}
               </button>
-            ),
-          )}
+            ))}
         </div>
 
         {/* Lista */}
@@ -226,10 +255,14 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-50">
-                {filtered.map((r) => (
+                {paginated.map((r) => (
                   <tr
                     key={r.id}
-                    onClick={() => navigate(`/reservations/${r.id}`)}
+                    onClick={() =>
+                      navigate(
+                        `/reservations/${r.id}?dashboardPage=${currentPage}&dashboardFilter=${filter}`,
+                      )
+                    }
                     className="hover:bg-stone-50 cursor-pointer transition-colors group"
                   >
                     <td className="px-5 py-3.5">
@@ -277,6 +310,32 @@ export default function Dashboard() {
                 ))}
               </tbody>
             </table>
+            </div>
+            <div className="border-t border-stone-100 px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-xs text-stone-400">
+                Mostrando {showingStart}-{showingEnd} de {filtered.length}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  disabled={currentPage === 1}
+                  className="text-sm px-3 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-500 hover:border-stone-400 transition-colors disabled:opacity-40 disabled:hover:border-stone-200"
+                >
+                  Anterior
+                </button>
+                <span className="text-xs text-stone-400 px-1">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <button
+                  onClick={() =>
+                    setPage((current) => Math.min(totalPages, current + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="text-sm px-3 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-500 hover:border-stone-400 transition-colors disabled:opacity-40 disabled:hover:border-stone-200"
+                >
+                  Próxima
+                </button>
+              </div>
             </div>
           </div>
         )}
