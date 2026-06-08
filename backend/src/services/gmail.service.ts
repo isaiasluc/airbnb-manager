@@ -55,13 +55,17 @@ function extractText(body: string): string {
 
 function parseDate(dateStr: string, timeStr: string): Date {
   const currentYear = new Date().getFullYear()
-  const normalized = `${dateStr.replace(/^[A-Za-z]+,\s*/, '')} ${currentYear} ${timeStr}`
-  const parsed = new Date(normalized)
-  // Ajusta para Brasília (UTC-3)
-  const brazilOffset = -3 * 60
-  const localOffset  = parsed.getTimezoneOffset()
-  const diff         = (localOffset - brazilOffset) * 60 * 1000
-  return new Date(parsed.getTime() + diff)
+  const dateWithoutWeekday = dateStr.replace(/^[A-Za-z]+,\s*/, '')
+  const dateWithYear = /\d{4}/.test(dateWithoutWeekday)
+    ? dateWithoutWeekday
+    : `${dateWithoutWeekday}, ${currentYear}`
+  const parsed = new Date(`${dateWithYear} ${timeStr} GMT-0300`)
+
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error(`Data inválida: ${dateStr} ${timeStr}`)
+  }
+
+  return parsed
 }
 
 function parseHostPayout(text: string): number {
@@ -73,6 +77,17 @@ function parseHostPayout(text: string): number {
     ? raw.replace(/\./g, '').replace(',', '.')
     : raw.replace(/,/g, '')
   return parseFloat(normalized)
+}
+
+function parseGuestCount(text: string): number {
+  const guestsSection = text.match(/GUESTS\s+(.+?)\s+MORE DETAILS ABOUT WHO’S COMING/i)?.[1] ?? text
+  const guestTypes = ['adult', 'child', 'infant']
+  const count = guestTypes.reduce((total, type) => {
+    const match = guestsSection.match(new RegExp(`(\\d+)\\s+${type}(?:ren|s)?`, 'i'))
+    return total + (match ? parseInt(match[1], 10) : 0)
+  }, 0)
+
+  return count || 1
 }
 
 function splitGuestName(fullName: string): { first_name: string; last_name: string } {
@@ -111,7 +126,38 @@ function parseGuestName(text: string): { first_name: string; last_name: string }
   throw new Error('Nome do hóspede não encontrado')
 }
 
-function parseEmail(rawText: string): Omit<CreateReservationInput, 'source_email_id'> {
+const airbnbDatePattern = String.raw`(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+[A-Za-z]+\s+\d{1,2}(?:,\s+\d{4})?`
+const airbnbTimePattern = String.raw`\d{1,2}(?::\d{2})?\s+[AP]M`
+
+function parseReservationDates(text: string): { checkin_at: Date; checkout_at: Date } {
+  const inlineCheckinMatch = text.match(new RegExp(`Check-in\\s+(${airbnbDatePattern})\\s+(${airbnbTimePattern})`, 'i'))
+  const inlineCheckoutMatch = text.match(new RegExp(`Checkout\\s+(${airbnbDatePattern})\\s+(${airbnbTimePattern})`, 'i'))
+
+  if (inlineCheckinMatch && inlineCheckoutMatch) {
+    return {
+      checkin_at: parseDate(inlineCheckinMatch[1], inlineCheckinMatch[2]),
+      checkout_at: parseDate(inlineCheckoutMatch[1], inlineCheckoutMatch[2]),
+    }
+  }
+
+  const tableMatch = text.match(
+    new RegExp(
+      `Check-in\\s+Checkout\\s+(${airbnbDatePattern})\\s+(${airbnbDatePattern})\\s+(${airbnbTimePattern})\\s+(${airbnbTimePattern})`,
+      'i'
+    )
+  )
+
+  if (tableMatch) {
+    return {
+      checkin_at: parseDate(tableMatch[1], tableMatch[3]),
+      checkout_at: parseDate(tableMatch[2], tableMatch[4]),
+    }
+  }
+
+  throw new Error('Datas de check-in/checkout não encontradas')
+}
+
+export function parseEmail(rawText: string): Omit<CreateReservationInput, 'source_email_id'> {
   const text = extractText(rawText)
 
   const { first_name, last_name } = parseGuestName(text)
@@ -120,15 +166,9 @@ function parseEmail(rawText: string): Omit<CreateReservationInput, 'source_email
   if (!codeMatch) throw new Error('Código de confirmação não encontrado')
   const confirmation_code = codeMatch[1]
 
-  const checkinMatch  = text.match(/Check-in\s+((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+\w+\s+\d+)\s+([\d:]+\s+[AP]M)/)
-  const checkoutMatch = text.match(/Checkout\s+((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+\w+\s+\d+)\s+([\d:]+\s+[AP]M)/)
-  if (!checkinMatch || !checkoutMatch) throw new Error('Datas de check-in/checkout não encontradas')
+  const { checkin_at, checkout_at } = parseReservationDates(text)
 
-  const checkin_at  = parseDate(checkinMatch[1], checkinMatch[2])
-  const checkout_at = parseDate(checkoutMatch[1], checkoutMatch[2])
-
-  const guestsMatch  = text.match(/(\d+)\s+adults?/)
-  const guests_count = guestsMatch ? parseInt(guestsMatch[1]) : 1
+  const guests_count = parseGuestCount(text)
 
   const host_payout = parseHostPayout(text)
 
