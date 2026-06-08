@@ -1,14 +1,20 @@
 import { Router } from 'express'
-import { syncGmailReservations } from '../services/gmail.service'
+import { getSyncStatus, runGmailSync } from '../services/sync-status.service'
 
 const router = Router()
 
+router.get('/', (_req, res) => {
+  res.json(getSyncStatus())
+})
+
 router.post('/', async (_req, res) => {
   try {
-    const result = await syncGmailReservations()
-    res.json(result)
+    const result = await runGmailSync('manual')
+    res.json({ ...result, syncStatus: getSyncStatus() })
   } catch (err) {
-    res.status(500).json({ error: (err as Error).message })
+    const message = (err as Error).message
+    const status = message === 'Sincronização já está em andamento' ? 409 : 500
+    res.status(status).json({ error: message, syncStatus: getSyncStatus() })
   }
 })
 

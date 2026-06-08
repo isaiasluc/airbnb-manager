@@ -5,6 +5,7 @@ dotenv.config()
 
 import reservationRoutes from './routes/reservation.routes'
 import syncRoutes        from './routes/sync.routes'
+import { startGmailSyncCron } from './services/sync-cron.service'
 
 const app = express()
 app.use(cors())
@@ -18,3 +19,5 @@ const PORT = process.env.PORT ?? 3000
 app.listen(Number(PORT), '0.0.0.0', () =>
   console.log(`Backend rodando em http://localhost:${PORT}`)
 )
+
+startGmailSyncCron()
