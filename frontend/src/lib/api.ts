@@ -1,7 +1,7 @@
 import type { Reservation, SyncResult, SyncStatus } from './types';
 import { auth } from './firebase';
 
-const BASE = '/api'
+const BASE = import.meta.env.VITE_API_URL ?? '/api'
 
 async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
   const headers = new Headers(init.headers)

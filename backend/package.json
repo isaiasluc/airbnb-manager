@@ -2,6 +2,7 @@
   "name": "airbnb-manager-backend",
   "version": "1.0.0",
   "scripts": {
+    "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "migrate:latest": "knex --knexfile knexfile.ts migrate:latest",
