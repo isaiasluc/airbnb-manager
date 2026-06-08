@@ -6,6 +6,7 @@ const router = Router()
 router.get('/',        ReservationController.list)
 router.get('/:id',     ReservationController.getOne)
 router.post('/',       ReservationController.create)
+router.post('/:id/send-email', ReservationController.sendEmail)
 router.patch('/:id',   ReservationController.update)
 router.delete('/:id',  ReservationController.remove)
 

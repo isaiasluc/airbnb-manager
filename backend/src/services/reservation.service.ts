@@ -1,5 +1,6 @@
 import * as GuestRepo from '../repositories/guest.repository'
 import * as ReservationRepo from '../repositories/reservation.repository'
+import { sendCheckinEmail } from './reservation-email.service'
 import type { CreateReservationInput, ReservationListFilters, ReservationWithGuest, Reservation } from '../types'
 
 const HOST_SERVICE_RATE_CHANGE_DATE = '2026-02-08'
@@ -70,6 +71,11 @@ export async function updateReservation(
   const updated = await ReservationRepo.updateReservation(id, updateData)
   if (!updated) throw new Error(`Reserva ${id} não encontrada`)
   return updated
+}
+
+export async function sendReservationEmail(id: number): Promise<void> {
+  const reservation = await getReservation(id)
+  await sendCheckinEmail(reservation)
 }
 
 export async function deleteReservation(id: number): Promise<void> {

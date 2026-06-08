@@ -56,6 +56,13 @@ export async function updateReservation(
   return res.json()
 }
 
+export async function sendReservationEmail(id: number): Promise<void> {
+  const res = await authFetch(`${BASE}/reservations/${id}/send-email`, {
+    method: 'POST',
+  })
+  if (!res.ok) throw new Error('Erro ao enviar email')
+}
+
 export async function deleteReservation(id: number): Promise<void> {
   const res = await authFetch(`${BASE}/reservations/${id}`, { method: 'DELETE' })
   if (!res.ok) throw new Error('Erro ao deletar reserva')

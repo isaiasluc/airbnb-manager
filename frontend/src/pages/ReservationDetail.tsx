@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import ThemeToggle from '../components/ThemeToggle'
 import { useAuth } from '../contexts/useAuth'
 import type { Reservation } from '../lib/types'
-import { fetchReservation, updateReservation, deleteReservation } from '../lib/api'
+import { fetchReservation, updateReservation, deleteReservation, sendReservationEmail } from '../lib/api'
 import {
   formatDate,
   formatCurrency,
@@ -23,6 +23,7 @@ export default function ReservationDetail() {
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -40,6 +41,18 @@ export default function ReservationDetail() {
       setReservation(updated)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleSendEmail() {
+    if (!reservation) return
+    setSendingEmail(true)
+    try {
+      await sendReservationEmail(reservation.id)
+      const updated = await updateReservation(reservation.id, { email_sent: true })
+      setReservation(updated)
+    } finally {
+      setSendingEmail(false)
     }
   }
 
@@ -208,6 +221,15 @@ export default function ReservationDetail() {
         <div className="space-y-4 rounded-xl border border-stone-200 bg-white px-6 py-5 transition-colors dark:border-stone-800 dark:bg-stone-900">
           <p className="text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">Ações</p>
 
+          <button
+            type="button"
+            onClick={handleSendEmail}
+            disabled={sendingEmail || saving || reservation.email_sent}
+            className="inline-flex w-full items-center justify-center rounded-lg bg-stone-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-stone-200"
+          >
+            {sendingEmail ? 'Enviando...' : reservation.email_sent ? 'E-mail enviado' : 'Enviar e-mail'}
+          </button>
+
           {/* Email enviado */}
           <div className="flex items-center justify-between">
             <div>
@@ -216,7 +238,7 @@ export default function ReservationDetail() {
             </div>
             <button
               onClick={toggleEmailSent}
-              disabled={saving}
+              disabled={saving || sendingEmail}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
                 reservation.email_sent ? 'bg-stone-900 dark:bg-stone-100' : 'bg-stone-200 dark:bg-stone-700'
               }`}

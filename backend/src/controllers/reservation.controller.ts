@@ -53,6 +53,17 @@ export async function update(req: Request, res: Response) {
   }
 }
 
+export async function sendEmail(req: Request, res: Response) {
+  try {
+    await ReservationService.sendReservationEmail(Number(req.params.id))
+    res.status(204).send()
+  } catch (err) {
+    const message = (err as Error).message
+    const status = message.includes('não encontrada') ? 404 : 500
+    res.status(status).json({ error: message })
+  }
+}
+
 export async function remove(req: Request, res: Response) {
   try {
     await ReservationService.deleteReservation(Number(req.params.id))
