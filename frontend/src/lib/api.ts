@@ -1,6 +1,19 @@
 import type { Reservation, SyncResult, SyncStatus } from './types';
+import { auth } from './firebase';
 
 const BASE = '/api'
+
+async function authFetch(input: RequestInfo | URL, init: RequestInit = {}) {
+  const headers = new Headers(init.headers)
+  const token = await auth.currentUser?.getIdToken()
+
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+
+  return fetch(input, {
+    ...init,
+    headers,
+  })
+}
 
 export interface ReservationDateFilters {
   from?: string
@@ -15,13 +28,13 @@ export async function fetchReservations(
   if (filters.to) params.set('to', filters.to)
 
   const query = params.size ? `?${params.toString()}` : ''
-  const res = await fetch(`${BASE}/reservations${query}`)
+  const res = await authFetch(`${BASE}/reservations${query}`)
   if (!res.ok) throw new Error('Erro ao buscar reservas')
   return res.json()
 }
 
 export async function fetchReservation(id: number): Promise<Reservation> {
-  const res = await fetch(`${BASE}/reservations/${id}`)
+  const res = await authFetch(`${BASE}/reservations/${id}`)
   if (!res.ok) throw new Error('Reserva não encontrada')
   return res.json()
 }
@@ -30,7 +43,7 @@ export async function updateReservation(
   id: number,
   data: Partial<Pick<Reservation, 'status' | 'email_sent' | 'checkin_at' | 'checkout_at' | 'guests_count' | 'host_payout' | 'host_service_fee' | 'host_service_status'>>
 ): Promise<Reservation> {
-  const res = await fetch(`${BASE}/reservations/${id}`, {
+  const res = await authFetch(`${BASE}/reservations/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -40,18 +53,18 @@ export async function updateReservation(
 }
 
 export async function deleteReservation(id: number): Promise<void> {
-  const res = await fetch(`${BASE}/reservations/${id}`, { method: 'DELETE' })
+  const res = await authFetch(`${BASE}/reservations/${id}`, { method: 'DELETE' })
   if (!res.ok) throw new Error('Erro ao deletar reserva')
 }
 
 export async function syncEmails(): Promise<SyncResult> {
-  const res = await fetch(`${BASE}/sync`, { method: 'POST' })
+  const res = await authFetch(`${BASE}/sync`, { method: 'POST' })
   if (!res.ok) throw new Error('Erro ao sincronizar emails')
   return res.json()
 }
 
 export async function fetchSyncStatus(): Promise<SyncStatus> {
-  const res = await fetch(`${BASE}/sync`)
+  const res = await authFetch(`${BASE}/sync`)
   if (!res.ok) throw new Error('Erro ao buscar status da sincronização')
   return res.json()
 }

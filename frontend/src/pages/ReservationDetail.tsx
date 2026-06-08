@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import ThemeToggle from '../components/ThemeToggle'
+import { useAuth } from '../contexts/useAuth'
 import type { Reservation } from '../lib/types'
 import { fetchReservation, updateReservation, deleteReservation } from '../lib/api'
 import {
@@ -17,6 +18,7 @@ import {
 export default function ReservationDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { signOut } = useAuth()
   const [searchParams] = useSearchParams()
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [loading, setLoading] = useState(true)
@@ -130,6 +132,13 @@ export default function ReservationDetail() {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
+            >
+              Sair
+            </button>
             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ring-1 ${statusColor[reservation.status]}`}>
               {statusLabel[reservation.status]}
             </span>

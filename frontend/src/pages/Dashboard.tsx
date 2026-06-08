@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ThemeToggle from "../components/ThemeToggle";
+import { useAuth } from "../contexts/useAuth";
 import type { Reservation, SyncResult, SyncStatus } from "../lib/types";
 import {
   fetchReservations,
@@ -244,6 +245,7 @@ function SyncResultModal({
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -447,6 +449,13 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <ThemeToggle />
+              <button
+                type="button"
+                onClick={() => void signOut()}
+                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
+              >
+                Sair
+              </button>
               <button
                 type="button"
                 onClick={() => applyDateRange(getCurrentMonthRange())}
