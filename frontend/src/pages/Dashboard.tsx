@@ -5,7 +5,9 @@ import { useAuth } from "../contexts/useAuth";
 import type { Reservation, SyncResult, SyncStatus } from "../lib/types";
 import {
   fetchReservations,
+  fetchGoogleAuthStatus,
   fetchSyncStatus,
+  startGoogleAuth,
   syncEmails,
   type ReservationDateFilters,
 } from "../lib/api";
@@ -22,6 +24,8 @@ import {
 
 const PAGE_SIZE = 10;
 const SYNC_MODAL_ANIMATION_MS = 180;
+const ALLOWED_SYNC_EMAIL =
+  import.meta.env.VITE_SYNC_ALLOWED_EMAIL ?? "isaiiaslucena@gmail.com";
 const FILTERS = ["all", "confirmed", "completed", "cancelled"] as const;
 type ReservationFilter = (typeof FILTERS)[number];
 const DATE_PARAM_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -245,7 +249,7 @@ function SyncResultModal({
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -255,6 +259,8 @@ export default function Dashboard() {
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isSyncModalClosing, setIsSyncModalClosing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
+  const [googleAuthenticated, setGoogleAuthenticated] = useState(false);
+  const [authenticatingGoogle, setAuthenticatingGoogle] = useState(false);
   const [filter, setFilter] = useState<ReservationFilter>(() =>
     getInitialFilter(searchParams.get("filter")),
   );
@@ -267,6 +273,8 @@ export default function Dashboard() {
   const [dateTo, setDateTo] = useState(() =>
     getInitialDate(searchParams.get("to")),
   );
+  const canSyncGmail =
+    user?.email?.toLowerCase() === ALLOWED_SYNC_EMAIL.toLowerCase();
 
   useEffect(() => {
     let isMounted = true;
@@ -278,13 +286,17 @@ export default function Dashboard() {
     async function loadInitialReservations() {
       setLoading(true);
       try {
-        const [data, status] = await Promise.all([
+        const [data, status, googleAuth] = await Promise.all([
           fetchReservations(dateFilters),
-          fetchSyncStatus().catch(() => null),
+          canSyncGmail ? fetchSyncStatus().catch(() => null) : Promise.resolve(null),
+          canSyncGmail
+            ? fetchGoogleAuthStatus().catch(() => ({ authenticated: false }))
+            : Promise.resolve({ authenticated: false }),
         ]);
         if (isMounted) {
           setReservations(data);
           setSyncStatus(status);
+          setGoogleAuthenticated(googleAuth.authenticated);
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -296,7 +308,23 @@ export default function Dashboard() {
     return () => {
       isMounted = false;
     };
-  }, [dateFrom, dateTo]);
+  }, [canSyncGmail, dateFrom, dateTo]);
+
+  useEffect(() => {
+    if (!canSyncGmail) return;
+
+    const googleAuth = searchParams.get("googleAuth");
+    if (googleAuth === "success") {
+      setGoogleAuthenticated(true);
+      setSyncMsg("Google autenticado. Sincronização liberada.");
+    }
+    if (googleAuth === "error") {
+      setSyncMsg("Erro ao autenticar Google. Tente novamente.");
+    }
+    if (googleAuth === "wrongEmail") {
+      setSyncMsg(`Use o Google ${ALLOWED_SYNC_EMAIL} para liberar a sincronização.`);
+    }
+  }, [canSyncGmail, searchParams]);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -358,6 +386,19 @@ export default function Dashboard() {
       setSyncMsg("Erro ao sincronizar.");
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function handleGoogleAuth() {
+    setAuthenticatingGoogle(true);
+    setSyncMsg(null);
+
+    try {
+      const authUrl = await startGoogleAuth();
+      window.location.assign(authUrl);
+    } catch {
+      setAuthenticatingGoogle(false);
+      setSyncMsg("Erro ao iniciar autenticação Google.");
     }
   }
 
@@ -477,35 +518,17 @@ export default function Dashboard() {
               >
                 Todos
               </button>
-              <button
-                onClick={handleSync}
-                disabled={syncing}
-                className="flex h-9 items-center gap-2 rounded-lg bg-stone-900 px-4 text-sm font-medium text-white transition-colors hover:bg-stone-700 disabled:opacity-50 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-stone-300"
-              >
-                <svg
-                  className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                {syncing ? "Sincronizando..." : "Sincronizar Gmail"}
-              </button>
             </div>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto px-6 pb-3">
-          <p className="text-xs text-stone-400 dark:text-stone-500">
-            Último sync{syncStatus?.lastSyncSource ? ` ${formatSyncSource(syncStatus.lastSyncSource)}` : ""}:{" "}
-            {formatLastSync(syncStatus?.lastSyncAt ?? null)}
-          </p>
-        </div>
+        {canSyncGmail && (
+          <div className="max-w-6xl mx-auto px-6 pb-3">
+            <p className="text-xs text-stone-400 dark:text-stone-500">
+              Último sync{syncStatus?.lastSyncSource ? ` ${formatSyncSource(syncStatus.lastSyncSource)}` : ""}:{" "}
+              {formatLastSync(syncStatus?.lastSyncAt ?? null)}
+            </p>
+          </div>
+        )}
         {syncMsg && (
           <div className="max-w-6xl mx-auto px-6 pb-3">
             <button
@@ -518,6 +541,42 @@ export default function Dashboard() {
           </div>
         )}
       </header>
+
+      {canSyncGmail && (
+        <div className="fixed bottom-6 right-6 z-30">
+          {googleAuthenticated ? (
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex h-11 items-center gap-2 rounded-lg bg-stone-900 px-5 text-sm font-medium text-white shadow-lg shadow-stone-900/15 transition-colors hover:bg-stone-700 disabled:opacity-50 dark:bg-stone-100 dark:text-stone-950 dark:shadow-black/30 dark:hover:bg-stone-300"
+            >
+              <svg
+                className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              {syncing ? "Sincronizando..." : "Sincronizar Gmail"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleGoogleAuth}
+              disabled={authenticatingGoogle}
+              className="h-11 rounded-lg bg-stone-900 px-5 text-sm font-medium text-white shadow-lg shadow-stone-900/15 transition-colors hover:bg-stone-700 disabled:opacity-50 dark:bg-stone-100 dark:text-stone-950 dark:shadow-black/30 dark:hover:bg-stone-300"
+            >
+              {authenticatingGoogle ? "Abrindo Google..." : "Autenticar Google"}
+            </button>
+          )}
+        </div>
+      )}
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         {/* Stats */}

@@ -1,5 +1,10 @@
 import type { Request, Response, NextFunction } from 'express'
 import { firebaseAuth } from '../services/firebase-admin'
+import type { DecodedIdToken } from 'firebase-admin/auth'
+
+export interface FirebaseLocals {
+  firebaseUser?: DecodedIdToken
+}
 
 function getBearerToken(authorization?: string) {
   if (!authorization?.startsWith('Bearer ')) return null
@@ -20,7 +25,7 @@ export async function verifyFirebaseToken(
   }
 
   try {
-    await firebaseAuth.verifyIdToken(token)
+    res.locals.firebaseUser = await firebaseAuth.verifyIdToken(token)
     next()
   } catch {
     res.status(401).json({ error: 'Token Firebase inválido' })

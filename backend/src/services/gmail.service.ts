@@ -1,37 +1,9 @@
-import fs from 'fs'
-import path from 'path'
 import { google } from 'googleapis'
-import type { OAuth2Client } from 'googleapis-common'
 import type { CreateReservationInput } from '../types'
 import { reservationExistsByEmailId } from '../repositories/reservation.repository'
 import { createReservation } from './reservation.service'
-
-// ─── OAuth2 setup ─────────────────────────────────────────────────────────────
-
-const TOKEN_PATH = path.resolve(process.env.GOOGLE_TOKEN_PATH ?? './google-token.json')
-
-function createOAuthClient(): OAuth2Client {
-  return new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  )
-}
-
-function loadToken(client: OAuth2Client): void {
-  if (!fs.existsSync(TOKEN_PATH)) {
-    throw new Error(
-      `Token não encontrado em ${TOKEN_PATH}. ` +
-      `Execute primeiro: npx tsx scripts/auth-google.ts`
-    )
-  }
-  const token = JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf-8'))
-  client.setCredentials(token)
-  client.on('tokens', (tokens) => {
-    const current = JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf-8'))
-    fs.writeFileSync(TOKEN_PATH, JSON.stringify({ ...current, ...tokens }, null, 2))
-  })
-}
+import { createGoogleOAuthClient, getAuthenticatedGmailAddress, loadGoogleToken } from './google-auth.service'
+import { getAllowedSyncEmail } from '../middlewares/require-sync-email'
 
 // ─── Parsing ──────────────────────────────────────────────────────────────────
 
@@ -192,8 +164,13 @@ function getGuestNameFromSubject(subject: string): string | undefined {
 }
 
 export async function syncGmailReservations(): Promise<SyncResult> {
-  const client = createOAuthClient()
-  loadToken(client)
+  const client = createGoogleOAuthClient()
+  loadGoogleToken(client)
+
+  const googleEmail = await getAuthenticatedGmailAddress(client)
+  if (googleEmail !== getAllowedSyncEmail()) {
+    throw new Error('Token Google autorizado para um email diferente do permitido')
+  }
 
   const gmail  = google.gmail({ version: 'v1', auth: client })
   const result: SyncResult = {
