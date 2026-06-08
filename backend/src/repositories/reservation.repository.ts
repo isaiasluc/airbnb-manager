@@ -37,7 +37,7 @@ export async function createReservation(
 
 export async function updateReservation(
   id: number,
-  data: Partial<Pick<Reservation, 'checkin_at' | 'checkout_at' | 'guests_count' | 'host_payout' | 'email_sent' | 'status'>>
+  data: Partial<Pick<Reservation, 'checkin_at' | 'checkout_at' | 'guests_count' | 'host_payout' | 'host_service_fee' | 'host_service_status' | 'email_sent' | 'status'>>
 ): Promise<Reservation | undefined> {
   const [updated] = await db<Reservation>('reservations')
     .where({ id })
