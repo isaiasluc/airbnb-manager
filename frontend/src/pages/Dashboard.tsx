@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import type { Reservation, SyncStatus } from "../lib/types";
+import type { Reservation, SyncResult, SyncStatus } from "../lib/types";
 import { fetchReservations, fetchSyncStatus, syncEmails } from "../lib/api";
 import {
   formatDate,
@@ -14,6 +14,7 @@ import {
 } from "../lib/utils";
 
 const PAGE_SIZE = 10;
+const SYNC_MODAL_ANIMATION_MS = 180;
 const FILTERS = ["all", "confirmed", "completed", "cancelled"] as const;
 type ReservationFilter = (typeof FILTERS)[number];
 
@@ -54,6 +55,155 @@ function formatSyncSource(source: SyncStatus["lastSyncSource"]) {
   return "";
 }
 
+function EmptySyncList({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-stone-200 py-8 text-stone-300 gap-2">
+      <svg
+        className="h-9 w-9"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+        />
+      </svg>
+      <span className="text-sm">{label}</span>
+    </div>
+  );
+}
+
+function SyncResultModal({
+  result,
+  isClosing,
+  onClose,
+}: {
+  result: SyncResult;
+  isClosing: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className={`sync-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-950/40 px-4 py-6 ${
+        isClosing ? "sync-modal-overlay-exit" : "sync-modal-overlay-enter"
+      }`}
+      onClick={onClose}
+    >
+      <div
+        className={`sync-modal-panel max-h-[86vh] w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl ${
+          isClosing ? "sync-modal-panel-exit" : "sync-modal-panel-enter"
+        }`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
+          <div>
+            <h2 className="text-base font-semibold text-stone-900">
+              Detalhes da sincronização
+            </h2>
+            <p className="text-xs text-stone-400 mt-0.5">
+              {result.imported} importada(s) · {result.skipped} ignorada(s) ·{" "}
+              {result.errors.length} erro(s)
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full p-2 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"
+            aria-label="Fechar modal"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18 18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div className="max-h-[calc(86vh-82px)] overflow-y-auto px-5 py-5 space-y-6">
+          <section>
+            <h3 className="text-xs font-medium uppercase tracking-widest text-stone-400 mb-3">
+              Importadas
+            </h3>
+            {result.importedItems.length === 0 ? (
+              <EmptySyncList label="Nenhuma reserva importada" />
+            ) : (
+              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100">
+                {result.importedItems.map((item) => (
+                  <div key={item.emailId} className="px-4 py-3">
+                    <p className="text-sm font-medium text-stone-800">
+                      {item.guestName || item.subject || item.emailId}
+                    </p>
+                    <p className="text-xs text-stone-400 mt-1">
+                      {item.confirmationCode
+                        ? `Código ${item.confirmationCode}`
+                        : item.emailId}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section>
+            <h3 className="text-xs font-medium uppercase tracking-widest text-stone-400 mb-3">
+              Ignoradas
+            </h3>
+            {result.skippedItems.length === 0 ? (
+              <EmptySyncList label="Nenhuma reserva ignorada" />
+            ) : (
+              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100">
+                {result.skippedItems.map((item) => (
+                  <div key={item.emailId} className="px-4 py-3">
+                    <p className="text-sm font-medium text-stone-800">
+                      {item.guestName || item.subject || item.emailId}
+                    </p>
+                    <p className="text-xs text-stone-400 mt-1">
+                      {item.reason || "Ignorada"} · {item.emailId}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section>
+            <h3 className="text-xs font-medium uppercase tracking-widest text-stone-400 mb-3">
+              Erros
+            </h3>
+            {result.errors.length === 0 ? (
+              <EmptySyncList label="Nenhum erro encontrado" />
+            ) : (
+              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100">
+                {result.errors.map((error) => (
+                  <div key={error.emailId} className="px-4 py-3">
+                    <p className="text-sm font-medium text-stone-800">
+                      {error.emailId}
+                    </p>
+                    <p className="text-xs text-rose-500 mt-1">
+                      {error.reason}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -61,6 +211,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [isSyncModalClosing, setIsSyncModalClosing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
   const [filter, setFilter] = useState<ReservationFilter>(() =>
     getInitialFilter(searchParams.get("filter")),
@@ -97,9 +250,13 @@ export default function Dashboard() {
   async function handleSync() {
     setSyncing(true);
     setSyncMsg(null);
+    setSyncResult(null);
+    setIsSyncModalOpen(false);
+    setIsSyncModalClosing(false);
     try {
       const result = await syncEmails();
       if (result.syncStatus) setSyncStatus(result.syncStatus);
+      setSyncResult(result);
       setSyncMsg(
         `${result.imported} importada(s) · ${result.skipped} ignorada(s) · ${result.errors.length} erro(s)`,
       );
@@ -128,6 +285,20 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function openSyncModal() {
+    if (!syncResult) return;
+    setIsSyncModalClosing(false);
+    setIsSyncModalOpen(true);
+  }
+
+  function closeSyncModal() {
+    setIsSyncModalClosing(true);
+    window.setTimeout(() => {
+      setIsSyncModalOpen(false);
+      setIsSyncModalClosing(false);
+    }, SYNC_MODAL_ANIMATION_MS);
   }
 
   const filtered =
@@ -187,9 +358,13 @@ export default function Dashboard() {
         </div>
         {syncMsg && (
           <div className="max-w-6xl mx-auto px-6 pb-3">
-            <p className="text-xs text-stone-500 bg-stone-100 rounded-md px-3 py-1.5 inline-block">
+            <button
+              type="button"
+              onClick={openSyncModal}
+              className="text-xs text-stone-500 bg-stone-100 hover:bg-stone-200 rounded-md px-3 py-1.5 inline-block transition-colors"
+            >
               {syncMsg}
-            </p>
+            </button>
           </div>
         )}
       </header>
@@ -400,6 +575,13 @@ export default function Dashboard() {
           </div>
         )}
       </main>
+      {isSyncModalOpen && syncResult && (
+        <SyncResultModal
+          result={syncResult}
+          isClosing={isSyncModalClosing}
+          onClose={closeSyncModal}
+        />
+      )}
     </div>
   );
 }

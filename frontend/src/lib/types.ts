@@ -27,8 +27,18 @@ export interface Reservation {
 export interface SyncResult {
   imported: number
   skipped: number
+  importedItems: SyncItem[]
+  skippedItems: SyncItem[]
   errors: { emailId: string; reason: string }[]
   syncStatus?: SyncStatus
+}
+
+export interface SyncItem {
+  emailId: string
+  subject: string
+  guestName?: string
+  confirmationCode?: string
+  reason?: string
 }
 
 export interface SyncStatus {

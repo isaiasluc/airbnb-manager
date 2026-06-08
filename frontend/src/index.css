@@ -25,3 +25,63 @@ button:disabled,
 .page-fade-in {
   animation: page-fade-in 360ms ease-out;
 }
+
+@keyframes sync-modal-overlay-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sync-modal-overlay-exit {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sync-modal-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sync-modal-panel-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.sync-modal-overlay-enter {
+  animation: sync-modal-overlay-enter 180ms ease-out both;
+}
+
+.sync-modal-overlay-exit {
+  animation: sync-modal-overlay-exit 180ms ease-in both;
+}
+
+.sync-modal-panel-enter {
+  animation: sync-modal-panel-enter 180ms ease-out both;
+}
+
+.sync-modal-panel-exit {
+  animation: sync-modal-panel-exit 180ms ease-in both;
+}
