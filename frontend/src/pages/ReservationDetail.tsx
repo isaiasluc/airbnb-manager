@@ -2,7 +2,16 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import type { Reservation } from '../lib/types'
 import { fetchReservation, updateReservation, deleteReservation } from '../lib/api'
-import { formatDate, formatCurrency, guestName, nightsCount, statusLabel, statusColor } from '../lib/utils'
+import {
+  formatDate,
+  formatCurrency,
+  guestName,
+  nightsCount,
+  statusLabel,
+  statusColor,
+  hostServiceStatusLabel,
+  hostServiceStatusColor,
+} from '../lib/utils'
 
 export default function ReservationDetail() {
   const { id } = useParams<{ id: string }>()
@@ -119,14 +128,27 @@ export default function ReservationDetail() {
         </div>
 
         {/* Financeiro */}
-        <div className="bg-white rounded-xl border border-stone-200 px-6 py-5">
-          <p className="text-xs text-stone-400 uppercase tracking-widest mb-3">Repasse do host</p>
-          <p className="text-3xl font-semibold text-stone-900">
-            {formatCurrency(Number(reservation.host_payout), reservation.currency)}
-          </p>
-          <p className="text-sm text-stone-400 mt-1">
-            {formatCurrency(Number(reservation.host_payout) / nights, reservation.currency)} por noite
-          </p>
+        <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-stone-100">
+            <div className="px-6 py-5">
+              <p className="text-xs text-stone-400 uppercase tracking-widest mb-3">Repasse do host</p>
+              <p className="text-3xl font-semibold text-stone-900">
+                {formatCurrency(Number(reservation.host_payout), reservation.currency)}
+              </p>
+              <p className="text-sm text-stone-400 mt-1">
+                {formatCurrency(Number(reservation.host_payout) / nights, reservation.currency)} por noite
+              </p>
+            </div>
+            <div className="px-6 py-5">
+              <p className="text-xs text-stone-400 uppercase tracking-widest mb-3">Taxa de serviço</p>
+              <p className="text-3xl font-semibold text-stone-900">
+                {formatCurrency(Number(reservation.host_service_fee), reservation.currency)}
+              </p>
+              <span className={`mt-2 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ring-1 ${hostServiceStatusColor[reservation.host_service_status]}`}>
+                {hostServiceStatusLabel[reservation.host_service_status]}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Ações */}

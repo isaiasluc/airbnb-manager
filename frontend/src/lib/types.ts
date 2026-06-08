@@ -14,6 +14,8 @@ export interface Reservation {
   checkout_at: string
   guests_count: number
   host_payout: number
+  host_service_fee: number
+  host_service_status: 'pending' | 'paid'
   currency: string
   source_email_id: string
   email_sent: boolean

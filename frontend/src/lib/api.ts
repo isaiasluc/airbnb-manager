@@ -16,7 +16,7 @@ export async function fetchReservation(id: number): Promise<Reservation> {
 
 export async function updateReservation(
   id: number,
-  data: Partial<Pick<Reservation, 'status' | 'email_sent' | 'checkin_at' | 'checkout_at' | 'guests_count' | 'host_payout'>>
+  data: Partial<Pick<Reservation, 'status' | 'email_sent' | 'checkin_at' | 'checkout_at' | 'guests_count' | 'host_payout' | 'host_service_fee' | 'host_service_status'>>
 ): Promise<Reservation> {
   const res = await fetch(`${BASE}/reservations/${id}`, {
     method: 'PATCH',

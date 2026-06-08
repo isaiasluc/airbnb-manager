@@ -9,6 +9,8 @@ import {
   nightsCount,
   statusLabel,
   statusColor,
+  hostServiceStatusLabel,
+  hostServiceStatusColor,
 } from "../lib/utils";
 
 export default function Dashboard() {
@@ -68,7 +70,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-stone-50 font-sans">
       {/* Header */}
       <header className="bg-white border-b border-stone-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold text-stone-900 tracking-tight">
               Hospedagens
@@ -99,7 +101,7 @@ export default function Dashboard() {
           </button>
         </div>
         {syncMsg && (
-          <div className="max-w-5xl mx-auto px-6 pb-3">
+          <div className="max-w-6xl mx-auto px-6 pb-3">
             <p className="text-xs text-stone-500 bg-stone-100 rounded-md px-3 py-1.5 inline-block">
               {syncMsg}
             </p>
@@ -107,9 +109,9 @@ export default function Dashboard() {
         )}
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="max-w-6xl mx-auto px-6 py-8">
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
             { label: "Total", value: reservations.length },
             {
@@ -121,6 +123,15 @@ export default function Dashboard() {
               label: "Receita total",
               value: formatCurrency(
                 reservations.reduce((s, r) => s + Number(r.host_payout), 0),
+              ),
+            },
+            {
+              label: "Taxa host",
+              value: formatCurrency(
+                reservations.reduce(
+                  (s, r) => s + Number(r.host_service_fee),
+                  0,
+                ),
               ),
             },
           ].map((stat) => (
@@ -181,7 +192,8 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[980px] text-sm">
               <thead>
                 <tr className="border-b border-stone-100">
                   <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
@@ -198,6 +210,12 @@ export default function Dashboard() {
                   </th>
                   <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
                     Payout
+                  </th>
+                  <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
+                    Taxa host
+                  </th>
+                  <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
+                    Serviço
                   </th>
                   <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
                     Status
@@ -231,6 +249,16 @@ export default function Dashboard() {
                     <td className="px-5 py-3.5 font-medium text-stone-700">
                       {formatCurrency(Number(r.host_payout))}
                     </td>
+                    <td className="px-5 py-3.5 font-medium text-stone-700">
+                      {formatCurrency(Number(r.host_service_fee), r.currency)}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ring-1 ${hostServiceStatusColor[r.host_service_status]}`}
+                      >
+                        {hostServiceStatusLabel[r.host_service_status]}
+                      </span>
+                    </td>
                     <td className="px-5 py-3.5">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ring-1 ${statusColor[r.status]}`}
@@ -249,6 +277,7 @@ export default function Dashboard() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </main>

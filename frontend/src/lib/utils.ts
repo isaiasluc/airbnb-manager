@@ -36,3 +36,13 @@ export const statusColor: Record<string, string> = {
   cancelled: 'bg-red-50 text-red-600 ring-red-200',
   completed: 'bg-stone-100 text-stone-500 ring-stone-200',
 }
+
+export const hostServiceStatusLabel: Record<string, string> = {
+  pending: 'Pendente',
+  paid: 'Pago',
+}
+
+export const hostServiceStatusColor: Record<string, string> = {
+  pending: 'bg-amber-50 text-amber-700 ring-amber-200',
+  paid: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+}
