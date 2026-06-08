@@ -21,6 +21,56 @@ export async function listReservations(
   return ReservationRepo.listReservations(filters)
 }
 
+function formatCsvDate(value: Date | string): string {
+  return new Date(value).toISOString().slice(0, 10)
+}
+
+function escapeCsvValue(value: string | number | boolean | null | undefined): string {
+  if (value === null || value === undefined) return ''
+
+  const text = String(value)
+  if (!/[",\n\r]/.test(text)) return text
+
+  return `"${text.replace(/"/g, '""')}"`
+}
+
+export async function exportReservationsCsv(
+  filters: ReservationListFilters = {}
+): Promise<string> {
+  const reservations = await ReservationRepo.listReservations(filters)
+  const headers = [
+    'Codigo',
+    'Hospede',
+    'Check-in',
+    'Check-out',
+    'Hospedes',
+    'Payout',
+    'Taxa host',
+    'Moeda',
+    'Servico',
+    'Status',
+    'Email enviado',
+  ]
+
+  const rows = reservations.map((reservation) => [
+    reservation.confirmation_code,
+    [reservation.guest_first_name, reservation.guest_last_name].filter(Boolean).join(' '),
+    formatCsvDate(reservation.checkin_at),
+    formatCsvDate(reservation.checkout_at),
+    reservation.guests_count,
+    reservation.host_payout,
+    reservation.host_service_fee,
+    reservation.currency,
+    reservation.host_service_status,
+    reservation.status,
+    reservation.email_sent ? 'Sim' : 'Nao',
+  ])
+
+  return [headers, ...rows]
+    .map((row) => row.map(escapeCsvValue).join(','))
+    .join('\n')
+}
+
 export async function getReservation(id: number): Promise<ReservationWithGuest> {
   const reservation = await ReservationRepo.findReservationById(id)
   if (!reservation) throw new Error(`Reserva ${id} não encontrada`)

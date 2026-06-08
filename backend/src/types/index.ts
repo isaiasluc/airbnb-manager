@@ -47,4 +47,5 @@ export interface ReservationWithGuest extends Reservation {
 export interface ReservationListFilters {
   from?: string
   to?: string
+  status?: Reservation['status']
 }

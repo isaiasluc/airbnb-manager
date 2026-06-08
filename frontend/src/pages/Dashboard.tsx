@@ -4,6 +4,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import { useAuth } from "../contexts/useAuth";
 import type { Reservation, SyncResult, SyncStatus } from "../lib/types";
 import {
+  exportReservationsCsv,
   fetchReservations,
   fetchGoogleAuthStatus,
   fetchSyncStatus,
@@ -265,6 +266,7 @@ export default function Dashboard() {
   const initialGoogleAuth = canSyncGmail ? searchParams.get("googleAuth") : null;
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exportingCsv, setExportingCsv] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(() =>
     getGoogleAuthMessage(initialGoogleAuth),
@@ -417,6 +419,33 @@ export default function Dashboard() {
     }
   }
 
+  async function handleExportCsv() {
+    setExportingCsv(true);
+    setSyncMsg(null);
+
+    try {
+      const csv = await exportReservationsCsv({
+        ...getDateFilters(),
+        status: filter === "all" ? undefined : filter,
+      });
+      const url = window.URL.createObjectURL(csv);
+      const link = document.createElement("a");
+      const suffix = [dateFrom || "inicio", dateTo || "fim"]
+        .join("_")
+        .replace(/[^a-z0-9_-]/gi, "");
+      link.href = url;
+      link.download = `reservas_${suffix}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setSyncMsg("Erro ao exportar CSV.");
+    } finally {
+      setExportingCsv(false);
+    }
+  }
+
   function openSyncModal() {
     if (!syncResult) return;
     setIsSyncModalClosing(false);
@@ -447,7 +476,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-stone-50 font-sans transition-colors dark:bg-stone-950">
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-950">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <button
             type="button"
             onClick={handleHomeClick}
@@ -460,42 +489,46 @@ export default function Dashboard() {
               Apê dos sonhos em Ponta Negra
             </p>
           </button>
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
-                Início
-                <input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(event) => {
-                    setDateFrom(event.target.value);
-                    setPage(1);
-                  }}
-                  className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-stone-700 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:focus:border-stone-500"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
-                Fim
-                <input
-                  type="date"
-                  value={dateTo}
-                  onChange={(event) => {
-                    setDateTo(event.target.value);
-                    setPage(1);
-                  }}
-                  className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-stone-700 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:focus:border-stone-500"
-                />
-              </label>
+          <div className="flex flex-1 flex-col gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
+                  Início
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(event) => {
+                      setDateFrom(event.target.value);
+                      setPage(1);
+                    }}
+                    className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-stone-700 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:focus:border-stone-500"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
+                  Fim
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(event) => {
+                      setDateTo(event.target.value);
+                      setPage(1);
+                    }}
+                    className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-stone-700 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:focus:border-stone-500"
+                  />
+                </label>
+              </div>
+              <div className="flex items-center gap-2 sm:justify-end">
+                <ThemeToggle />
+                <button
+                  type="button"
+                  onClick={() => void signOut()}
+                  className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
+                >
+                  Sair
+                </button>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <ThemeToggle />
-              <button
-                type="button"
-                onClick={() => void signOut()}
-                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
-              >
-                Sair
-              </button>
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
               <button
                 type="button"
                 onClick={() => applyDateRange(getCurrentMonthRange())}
@@ -516,6 +549,14 @@ export default function Dashboard() {
                 className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
               >
                 Todos
+              </button>
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                disabled={loading || exportingCsv || filtered.length === 0}
+                className="h-9 rounded-lg bg-stone-900 px-3 text-sm font-medium text-white transition-colors hover:bg-stone-700 disabled:opacity-50 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-stone-300"
+              >
+                {exportingCsv ? "Exportando..." : "Exportar CSV"}
               </button>
             </div>
           </div>

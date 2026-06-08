@@ -20,6 +20,10 @@ export interface ReservationDateFilters {
   to?: string
 }
 
+export interface ReservationExportFilters extends ReservationDateFilters {
+  status?: Reservation['status']
+}
+
 export interface GoogleAuthStatus {
   authenticated: boolean
 }
@@ -35,6 +39,20 @@ export async function fetchReservations(
   const res = await authFetch(`${BASE}/reservations${query}`)
   if (!res.ok) throw new Error('Erro ao buscar reservas')
   return res.json()
+}
+
+export async function exportReservationsCsv(
+  filters: ReservationExportFilters = {},
+): Promise<Blob> {
+  const params = new URLSearchParams()
+  if (filters.from) params.set('from', filters.from)
+  if (filters.to) params.set('to', filters.to)
+  if (filters.status) params.set('status', filters.status)
+
+  const query = params.size ? `?${params.toString()}` : ''
+  const res = await authFetch(`${BASE}/reservations/export${query}`)
+  if (!res.ok) throw new Error('Erro ao exportar CSV')
+  return res.blob()
 }
 
 export async function fetchReservation(id: number): Promise<Reservation> {

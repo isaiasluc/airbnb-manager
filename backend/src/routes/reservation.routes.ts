@@ -4,6 +4,7 @@ import * as ReservationController from '../controllers/reservation.controller'
 const router = Router()
 
 router.get('/',        ReservationController.list)
+router.get('/export',  ReservationController.exportCsv)
 router.get('/:id',     ReservationController.getOne)
 router.post('/',       ReservationController.create)
 router.post('/:id/send-email', ReservationController.sendEmail)

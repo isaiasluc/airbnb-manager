@@ -20,6 +20,10 @@ export async function listReservations(
     query.where('r.checkin_at', '<=', filters.to)
   }
 
+  if (filters.status) {
+    query.where('r.status', filters.status)
+  }
+
   return query
     .orderBy('r.checkin_at', 'desc')
 }

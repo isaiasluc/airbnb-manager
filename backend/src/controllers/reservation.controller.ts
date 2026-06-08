@@ -1,8 +1,9 @@
 import type { Request, Response } from 'express'
 import * as ReservationService from '../services/reservation.service'
-import type { ReservationListFilters } from '../types'
+import type { Reservation, ReservationListFilters } from '../types'
 
 const DATE_PARAM_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+const RESERVATION_STATUSES: Reservation['status'][] = ['confirmed', 'cancelled', 'completed']
 
 function getDateParam(value: unknown): string | undefined {
   return typeof value === 'string' && DATE_PARAM_PATTERN.test(value)
@@ -10,14 +11,38 @@ function getDateParam(value: unknown): string | undefined {
     : undefined
 }
 
+function getStatusParam(value: unknown): Reservation['status'] | undefined {
+  return typeof value === 'string' && RESERVATION_STATUSES.includes(value as Reservation['status'])
+    ? value as Reservation['status']
+    : undefined
+}
+
+function getListFilters(query: Request['query']): ReservationListFilters {
+  return {
+    from: getDateParam(query.from),
+    to: getDateParam(query.to),
+    status: getStatusParam(query.status),
+  }
+}
+
 export async function list(req: Request, res: Response) {
   try {
-    const filters: ReservationListFilters = {
-      from: getDateParam(req.query.from),
-      to: getDateParam(req.query.to),
-    }
+    const filters = getListFilters(req.query)
     const reservations = await ReservationService.listReservations(filters)
     res.json(reservations)
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+}
+
+export async function exportCsv(req: Request, res: Response) {
+  try {
+    const filters = getListFilters(req.query)
+    const csv = await ReservationService.exportReservationsCsv(filters)
+    res
+      .setHeader('Content-Type', 'text/csv; charset=utf-8')
+      .setHeader('Content-Disposition', 'attachment; filename="reservations.csv"')
+      .send(csv)
   } catch (err) {
     res.status(500).json({ error: (err as Error).message })
   }
