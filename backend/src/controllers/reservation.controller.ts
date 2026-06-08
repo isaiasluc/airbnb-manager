@@ -25,6 +25,16 @@ function getListFilters(query: Request['query']): ReservationListFilters {
   }
 }
 
+function isEmailTimeoutError(error: Error): boolean {
+  const message = error.message.toLowerCase()
+  const code = (error as Error & { code?: string }).code
+
+  return code === 'ETIMEDOUT'
+    || code === 'ESOCKET'
+    || message.includes('timeout')
+    || message.includes('timed out')
+}
+
 export async function list(req: Request, res: Response) {
   try {
     const filters = getListFilters(req.query)
@@ -83,8 +93,13 @@ export async function sendEmail(req: Request, res: Response) {
     await ReservationService.sendReservationEmail(Number(req.params.id))
     res.status(204).send()
   } catch (err) {
-    const message = (err as Error).message
-    const status = message.includes('não encontrada') ? 404 : 500
+    const error = err as Error
+    const message = error.message
+    const status = message.includes('não encontrada')
+      ? 404
+      : isEmailTimeoutError(error)
+        ? 504
+        : 500
     res.status(status).json({ error: message })
   }
 }

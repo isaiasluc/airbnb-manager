@@ -2,6 +2,8 @@ import nodemailer from 'nodemailer'
 import type { ReservationWithGuest } from '../types'
 
 const DEFAULT_APARTMENT = '1203'
+const DEFAULT_SMTP_TIMEOUT_MS = 15000
+const RESEND_EMAILS_URL = 'https://api.resend.com/emails'
 
 function requireEnv(name: string): string {
   const value = process.env[name]
@@ -30,16 +32,51 @@ function getGuestName(reservation: ReservationWithGuest): string {
 function createTransporter() {
   const port = Number(process.env.SMTP_PORT ?? 587)
   const secure = process.env.SMTP_SECURE === 'true' || port === 465
+  const timeout = Number(process.env.SMTP_TIMEOUT_MS ?? DEFAULT_SMTP_TIMEOUT_MS)
 
   return nodemailer.createTransport({
     host: requireEnv('SMTP_HOST'),
     port,
     secure,
+    connectionTimeout: timeout,
+    greetingTimeout: timeout,
+    socketTimeout: timeout,
     auth: {
       user: requireEnv('SMTP_USER'),
       pass: requireEnv('SMTP_PASS'),
     },
   })
+}
+
+async function sendWithSmtp(input: {
+  from: string
+  to: string
+  subject: string
+  text: string
+}): Promise<void> {
+  const transporter = createTransporter()
+  await transporter.sendMail(input)
+}
+
+async function sendWithResend(input: {
+  from: string
+  to: string
+  subject: string
+  text: string
+}): Promise<void> {
+  const response = await fetch(RESEND_EMAILS_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${requireEnv('RESEND_API_KEY')}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  })
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null) as { message?: string } | null
+    throw new Error(data?.message ?? `Erro ao enviar email via Resend (${response.status})`)
+  }
 }
 
 export function buildCheckinEmailText(reservation: ReservationWithGuest): string {
@@ -63,13 +100,20 @@ export function buildCheckinEmailText(reservation: ReservationWithGuest): string
 
 export async function sendCheckinEmail(reservation: ReservationWithGuest): Promise<void> {
   const to = requireEnv('RESERVATION_EMAIL_TO')
-  const from = process.env.SMTP_FROM ?? requireEnv('SMTP_USER')
-  const transporter = createTransporter()
-
-  await transporter.sendMail({
+  const from = process.env.RESEND_API_KEY
+    ? requireEnv('RESEND_FROM')
+    : process.env.SMTP_FROM ?? requireEnv('SMTP_USER')
+  const email = {
     from,
     to,
     subject: `Nova hospedagem - ${getGuestName(reservation)}`,
     text: buildCheckinEmailText(reservation),
-  })
+  }
+
+  if (process.env.RESEND_API_KEY) {
+    await sendWithResend(email)
+    return
+  }
+
+  await sendWithSmtp(email)
 }

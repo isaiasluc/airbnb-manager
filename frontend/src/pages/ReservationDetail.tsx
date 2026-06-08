@@ -24,6 +24,7 @@ export default function ReservationDetail() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -47,10 +48,13 @@ export default function ReservationDetail() {
   async function handleSendEmail() {
     if (!reservation) return
     setSendingEmail(true)
+    setEmailError(null)
     try {
       await sendReservationEmail(reservation.id)
       const updated = await updateReservation(reservation.id, { email_sent: true })
       setReservation(updated)
+    } catch (error) {
+      setEmailError((error as Error).message)
     } finally {
       setSendingEmail(false)
     }
@@ -229,6 +233,11 @@ export default function ReservationDetail() {
           >
             {sendingEmail ? 'Enviando...' : reservation.email_sent ? 'E-mail enviado' : 'Enviar e-mail'}
           </button>
+          {emailError && (
+            <p className="text-sm text-red-500 dark:text-red-400">
+              {emailError}
+            </p>
+          )}
 
           {/* Email enviado */}
           <div className="flex items-center justify-between">
