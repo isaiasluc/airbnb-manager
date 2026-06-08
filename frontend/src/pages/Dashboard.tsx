@@ -45,6 +45,15 @@ function getInitialDate(value: string | null) {
   return value && DATE_PARAM_PATTERN.test(value) ? value : "";
 }
 
+function getGoogleAuthMessage(value: string | null) {
+  if (value === "success") return "Google autenticado. Sincronização liberada.";
+  if (value === "error") return "Erro ao autenticar Google. Tente novamente.";
+  if (value === "wrongEmail") {
+    return `Use o Google ${ALLOWED_SYNC_EMAIL} para liberar a sincronização.`;
+  }
+  return null;
+}
+
 function formatInputDate(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -251,15 +260,22 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const canSyncGmail =
+    user?.email?.toLowerCase() === ALLOWED_SYNC_EMAIL.toLowerCase();
+  const initialGoogleAuth = canSyncGmail ? searchParams.get("googleAuth") : null;
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const [syncMsg, setSyncMsg] = useState<string | null>(() =>
+    getGoogleAuthMessage(initialGoogleAuth),
+  );
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isSyncModalClosing, setIsSyncModalClosing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
-  const [googleAuthenticated, setGoogleAuthenticated] = useState(false);
+  const [googleAuthenticated, setGoogleAuthenticated] = useState(
+    initialGoogleAuth === "success",
+  );
   const [authenticatingGoogle, setAuthenticatingGoogle] = useState(false);
   const [filter, setFilter] = useState<ReservationFilter>(() =>
     getInitialFilter(searchParams.get("filter")),
@@ -273,8 +289,6 @@ export default function Dashboard() {
   const [dateTo, setDateTo] = useState(() =>
     getInitialDate(searchParams.get("to")),
   );
-  const canSyncGmail =
-    user?.email?.toLowerCase() === ALLOWED_SYNC_EMAIL.toLowerCase();
 
   useEffect(() => {
     let isMounted = true;
@@ -309,22 +323,6 @@ export default function Dashboard() {
       isMounted = false;
     };
   }, [canSyncGmail, dateFrom, dateTo]);
-
-  useEffect(() => {
-    if (!canSyncGmail) return;
-
-    const googleAuth = searchParams.get("googleAuth");
-    if (googleAuth === "success") {
-      setGoogleAuthenticated(true);
-      setSyncMsg("Google autenticado. Sincronização liberada.");
-    }
-    if (googleAuth === "error") {
-      setSyncMsg("Erro ao autenticar Google. Tente novamente.");
-    }
-    if (googleAuth === "wrongEmail") {
-      setSyncMsg(`Use o Google ${ALLOWED_SYNC_EMAIL} para liberar a sincronização.`);
-    }
-  }, [canSyncGmail, searchParams]);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -437,6 +435,7 @@ export default function Dashboard() {
     filter === "all"
       ? reservations
       : reservations.filter((r) => r.status === filter);
+  const billableFiltered = filtered.filter((r) => r.status !== "cancelled");
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pageStart = (currentPage - 1) * PAGE_SIZE;
@@ -582,22 +581,24 @@ export default function Dashboard() {
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Total", value: reservations.length },
+            { label: "Total", value: filtered.length },
             {
               label: "Confirmadas",
-              value: reservations.filter((r) => r.status === "confirmed")
-                .length,
+              value: filtered.filter((r) => r.status === "confirmed").length,
             },
             {
               label: "Receita total",
               value: formatCurrency(
-                reservations.reduce((s, r) => s + Number(r.host_payout), 0),
+                billableFiltered.reduce(
+                  (s, r) => s + Number(r.host_payout),
+                  0,
+                ),
               ),
             },
             {
               label: "Taxa host",
               value: formatCurrency(
-                reservations.reduce(
+                billableFiltered.reduce(
                   (s, r) => s + Number(r.host_service_fee),
                   0,
                 ),
