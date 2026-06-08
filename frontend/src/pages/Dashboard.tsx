@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import ThemeToggle from "../components/ThemeToggle";
 import type { Reservation, SyncResult, SyncStatus } from "../lib/types";
 import {
   fetchReservations,
@@ -94,7 +95,7 @@ function formatSyncSource(source: SyncStatus["lastSyncSource"]) {
 
 function EmptySyncList({ label }: { label: string }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-stone-200 py-8 text-stone-300 gap-2">
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-stone-200 py-8 text-stone-300 dark:border-stone-700 dark:text-stone-500">
       <svg
         className="h-9 w-9"
         fill="none"
@@ -130,17 +131,17 @@ function SyncResultModal({
       onClick={onClose}
     >
       <div
-        className={`sync-modal-panel max-h-[86vh] w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl ${
+        className={`sync-modal-panel max-h-[86vh] w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl dark:bg-stone-900 ${
           isClosing ? "sync-modal-panel-exit" : "sync-modal-panel-enter"
         }`}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4 dark:border-stone-800">
           <div>
-            <h2 className="text-base font-semibold text-stone-900">
+            <h2 className="text-base font-semibold text-stone-900 dark:text-stone-100">
               Detalhes da sincronização
             </h2>
-            <p className="text-xs text-stone-400 mt-0.5">
+            <p className="mt-0.5 text-xs text-stone-400 dark:text-stone-500">
               {result.imported} importada(s) · {result.skipped} ignorada(s) ·{" "}
               {result.errors.length} erro(s)
             </p>
@@ -148,7 +149,7 @@ function SyncResultModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"
+            className="rounded-full p-2 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-200"
             aria-label="Fechar modal"
           >
             <svg
@@ -169,19 +170,19 @@ function SyncResultModal({
 
         <div className="max-h-[calc(86vh-82px)] overflow-y-auto px-5 py-5 space-y-6">
           <section>
-            <h3 className="text-xs font-medium uppercase tracking-widest text-stone-400 mb-3">
+            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
               Importadas
             </h3>
             {result.importedItems.length === 0 ? (
               <EmptySyncList label="Nenhuma reserva importada" />
             ) : (
-              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100">
+              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100 dark:divide-stone-800 dark:border-stone-800">
                 {result.importedItems.map((item) => (
                   <div key={item.emailId} className="px-4 py-3">
-                    <p className="text-sm font-medium text-stone-800">
+                    <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
                       {item.guestName || item.subject || item.emailId}
                     </p>
-                    <p className="text-xs text-stone-400 mt-1">
+                    <p className="mt-1 text-xs text-stone-400 dark:text-stone-500">
                       {item.confirmationCode
                         ? `Código ${item.confirmationCode}`
                         : item.emailId}
@@ -193,19 +194,19 @@ function SyncResultModal({
           </section>
 
           <section>
-            <h3 className="text-xs font-medium uppercase tracking-widest text-stone-400 mb-3">
+            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
               Ignoradas
             </h3>
             {result.skippedItems.length === 0 ? (
               <EmptySyncList label="Nenhuma reserva ignorada" />
             ) : (
-              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100">
+              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100 dark:divide-stone-800 dark:border-stone-800">
                 {result.skippedItems.map((item) => (
                   <div key={item.emailId} className="px-4 py-3">
-                    <p className="text-sm font-medium text-stone-800">
+                    <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
                       {item.guestName || item.subject || item.emailId}
                     </p>
-                    <p className="text-xs text-stone-400 mt-1">
+                    <p className="mt-1 text-xs text-stone-400 dark:text-stone-500">
                       {item.reason || "Ignorada"} · {item.emailId}
                     </p>
                   </div>
@@ -215,16 +216,16 @@ function SyncResultModal({
           </section>
 
           <section>
-            <h3 className="text-xs font-medium uppercase tracking-widest text-stone-400 mb-3">
+            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
               Erros
             </h3>
             {result.errors.length === 0 ? (
               <EmptySyncList label="Nenhum erro encontrado" />
             ) : (
-              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100">
+              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100 dark:divide-stone-800 dark:border-stone-800">
                 {result.errors.map((error) => (
                   <div key={error.emailId} className="px-4 py-3">
-                    <p className="text-sm font-medium text-stone-800">
+                    <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
                       {error.emailId}
                     </p>
                     <p className="text-xs text-rose-500 mt-1">
@@ -401,25 +402,25 @@ export default function Dashboard() {
   const showingEnd = Math.min(pageStart + PAGE_SIZE, filtered.length);
 
   return (
-    <div className="min-h-screen bg-stone-50 font-sans">
+    <div className="min-h-screen bg-stone-50 font-sans transition-colors dark:bg-stone-950">
       {/* Header */}
-      <header className="bg-white border-b border-stone-200 sticky top-0 z-10">
+      <header className="sticky top-0 z-10 border-b border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-950">
         <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <button
             type="button"
             onClick={handleHomeClick}
             className="text-left group"
           >
-            <h1 className="text-xl font-semibold text-stone-900 tracking-tight group-hover:text-stone-600 transition-colors">
+            <h1 className="text-xl font-semibold text-stone-900 tracking-tight transition-colors group-hover:text-stone-600 dark:text-stone-100 dark:group-hover:text-stone-300">
               Hospedagens
             </h1>
-            <p className="text-sm text-stone-400 mt-0.5">
+            <p className="mt-0.5 text-sm text-stone-400 dark:text-stone-500">
               Apê dos sonhos em Ponta Negra
             </p>
           </button>
           <div className="flex flex-col gap-3 xl:flex-row xl:items-end">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-              <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400">
+              <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                 Início
                 <input
                   type="date"
@@ -428,10 +429,10 @@ export default function Dashboard() {
                     setDateFrom(event.target.value);
                     setPage(1);
                   }}
-                  className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-stone-700 outline-none transition-colors focus:border-stone-500"
+                  className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-stone-700 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:focus:border-stone-500"
                 />
               </label>
-              <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400">
+              <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                 Fim
                 <input
                   type="date"
@@ -440,36 +441,37 @@ export default function Dashboard() {
                     setDateTo(event.target.value);
                     setPage(1);
                   }}
-                  className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-stone-700 outline-none transition-colors focus:border-stone-500"
+                  className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-stone-700 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:focus:border-stone-500"
                 />
               </label>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <ThemeToggle />
               <button
                 type="button"
                 onClick={() => applyDateRange(getCurrentMonthRange())}
-                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400"
+                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
               >
                 Este mês
               </button>
               <button
                 type="button"
                 onClick={() => applyDateRange(getNext30DaysRange())}
-                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400"
+                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
               >
                 Próximos 30 dias
               </button>
               <button
                 type="button"
                 onClick={clearDateRange}
-                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400"
+                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
               >
                 Todos
               </button>
               <button
                 onClick={handleSync}
                 disabled={syncing}
-                className="flex h-9 items-center gap-2 rounded-lg bg-stone-900 px-4 text-sm font-medium text-white transition-colors hover:bg-stone-700 disabled:opacity-50"
+                className="flex h-9 items-center gap-2 rounded-lg bg-stone-900 px-4 text-sm font-medium text-white transition-colors hover:bg-stone-700 disabled:opacity-50 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-stone-300"
               >
                 <svg
                   className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
@@ -490,7 +492,7 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto px-6 pb-3">
-          <p className="text-xs text-stone-400">
+          <p className="text-xs text-stone-400 dark:text-stone-500">
             Último sync{syncStatus?.lastSyncSource ? ` ${formatSyncSource(syncStatus.lastSyncSource)}` : ""}:{" "}
             {formatLastSync(syncStatus?.lastSyncAt ?? null)}
           </p>
@@ -500,7 +502,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={openSyncModal}
-              className="text-xs text-stone-500 bg-stone-100 hover:bg-stone-200 rounded-md px-3 py-1.5 inline-block transition-colors"
+              className="inline-block rounded-md bg-stone-100 px-3 py-1.5 text-xs text-stone-500 transition-colors hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
             >
               {syncMsg}
             </button>
@@ -536,12 +538,12 @@ export default function Dashboard() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="bg-white rounded-xl border border-stone-200 px-5 py-4"
+              className="rounded-xl border border-stone-200 bg-white px-5 py-4 transition-colors dark:border-stone-800 dark:bg-stone-900"
             >
-              <p className="text-xs text-stone-400 uppercase tracking-widest mb-1">
+              <p className="mb-1 text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">
                 {stat.label}
               </p>
-              <p className="text-2xl font-semibold text-stone-900">
+              <p className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
                 {stat.value}
               </p>
             </div>
@@ -559,8 +561,8 @@ export default function Dashboard() {
                 }}
                 className={`text-sm px-3 py-1.5 rounded-lg transition-colors font-medium ${
                   filter === f
-                    ? "bg-stone-900 text-white"
-                    : "bg-white text-stone-500 border border-stone-200 hover:border-stone-400"
+                    ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950"
+                    : "bg-white text-stone-500 border border-stone-200 hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
                 }`}
               >
                 {f === "all" ? "Todas" : statusLabel[f]}
@@ -570,11 +572,11 @@ export default function Dashboard() {
 
         {/* Lista */}
         {loading ? (
-          <div className="flex items-center justify-center py-24 text-stone-300 text-sm">
+          <div className="flex items-center justify-center py-24 text-sm text-stone-300 dark:text-stone-600">
             Carregando...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-stone-300 gap-2">
+          <div className="flex flex-col items-center justify-center gap-2 py-24 text-stone-300 dark:text-stone-600">
             <svg
               className="w-10 h-10"
               fill="none"
@@ -591,68 +593,68 @@ export default function Dashboard() {
             <span className="text-sm">Nenhuma reserva encontrada</span>
           </div>
         ) : (
-          <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
+          <div className="overflow-hidden rounded-xl border border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-900">
             <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] text-sm">
               <thead>
-                <tr className="border-b border-stone-100">
-                  <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
+                <tr className="border-b border-stone-100 dark:border-stone-800">
+                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                     Hóspede
                   </th>
-                  <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
+                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                     Check-in
                   </th>
-                  <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
+                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                     Check-out
                   </th>
-                  <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
+                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                     Noites
                   </th>
-                  <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
+                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                     Payout
                   </th>
-                  <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
+                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                     Taxa host
                   </th>
-                  <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
+                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                     Serviço
                   </th>
-                  <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
+                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                     Status
                   </th>
-                  <th className="text-left text-xs text-stone-400 font-medium uppercase tracking-widest px-5 py-3">
+                  <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
                     Email
                   </th>
                 </tr>
               </thead>
               <tbody
                 key={`${filter}-${currentPage}`}
-                className="page-fade-in divide-y divide-stone-50"
+                className="page-fade-in divide-y divide-stone-50 dark:divide-stone-800"
               >
                 {paginated.map((r) => (
                   <tr
                     key={r.id}
                     onClick={() => navigate(buildReservationPath(r.id))}
-                    className="hover:bg-stone-50 cursor-pointer transition-colors group"
+                    className="group cursor-pointer transition-colors hover:bg-stone-50 dark:hover:bg-stone-800/70"
                   >
                     <td className="px-5 py-3.5">
-                      <span className="font-medium text-stone-800 group-hover:text-stone-900">
+                      <span className="font-medium text-stone-800 group-hover:text-stone-900 dark:text-stone-200 dark:group-hover:text-white">
                         {guestName(r.guest_first_name, r.guest_last_name)}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5 text-stone-500">
+                    <td className="px-5 py-3.5 text-stone-500 dark:text-stone-400">
                       {formatDate(r.checkin_at)}
                     </td>
-                    <td className="px-5 py-3.5 text-stone-500">
+                    <td className="px-5 py-3.5 text-stone-500 dark:text-stone-400">
                       {formatDate(r.checkout_at)}
                     </td>
-                    <td className="px-5 py-3.5 text-stone-500">
+                    <td className="px-5 py-3.5 text-stone-500 dark:text-stone-400">
                       {nightsCount(r.checkin_at, r.checkout_at)}n
                     </td>
-                    <td className="px-5 py-3.5 font-medium text-stone-700">
+                    <td className="px-5 py-3.5 font-medium text-stone-700 dark:text-stone-300">
                       {formatCurrency(Number(r.host_payout))}
                     </td>
-                    <td className="px-5 py-3.5 font-medium text-stone-700">
+                    <td className="px-5 py-3.5 font-medium text-stone-700 dark:text-stone-300">
                       {formatCurrency(Number(r.host_service_fee), r.currency)}
                     </td>
                     <td className="px-5 py-3.5">
@@ -673,7 +675,7 @@ export default function Dashboard() {
                       {r.email_sent ? (
                         <span className="text-emerald-500">✓</span>
                       ) : (
-                        <span className="text-stone-300">—</span>
+                        <span className="text-stone-300 dark:text-stone-600">—</span>
                       )}
                     </td>
                   </tr>
@@ -681,19 +683,19 @@ export default function Dashboard() {
               </tbody>
             </table>
             </div>
-            <div className="border-t border-stone-100 px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-xs text-stone-400">
+            <div className="flex flex-col gap-3 border-t border-stone-100 px-5 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-stone-800">
+              <p className="text-xs text-stone-400 dark:text-stone-500">
                 Mostrando {showingStart}-{showingEnd} de {filtered.length}
               </p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                   disabled={currentPage === 1}
-                  className="text-sm px-3 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-500 hover:border-stone-400 transition-colors disabled:opacity-40 disabled:hover:border-stone-200"
+                  className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-500 transition-colors hover:border-stone-400 disabled:opacity-40 disabled:hover:border-stone-200 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500 dark:disabled:hover:border-stone-700"
                 >
                   Anterior
                 </button>
-                <span className="text-xs text-stone-400 px-1">
+                <span className="px-1 text-xs text-stone-400 dark:text-stone-500">
                   Página {currentPage} de {totalPages}
                 </span>
                 <button
@@ -701,7 +703,7 @@ export default function Dashboard() {
                     setPage((current) => Math.min(totalPages, current + 1))
                   }
                   disabled={currentPage === totalPages}
-                  className="text-sm px-3 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-500 hover:border-stone-400 transition-colors disabled:opacity-40 disabled:hover:border-stone-200"
+                  className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm text-stone-500 transition-colors hover:border-stone-400 disabled:opacity-40 disabled:hover:border-stone-200 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500 dark:disabled:hover:border-stone-700"
                 >
                   Próxima
                 </button>

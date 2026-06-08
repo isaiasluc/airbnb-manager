@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import ThemeToggle from '../components/ThemeToggle'
 import type { Reservation } from '../lib/types'
 import { fetchReservation, updateReservation, deleteReservation } from '../lib/api'
 import {
@@ -77,7 +78,7 @@ export default function ReservationDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center text-stone-300 text-sm">
+      <div className="flex min-h-screen items-center justify-center bg-stone-50 text-sm text-stone-300 dark:bg-stone-950 dark:text-stone-600">
         Carregando...
       </div>
     )
@@ -85,7 +86,7 @@ export default function ReservationDetail() {
 
   if (!reservation) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center text-stone-400 text-sm">
+      <div className="flex min-h-screen items-center justify-center bg-stone-50 text-sm text-stone-400 dark:bg-stone-950 dark:text-stone-500">
         Reserva não encontrada.
       </div>
     )
@@ -108,25 +109,27 @@ export default function ReservationDetail() {
     : '/'
 
   return (
-    <div className="min-h-screen bg-stone-50 font-sans">
+    <div className="min-h-screen bg-stone-50 font-sans transition-colors dark:bg-stone-950">
       {/* Header */}
-      <header className="bg-white border-b border-stone-200 sticky top-0 z-10">
+      <header className="sticky top-0 z-10 border-b border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-950">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
           <button
             onClick={() => navigate(backToDashboardPath)}
-            className="text-stone-400 hover:text-stone-700 transition-colors"
+            className="text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-200"
+            aria-label="Voltar"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <div>
-            <h1 className="text-xl font-semibold text-stone-900 tracking-tight">
+            <h1 className="text-xl font-semibold text-stone-900 tracking-tight dark:text-stone-100">
               {guestName(reservation.guest_first_name, reservation.guest_last_name)}
             </h1>
-            <p className="text-sm text-stone-400 mt-0.5">{reservation.confirmation_code}</p>
+            <p className="mt-0.5 text-sm text-stone-400 dark:text-stone-500">{reservation.confirmation_code}</p>
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
             <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ring-1 ${statusColor[reservation.status]}`}>
               {statusLabel[reservation.status]}
             </span>
@@ -136,40 +139,40 @@ export default function ReservationDetail() {
 
       <main className="max-w-3xl mx-auto px-6 py-8 space-y-5">
         {/* Datas */}
-        <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
-          <div className="grid grid-cols-2 divide-x divide-stone-100">
+        <div className="overflow-hidden rounded-xl border border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-900">
+          <div className="grid grid-cols-2 divide-x divide-stone-100 dark:divide-stone-800">
             <div className="px-6 py-5">
-              <p className="text-xs text-stone-400 uppercase tracking-widest mb-1.5">Check-in</p>
-              <p className="text-xl font-semibold text-stone-900">{formatDate(reservation.checkin_at)}</p>
-              <p className="text-sm text-stone-400 mt-0.5">14:00</p>
+              <p className="mb-1.5 text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">Check-in</p>
+              <p className="text-xl font-semibold text-stone-900 dark:text-stone-100">{formatDate(reservation.checkin_at)}</p>
+              <p className="mt-0.5 text-sm text-stone-400 dark:text-stone-500">14:00</p>
             </div>
             <div className="px-6 py-5">
-              <p className="text-xs text-stone-400 uppercase tracking-widest mb-1.5">Check-out</p>
-              <p className="text-xl font-semibold text-stone-900">{formatDate(reservation.checkout_at)}</p>
-              <p className="text-sm text-stone-400 mt-0.5">12:00</p>
+              <p className="mb-1.5 text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">Check-out</p>
+              <p className="text-xl font-semibold text-stone-900 dark:text-stone-100">{formatDate(reservation.checkout_at)}</p>
+              <p className="mt-0.5 text-sm text-stone-400 dark:text-stone-500">12:00</p>
             </div>
           </div>
-          <div className="border-t border-stone-100 px-6 py-4 flex items-center gap-6 text-sm text-stone-500">
-            <span><strong className="text-stone-800">{nights}</strong> noite{nights !== 1 ? 's' : ''}</span>
-            <span><strong className="text-stone-800">{reservation.guests_count}</strong> hóspede{reservation.guests_count !== 1 ? 's' : ''}</span>
+          <div className="flex items-center gap-6 border-t border-stone-100 px-6 py-4 text-sm text-stone-500 dark:border-stone-800 dark:text-stone-400">
+            <span><strong className="text-stone-800 dark:text-stone-200">{nights}</strong> noite{nights !== 1 ? 's' : ''}</span>
+            <span><strong className="text-stone-800 dark:text-stone-200">{reservation.guests_count}</strong> hóspede{reservation.guests_count !== 1 ? 's' : ''}</span>
           </div>
         </div>
 
         {/* Financeiro */}
-        <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
-          <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-stone-100">
+        <div className="overflow-hidden rounded-xl border border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-900">
+          <div className="grid grid-cols-1 divide-y divide-stone-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0 dark:divide-stone-800">
             <div className="px-6 py-5">
-              <p className="text-xs text-stone-400 uppercase tracking-widest mb-3">Repasse do host</p>
-              <p className="text-3xl font-semibold text-stone-900">
+              <p className="mb-3 text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">Repasse do host</p>
+              <p className="text-3xl font-semibold text-stone-900 dark:text-stone-100">
                 {formatCurrency(Number(reservation.host_payout), reservation.currency)}
               </p>
-              <p className="text-sm text-stone-400 mt-1">
+              <p className="mt-1 text-sm text-stone-400 dark:text-stone-500">
                 {formatCurrency(Number(reservation.host_payout) / nights, reservation.currency)} por noite
               </p>
             </div>
             <div className="px-6 py-5">
-              <p className="text-xs text-stone-400 uppercase tracking-widest mb-3">Taxa de serviço</p>
-              <p className="text-3xl font-semibold text-stone-900">
+              <p className="mb-3 text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">Taxa de serviço</p>
+              <p className="text-3xl font-semibold text-stone-900 dark:text-stone-100">
                 {formatCurrency(Number(reservation.host_service_fee), reservation.currency)}
               </p>
               <div className="mt-3 flex gap-2">
@@ -181,7 +184,7 @@ export default function ReservationDetail() {
                     className={`text-xs px-3 py-1.5 rounded-full font-medium ring-1 transition-colors disabled:opacity-50 ${
                       reservation.host_service_status === status
                         ? hostServiceStatusColor[status]
-                        : 'bg-white text-stone-500 ring-stone-200 hover:bg-stone-50'
+                        : 'bg-white text-stone-500 ring-stone-200 hover:bg-stone-50 dark:bg-stone-900 dark:text-stone-300 dark:ring-stone-700 dark:hover:bg-stone-800'
                     }`}
                   >
                     {hostServiceStatusLabel[status]}
@@ -193,20 +196,20 @@ export default function ReservationDetail() {
         </div>
 
         {/* Ações */}
-        <div className="bg-white rounded-xl border border-stone-200 px-6 py-5 space-y-4">
-          <p className="text-xs text-stone-400 uppercase tracking-widest">Ações</p>
+        <div className="space-y-4 rounded-xl border border-stone-200 bg-white px-6 py-5 transition-colors dark:border-stone-800 dark:bg-stone-900">
+          <p className="text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">Ações</p>
 
           {/* Email enviado */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-stone-700">Email enviado</p>
-              <p className="text-xs text-stone-400">Marque após enviar as informações de check-in</p>
+              <p className="text-sm font-medium text-stone-700 dark:text-stone-200">Email enviado</p>
+              <p className="text-xs text-stone-400 dark:text-stone-500">Marque após enviar as informações de check-in</p>
             </div>
             <button
               onClick={toggleEmailSent}
               disabled={saving}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
-                reservation.email_sent ? 'bg-stone-900' : 'bg-stone-200'
+                reservation.email_sent ? 'bg-stone-900 dark:bg-stone-100' : 'bg-stone-200 dark:bg-stone-700'
               }`}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow ${
@@ -217,7 +220,7 @@ export default function ReservationDetail() {
 
           {/* Status */}
           <div>
-            <p className="text-sm font-medium text-stone-700 mb-2">Alterar status</p>
+              <p className="mb-2 text-sm font-medium text-stone-700 dark:text-stone-200">Alterar status</p>
             <div className="flex gap-2">
               {(['confirmed', 'completed', 'cancelled'] as const).map(s => (
                 <button
@@ -226,8 +229,8 @@ export default function ReservationDetail() {
                   disabled={saving || reservation.status === s}
                   className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-40 ${
                     reservation.status === s
-                      ? 'bg-stone-900 text-white'
-                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                      ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950'
+                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700'
                   }`}
                 >
                   {statusLabel[s]}
@@ -238,18 +241,18 @@ export default function ReservationDetail() {
         </div>
 
         {/* Danger zone */}
-        <div className="bg-white rounded-xl border border-red-100 px-6 py-5">
-          <p className="text-xs text-stone-400 uppercase tracking-widest mb-3">Zona de perigo</p>
+        <div className="rounded-xl border border-red-100 bg-white px-6 py-5 transition-colors dark:border-red-950 dark:bg-stone-900">
+          <p className="mb-3 text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">Zona de perigo</p>
           {!confirmDelete ? (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="text-sm text-red-500 hover:text-red-700 font-medium transition-colors"
+              className="text-sm font-medium text-red-500 transition-colors hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
             >
               Remover reserva
             </button>
           ) : (
             <div className="flex items-center gap-3">
-              <p className="text-sm text-stone-600">Tem certeza?</p>
+              <p className="text-sm text-stone-600 dark:text-stone-300">Tem certeza?</p>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
@@ -259,7 +262,7 @@ export default function ReservationDetail() {
               </button>
               <button
                 onClick={() => setConfirmDelete(false)}
-                className="text-sm text-stone-400 hover:text-stone-600 transition-colors"
+                className="text-sm text-stone-400 transition-colors hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300"
               >
                 Cancelar
               </button>

@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  background: #fafaf9;
+}
+
+html.dark {
+  background: #0c0a09;
+}
+
 button:not(:disabled),
 [role="button"]:not([aria-disabled="true"]) {
   cursor: pointer;
