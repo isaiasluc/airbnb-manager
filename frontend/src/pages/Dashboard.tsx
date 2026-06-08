@@ -254,7 +254,10 @@ export default function Dashboard() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-50">
+              <tbody
+                key={`${filter}-${currentPage}`}
+                className="page-fade-in divide-y divide-stone-50"
+              >
                 {paginated.map((r) => (
                   <tr
                     key={r.id}
