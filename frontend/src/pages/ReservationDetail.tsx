@@ -50,6 +50,19 @@ export default function ReservationDetail() {
     }
   }
 
+  async function changeHostServiceStatus(
+    host_service_status: Reservation['host_service_status'],
+  ) {
+    if (!reservation) return
+    setSaving(true)
+    try {
+      const updated = await updateReservation(reservation.id, { host_service_status })
+      setReservation(updated)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   async function handleDelete() {
     if (!reservation) return
     setDeleting(true)
@@ -144,9 +157,22 @@ export default function ReservationDetail() {
               <p className="text-3xl font-semibold text-stone-900">
                 {formatCurrency(Number(reservation.host_service_fee), reservation.currency)}
               </p>
-              <span className={`mt-2 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ring-1 ${hostServiceStatusColor[reservation.host_service_status]}`}>
-                {hostServiceStatusLabel[reservation.host_service_status]}
-              </span>
+              <div className="mt-3 flex gap-2">
+                {(['pending', 'paid'] as const).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => changeHostServiceStatus(status)}
+                    disabled={saving || reservation.host_service_status === status}
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium ring-1 transition-colors disabled:opacity-50 ${
+                      reservation.host_service_status === status
+                        ? hostServiceStatusColor[status]
+                        : 'bg-white text-stone-500 ring-stone-200 hover:bg-stone-50'
+                    }`}
+                  >
+                    {hostServiceStatusLabel[status]}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
