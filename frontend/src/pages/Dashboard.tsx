@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Reservation } from "../lib/types";
 import { fetchReservations, syncEmails } from "../lib/api";
@@ -21,19 +21,24 @@ export default function Dashboard() {
     "all" | "confirmed" | "completed" | "cancelled"
   >("all");
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await fetchReservations();
-      setReservations(data);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    load();
-  }, [load]);
+    let isMounted = true;
+
+    async function loadInitialReservations() {
+      try {
+        const data = await fetchReservations();
+        if (isMounted) setReservations(data);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadInitialReservations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function handleSync() {
     setSyncing(true);
@@ -43,7 +48,10 @@ export default function Dashboard() {
       setSyncMsg(
         `${result.imported} importada(s) · ${result.skipped} ignorada(s) · ${result.errors.length} erro(s)`,
       );
-      if (result.imported > 0) load();
+      if (result.imported > 0) {
+        const data = await fetchReservations();
+        setReservations(data);
+      }
     } catch {
       setSyncMsg("Erro ao sincronizar.");
     } finally {
