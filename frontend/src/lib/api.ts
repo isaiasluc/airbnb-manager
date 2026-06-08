@@ -1,4 +1,4 @@
-import type { Reservation, SyncResult } from './types';
+import type { Reservation, SyncResult, SyncStatus } from './types';
 
 const BASE = '/api'
 
@@ -35,5 +35,11 @@ export async function deleteReservation(id: number): Promise<void> {
 export async function syncEmails(): Promise<SyncResult> {
   const res = await fetch(`${BASE}/sync`, { method: 'POST' })
   if (!res.ok) throw new Error('Erro ao sincronizar emails')
+  return res.json()
+}
+
+export async function fetchSyncStatus(): Promise<SyncStatus> {
+  const res = await fetch(`${BASE}/sync`)
+  if (!res.ok) throw new Error('Erro ao buscar status da sincronização')
   return res.json()
 }

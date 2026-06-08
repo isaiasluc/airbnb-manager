@@ -28,4 +28,13 @@ export interface SyncResult {
   imported: number
   skipped: number
   errors: { emailId: string; reason: string }[]
+  syncStatus?: SyncStatus
+}
+
+export interface SyncStatus {
+  isRunning: boolean
+  lastSyncAt: string | null
+  lastSyncSource: 'manual' | 'cron' | null
+  lastSyncResult: Omit<SyncResult, 'syncStatus'> | null
+  lastSyncError: string | null
 }

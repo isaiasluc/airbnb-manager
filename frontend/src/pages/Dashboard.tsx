@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import type { Reservation } from "../lib/types";
-import { fetchReservations, syncEmails } from "../lib/api";
+import type { Reservation, SyncStatus } from "../lib/types";
+import { fetchReservations, fetchSyncStatus, syncEmails } from "../lib/api";
 import {
   formatDate,
   formatCurrency,
@@ -28,6 +28,32 @@ function getInitialFilter(value: string | null): ReservationFilter {
     : "all";
 }
 
+function formatLastSync(value: string | null) {
+  if (!value) return "Nunca sincronizado";
+
+  const date = new Date(value);
+  const formattedDate = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+  const formattedTime = new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .format(date)
+    .replace(":", "h");
+
+  return `${formattedDate}, ${formattedTime}`;
+}
+
+function formatSyncSource(source: SyncStatus["lastSyncSource"]) {
+  if (source === "cron") return "via cron";
+  if (source === "manual") return "manual";
+  return "";
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -35,6 +61,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
   const [filter, setFilter] = useState<ReservationFilter>(() =>
     getInitialFilter(searchParams.get("filter")),
   );
@@ -47,9 +74,13 @@ export default function Dashboard() {
 
     async function loadInitialReservations() {
       try {
-        const data = await fetchReservations();
+        const [data, status] = await Promise.all([
+          fetchReservations(),
+          fetchSyncStatus().catch(() => null),
+        ]);
         if (isMounted) {
           setReservations(data);
+          setSyncStatus(status);
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -68,6 +99,7 @@ export default function Dashboard() {
     setSyncMsg(null);
     try {
       const result = await syncEmails();
+      if (result.syncStatus) setSyncStatus(result.syncStatus);
       setSyncMsg(
         `${result.imported} importada(s) · ${result.skipped} ignorada(s) · ${result.errors.length} erro(s)`,
       );
@@ -146,6 +178,12 @@ export default function Dashboard() {
             </svg>
             {syncing ? "Sincronizando..." : "Sincronizar Gmail"}
           </button>
+        </div>
+        <div className="max-w-6xl mx-auto px-6 pb-3">
+          <p className="text-xs text-stone-400">
+            Último sync{syncStatus?.lastSyncSource ? ` ${formatSyncSource(syncStatus.lastSyncSource)}` : ""}:{" "}
+            {formatLastSync(syncStatus?.lastSyncAt ?? null)}
+          </p>
         </div>
         {syncMsg && (
           <div className="max-w-6xl mx-auto px-6 pb-3">
