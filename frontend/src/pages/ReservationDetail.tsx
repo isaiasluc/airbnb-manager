@@ -169,7 +169,7 @@ export default function ReservationDetail() {
                 {formatCurrency(Number(reservation.host_service_fee), reservation.currency)}
               </p>
               <div className="mt-3 flex gap-2">
-                {(['pending', 'paid'] as const).map((status) => (
+                {(['pending', 'paid', 'cancelled'] as const).map((status) => (
                   <button
                     key={status}
                     onClick={() => changeHostServiceStatus(status)}
