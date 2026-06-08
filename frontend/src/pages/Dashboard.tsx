@@ -83,6 +83,21 @@ export default function Dashboard() {
     }
   }
 
+  async function handleHomeClick() {
+    navigate("/", { replace: true });
+    setFilter("all");
+    setPage(1);
+    setLoading(true);
+    setSyncMsg(null);
+
+    try {
+      const data = await fetchReservations();
+      setReservations(data);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const filtered =
     filter === "all"
       ? reservations
@@ -99,14 +114,18 @@ export default function Dashboard() {
       {/* Header */}
       <header className="bg-white border-b border-stone-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-stone-900 tracking-tight">
+          <button
+            type="button"
+            onClick={handleHomeClick}
+            className="text-left group"
+          >
+            <h1 className="text-xl font-semibold text-stone-900 tracking-tight group-hover:text-stone-600 transition-colors">
               Hospedagens
             </h1>
             <p className="text-sm text-stone-400 mt-0.5">
               Apê dos sonhos em Ponta Negra
             </p>
-          </div>
+          </button>
           <button
             onClick={handleSync}
             disabled={syncing}
