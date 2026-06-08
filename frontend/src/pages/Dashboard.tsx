@@ -291,6 +291,7 @@ export default function Dashboard() {
   const [dateTo, setDateTo] = useState(() =>
     getInitialDate(searchParams.get("to")),
   );
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -471,6 +472,8 @@ export default function Dashboard() {
   const paginated = filtered.slice(pageStart, pageStart + PAGE_SIZE);
   const showingStart = filtered.length === 0 ? 0 : pageStart + 1;
   const showingEnd = Math.min(pageStart + PAGE_SIZE, filtered.length);
+  const activeFiltersCount =
+    (filter === "all" ? 0 : 1) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-stone-50 font-sans transition-colors dark:bg-stone-950">
@@ -490,6 +493,27 @@ export default function Dashboard() {
             </p>
           </button>
           <div className="flex flex-1 flex-col gap-3">
+            <div className="flex items-center justify-between gap-2 sm:hidden">
+              <button
+                type="button"
+                onClick={() => setFiltersOpen((current) => !current)}
+                aria-expanded={filtersOpen}
+                className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
+              >
+                Filtros{activeFiltersCount > 0 ? ` (${activeFiltersCount})` : ""}
+              </button>
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <button
+                  type="button"
+                  onClick={() => void signOut()}
+                  className="h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
+                >
+                  Sair
+                </button>
+              </div>
+            </div>
+            <div className={`${filtersOpen ? "flex" : "hidden"} flex-col gap-3 sm:flex`}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
                 <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
@@ -517,7 +541,7 @@ export default function Dashboard() {
                   />
                 </label>
               </div>
-              <div className="flex items-center gap-2 sm:justify-end">
+              <div className="hidden items-center gap-2 sm:flex sm:justify-end">
                 <ThemeToggle />
                 <button
                   type="button"
@@ -558,6 +582,7 @@ export default function Dashboard() {
               >
                 {exportingCsv ? "Exportando..." : "Exportar CSV"}
               </button>
+            </div>
             </div>
           </div>
         </div>
