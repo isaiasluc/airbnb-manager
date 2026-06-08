@@ -169,7 +169,26 @@ export function parseEmail(rawText: string, subject: string): Omit<CreateReserva
 export interface SyncResult {
   imported: number
   skipped:  number
+  importedItems: SyncItem[]
+  skippedItems:  SyncItem[]
   errors:   { emailId: string; reason: string }[]
+}
+
+export interface SyncItem {
+  emailId: string
+  subject: string
+  guestName?: string
+  confirmationCode?: string
+  reason?: string
+}
+
+function getGuestNameFromSubject(subject: string): string | undefined {
+  try {
+    const guest = parseGuestNameFromSubject(subject)
+    return [guest.first_name, guest.last_name].filter(Boolean).join(' ')
+  } catch {
+    return undefined
+  }
 }
 
 export async function syncGmailReservations(): Promise<SyncResult> {
@@ -177,7 +196,13 @@ export async function syncGmailReservations(): Promise<SyncResult> {
   loadToken(client)
 
   const gmail  = google.gmail({ version: 'v1', auth: client })
-  const result: SyncResult = { imported: 0, skipped: 0, errors: [] }
+  const result: SyncResult = {
+    imported: 0,
+    skipped: 0,
+    importedItems: [],
+    skippedItems: [],
+    errors: [],
+  }
 
   const listRes = await gmail.users.messages.list({
     userId: 'me',
@@ -190,11 +215,6 @@ export async function syncGmailReservations(): Promise<SyncResult> {
 
   for (const msg of messages) {
     const emailId = msg.id!
-
-    if (await reservationExistsByEmailId(emailId)) {
-      result.skipped++
-      continue
-    }
 
     try {
       const full = await gmail.users.messages.get({
@@ -210,6 +230,17 @@ export async function syncGmailReservations(): Promise<SyncResult> {
       const textPart = parts.find((p: any) => p.mimeType === 'text/plain')
       const bodyData = (htmlPart ?? textPart)?.body?.data
 
+      if (await reservationExistsByEmailId(emailId)) {
+        result.skipped++
+        result.skippedItems.push({
+          emailId,
+          subject,
+          guestName: getGuestNameFromSubject(subject),
+          reason: 'Já importada',
+        })
+        continue
+      }
+
       if (!bodyData) {
         result.errors.push({ emailId, reason: 'Corpo do email vazio' })
         continue
@@ -217,9 +248,15 @@ export async function syncGmailReservations(): Promise<SyncResult> {
 
       const decoded = Buffer.from(bodyData, 'base64url').toString('utf-8')
       const parsed  = parseEmail(decoded, subject)
+      const created = await createReservation({ ...parsed, source_email_id: emailId })
 
-      await createReservation({ ...parsed, source_email_id: emailId })
       result.imported++
+      result.importedItems.push({
+        emailId,
+        subject,
+        guestName: [parsed.guest.first_name, parsed.guest.last_name].filter(Boolean).join(' '),
+        confirmationCode: created.confirmation_code,
+      })
     } catch (err) {
       result.errors.push({ emailId, reason: (err as Error).message })
     }
