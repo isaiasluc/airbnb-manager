@@ -1,13 +1,14 @@
 import nodemailer from 'nodemailer'
+import { google } from 'googleapis'
 import type { ReservationWithGuest } from '../types'
+import { createGoogleOAuthClient, getAuthenticatedGmailAddress, loadGoogleToken } from './google-auth.service'
+import { getAllowedSyncEmail } from '../middlewares/require-sync-email'
 
 const DEFAULT_APARTMENT = '1203'
-const DEFAULT_SMTP_TIMEOUT_MS = 15000
-const RESEND_EMAILS_URL = 'https://api.resend.com/emails'
 
 function requireEnv(name: string): string {
   const value = process.env[name]
-  if (!value) throw new Error(`Variável de ambiente ${name} não configurada`)
+  if (!value) throw new Error(`Vari\u00e1vel de ambiente ${name} n\u00e3o configurada`)
   return value
 }
 
@@ -29,54 +30,54 @@ function getGuestName(reservation: ReservationWithGuest): string {
     .join(' ')
 }
 
-function createTransporter() {
-  const port = Number(process.env.SMTP_PORT ?? 587)
-  const secure = process.env.SMTP_SECURE === 'true' || port === 465
-  const timeout = Number(process.env.SMTP_TIMEOUT_MS ?? DEFAULT_SMTP_TIMEOUT_MS)
-
-  return nodemailer.createTransport({
-    host: requireEnv('SMTP_HOST'),
-    port,
-    secure,
-    connectionTimeout: timeout,
-    greetingTimeout: timeout,
-    socketTimeout: timeout,
-    auth: {
-      user: requireEnv('SMTP_USER'),
-      pass: requireEnv('SMTP_PASS'),
-    },
-  })
-}
-
-async function sendWithSmtp(input: {
+async function buildRawEmail(input: {
   from: string
   to: string
   subject: string
   text: string
-}): Promise<void> {
-  const transporter = createTransporter()
-  await transporter.sendMail(input)
-}
-
-async function sendWithResend(input: {
-  from: string
-  to: string
-  subject: string
-  text: string
-}): Promise<void> {
-  const response = await fetch(RESEND_EMAILS_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${requireEnv('RESEND_API_KEY')}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(input),
+}): Promise<string> {
+  const transporter = nodemailer.createTransport({
+    streamTransport: true,
+    buffer: true,
+    newline: 'unix',
   })
 
-  if (!response.ok) {
-    const data = await response.json().catch(() => null) as { message?: string } | null
-    throw new Error(data?.message ?? `Erro ao enviar email via Resend (${response.status})`)
+  const info = await transporter.sendMail(input)
+  const message = (info as { message?: Buffer | string }).message
+
+  if (!message) {
+    throw new Error('N\u00e3o foi poss\u00edvel gerar a mensagem de email')
   }
+
+  const raw = Buffer.isBuffer(message) ? message : Buffer.from(message)
+  return raw
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '')
+}
+
+async function sendWithGmailApi(input: {
+  from: string
+  to: string
+  subject: string
+  text: string
+}): Promise<void> {
+  const client = createGoogleOAuthClient()
+  loadGoogleToken(client)
+
+  const googleEmail = await getAuthenticatedGmailAddress(client)
+  if (googleEmail !== getAllowedSyncEmail()) {
+    throw new Error('Token Google autorizado para um email diferente do permitido')
+  }
+
+  const raw = await buildRawEmail(input)
+  const gmail = google.gmail({ version: 'v1', auth: client })
+
+  await gmail.users.messages.send({
+    userId: 'me',
+    requestBody: { raw },
+  })
 }
 
 export function buildCheckinEmailText(reservation: ReservationWithGuest): string {
@@ -100,9 +101,7 @@ export function buildCheckinEmailText(reservation: ReservationWithGuest): string
 
 export async function sendCheckinEmail(reservation: ReservationWithGuest): Promise<void> {
   const to = requireEnv('RESERVATION_EMAIL_TO')
-  const from = process.env.RESEND_API_KEY
-    ? requireEnv('RESEND_FROM')
-    : process.env.SMTP_FROM ?? requireEnv('SMTP_USER')
+  const from = process.env.RESERVATION_EMAIL_FROM ?? getAllowedSyncEmail()
   const email = {
     from,
     to,
@@ -110,10 +109,5 @@ export async function sendCheckinEmail(reservation: ReservationWithGuest): Promi
     text: buildCheckinEmailText(reservation),
   }
 
-  if (process.env.RESEND_API_KEY) {
-    await sendWithResend(email)
-    return
-  }
-
-  await sendWithSmtp(email)
+  await sendWithGmailApi(email)
 }

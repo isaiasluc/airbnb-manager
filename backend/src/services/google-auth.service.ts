@@ -11,6 +11,8 @@ const STATE_TTL_MS = 10 * 60 * 1000
 const states = new Map<string, number>()
 
 export const GMAIL_READONLY_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly'
+export const GMAIL_SEND_SCOPE = 'https://www.googleapis.com/auth/gmail.send'
+const GMAIL_SCOPES = [GMAIL_READONLY_SCOPE, GMAIL_SEND_SCOPE]
 
 function requireGoogleEnv(name: string): string {
   const value = process.env[name]
@@ -73,7 +75,7 @@ export function createGoogleAuthUrl(): string {
 
   return createGoogleOAuthClient().generateAuthUrl({
     access_type: 'offline',
-    scope: [GMAIL_READONLY_SCOPE],
+    scope: GMAIL_SCOPES,
     prompt: 'consent',
     state,
   })
