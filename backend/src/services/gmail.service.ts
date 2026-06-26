@@ -25,19 +25,35 @@ function extractText(body: string): string {
     .trim()
 }
 
-function parseDate(dateStr: string, timeStr: string): Date {
-  const currentYear = new Date().getFullYear()
-  const dateWithoutWeekday = dateStr.replace(/^[A-Za-z]+,\s*/, '')
-  const dateWithYear = /\d{4}/.test(dateWithoutWeekday)
-    ? dateWithoutWeekday
-    : `${dateWithoutWeekday}, ${currentYear}`
+function buildDate(dateWithYear: string, timeStr: string, original: string): Date {
   const parsed = new Date(`${dateWithYear} ${timeStr} GMT-0300`)
 
   if (Number.isNaN(parsed.getTime())) {
-    throw new Error(`Data inválida: ${dateStr} ${timeStr}`)
+    throw new Error(`Data inválida: ${original} ${timeStr}`)
   }
 
   return parsed
+}
+
+function parseDate(dateStr: string, timeStr: string, referenceDate: Date): Date {
+  const dateWithoutWeekday = dateStr.replace(/^[A-Za-z]+,\s*/, '')
+
+  // Quando o e-mail já traz o ano, usa direto.
+  if (/\d{4}/.test(dateWithoutWeekday)) {
+    return buildDate(dateWithoutWeekday, timeStr, dateStr)
+  }
+
+  // Sem ano: a reserva é sempre na data de recebimento ou depois, então pega o
+  // menor ano (a partir do ano do e-mail) em que a data fica >= ao recebimento.
+  // Isso resolve tanto o ano correto quanto a virada de ano (ex.: Dez → Jan).
+  const baseYear = referenceDate.getFullYear()
+  for (let year = baseYear; year <= baseYear + 1; year++) {
+    const candidate = buildDate(`${dateWithoutWeekday}, ${year}`, timeStr, dateStr)
+    if (candidate.getTime() >= referenceDate.getTime()) return candidate
+  }
+
+  // Fallback (data no passado relativo ao e-mail): mantém o ano do e-mail.
+  return buildDate(`${dateWithoutWeekday}, ${baseYear}`, timeStr, dateStr)
 }
 
 function parseHostPayout(text: string): number {
@@ -82,14 +98,14 @@ function parseGuestNameFromSubject(subject: string): { first_name: string; last_
 const airbnbDatePattern = String.raw`(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s+[A-Za-z]+\s+\d{1,2}(?:,\s+\d{4})?`
 const airbnbTimePattern = String.raw`\d{1,2}(?::\d{2})?\s+[AP]M`
 
-function parseReservationDates(text: string): { checkin_at: Date; checkout_at: Date } {
+function parseReservationDates(text: string, referenceDate: Date): { checkin_at: Date; checkout_at: Date } {
   const inlineCheckinMatch = text.match(new RegExp(`Check-in\\s+(${airbnbDatePattern})\\s+(${airbnbTimePattern})`, 'i'))
   const inlineCheckoutMatch = text.match(new RegExp(`Checkout\\s+(${airbnbDatePattern})\\s+(${airbnbTimePattern})`, 'i'))
 
   if (inlineCheckinMatch && inlineCheckoutMatch) {
     return {
-      checkin_at: parseDate(inlineCheckinMatch[1], inlineCheckinMatch[2]),
-      checkout_at: parseDate(inlineCheckoutMatch[1], inlineCheckoutMatch[2]),
+      checkin_at: parseDate(inlineCheckinMatch[1], inlineCheckinMatch[2], referenceDate),
+      checkout_at: parseDate(inlineCheckoutMatch[1], inlineCheckoutMatch[2], referenceDate),
     }
   }
 
@@ -102,15 +118,19 @@ function parseReservationDates(text: string): { checkin_at: Date; checkout_at: D
 
   if (tableMatch) {
     return {
-      checkin_at: parseDate(tableMatch[1], tableMatch[3]),
-      checkout_at: parseDate(tableMatch[2], tableMatch[4]),
+      checkin_at: parseDate(tableMatch[1], tableMatch[3], referenceDate),
+      checkout_at: parseDate(tableMatch[2], tableMatch[4], referenceDate),
     }
   }
 
   throw new Error('Datas de check-in/checkout não encontradas')
 }
 
-export function parseEmail(rawText: string, subject: string): Omit<CreateReservationInput, 'source_email_id'> {
+export function parseEmail(
+  rawText: string,
+  subject: string,
+  referenceDate: Date = new Date(),
+): Omit<CreateReservationInput, 'source_email_id'> {
   const text = extractText(rawText)
 
   const { first_name, last_name } = parseGuestNameFromSubject(subject)
@@ -119,7 +139,7 @@ export function parseEmail(rawText: string, subject: string): Omit<CreateReserva
   if (!codeMatch) throw new Error('Código de confirmação não encontrado')
   const confirmation_code = codeMatch[1]
 
-  const { checkin_at, checkout_at } = parseReservationDates(text)
+  const { checkin_at, checkout_at } = parseReservationDates(text, referenceDate)
 
   const guests_count = parseGuestCount(text)
 
@@ -181,13 +201,21 @@ export async function syncGmailReservations(): Promise<SyncResult> {
     errors: [],
   }
 
-  const listRes = await gmail.users.messages.list({
-    userId: 'me',
-    q: 'from:automated@airbnb.com subject:"Reservation confirmed"',
-    maxResults: 50,
-  })
+  // Pagina por todos os e-mails que casam, sem o limite de uma única página.
+  const messages: { id?: string | null }[] = []
+  let pageToken: string | undefined
 
-  const messages = listRes.data.messages ?? []
+  do {
+    const listRes = await gmail.users.messages.list({
+      userId: 'me',
+      q: 'from:automated@airbnb.com subject:"Reservation confirmed"',
+      maxResults: 100,
+      pageToken,
+    })
+    messages.push(...(listRes.data.messages ?? []))
+    pageToken = listRes.data.nextPageToken ?? undefined
+  } while (pageToken)
+
   if (messages.length === 0) return result
 
   for (const msg of messages) {
@@ -224,7 +252,10 @@ export async function syncGmailReservations(): Promise<SyncResult> {
       }
 
       const decoded = Buffer.from(bodyData, 'base64url').toString('utf-8')
-      const parsed  = parseEmail(decoded, subject)
+      const receivedAt = full.data.internalDate
+        ? new Date(Number(full.data.internalDate))
+        : new Date()
+      const parsed  = parseEmail(decoded, subject, receivedAt)
       const created = await createReservation({ ...parsed, source_email_id: emailId })
 
       result.imported++
