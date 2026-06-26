@@ -134,7 +134,8 @@ export default function Dashboard() {
           occupancy={occupancy}
         />
 
-        {isCalendar ? (
+        <div key={filters.view} className="page-fade-in">
+          {isCalendar ? (
           <>
             <CalendarToolbar
               year={calendar.year}
@@ -203,7 +204,8 @@ export default function Dashboard() {
               </div>
             )}
           </>
-        )}
+          )}
+        </div>
       </main>
 
       {sync.isSyncModalOpen && sync.syncResult && (
