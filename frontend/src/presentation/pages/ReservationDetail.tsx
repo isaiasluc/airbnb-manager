@@ -10,6 +10,15 @@ import DangerZone from '@/presentation/components/detail/DangerZone'
 
 function buildBackToDashboardPath(searchParams: URLSearchParams) {
   const dashboardParams = new URLSearchParams()
+  const view = searchParams.get('dashboardView')
+  const month = searchParams.get('dashboardMonth')
+
+  if (view === 'calendar' && month) {
+    dashboardParams.set('view', 'calendar')
+    dashboardParams.set('month', month)
+    return `/?${dashboardParams.toString()}`
+  }
+
   const page = searchParams.get('dashboardPage')
   const filter = searchParams.get('dashboardFilter')
   const from = searchParams.get('dashboardFrom')

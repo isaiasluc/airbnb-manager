@@ -75,6 +75,16 @@ export async function occupancy(req: Request, res: Response) {
   }
 }
 
+export async function calendar(req: Request, res: Response) {
+  try {
+    const period = getOccupancyPeriod(req.query)
+    const reservations = await ReservationService.getCalendarReservations(period)
+    res.json(reservations)
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+}
+
 export async function getOne(req: Request, res: Response) {
   try {
     const reservation = await ReservationService.getReservation(Number(req.params.id))

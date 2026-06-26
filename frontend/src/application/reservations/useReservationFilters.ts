@@ -4,7 +4,14 @@ import {
   RESERVATION_FILTERS,
   type ReservationFilter,
 } from '@/domain/services/reservationStats'
+import {
+  addMonths,
+  currentMonthKey,
+  isValidMonthKey,
+} from '@/domain/services/calendar'
 import type { ReservationDateFilters } from '@/infrastructure/reservations/reservationApi'
+
+export type DashboardView = 'list' | 'calendar'
 
 const DATE_PARAM_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
@@ -23,6 +30,14 @@ function getInitialDate(value: string | null) {
   return value && DATE_PARAM_PATTERN.test(value) ? value : ''
 }
 
+function getInitialView(value: string | null): DashboardView {
+  return value === 'calendar' ? 'calendar' : 'list'
+}
+
+function getInitialMonth(value: string | null): string {
+  return value && isValidMonthKey(value) ? value : currentMonthKey()
+}
+
 export function useReservationFilters() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [filter, setFilterState] = useState<ReservationFilter>(() =>
@@ -37,15 +52,26 @@ export function useReservationFilters() {
   const [dateTo, setDateTo] = useState(() =>
     getInitialDate(searchParams.get('to')),
   )
+  const [view, setView] = useState<DashboardView>(() =>
+    getInitialView(searchParams.get('view')),
+  )
+  const [month, setMonth] = useState(() =>
+    getInitialMonth(searchParams.get('month')),
+  )
 
   useEffect(() => {
     const params = new URLSearchParams()
-    if (page > 1) params.set('page', String(page))
-    if (filter !== 'all') params.set('filter', filter)
-    if (dateFrom) params.set('from', dateFrom)
-    if (dateTo) params.set('to', dateTo)
+    if (view === 'calendar') {
+      params.set('view', 'calendar')
+      params.set('month', month)
+    } else {
+      if (page > 1) params.set('page', String(page))
+      if (filter !== 'all') params.set('filter', filter)
+      if (dateFrom) params.set('from', dateFrom)
+      if (dateTo) params.set('to', dateTo)
+    }
     setSearchParams(params, { replace: true })
-  }, [dateFrom, dateTo, filter, page, setSearchParams])
+  }, [dateFrom, dateTo, filter, page, view, month, setSearchParams])
 
   const dateFilters: ReservationDateFilters = {
     from: dateFrom || undefined,
@@ -86,12 +112,30 @@ export function useReservationFilters() {
     setPage(1)
   }
 
+  function changeView(next: DashboardView) {
+    setView(next)
+  }
+
+  function goToMonth(next: string) {
+    setMonth(next)
+  }
+
+  function stepMonth(delta: number) {
+    setMonth((current) => addMonths(current, delta))
+  }
+
+  function goToCurrentMonth() {
+    setMonth(currentMonthKey())
+  }
+
   return {
     filter,
     page,
     dateFrom,
     dateTo,
     dateFilters,
+    view,
+    month,
     setPage,
     changeFilter,
     changeDateFrom,
@@ -99,5 +143,9 @@ export function useReservationFilters() {
     applyDateRange,
     clearDateRange,
     reset,
+    changeView,
+    goToMonth,
+    stepMonth,
+    goToCurrentMonth,
   }
 }

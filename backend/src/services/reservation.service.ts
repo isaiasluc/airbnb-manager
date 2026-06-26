@@ -149,6 +149,13 @@ export async function listReservations(
   return ReservationRepo.listReservations(filters)
 }
 
+export async function getCalendarReservations(
+  period: OccupancyPeriod
+): Promise<ReservationWithGuest[]> {
+  const { from, to } = resolveOccupancyPeriod(period)
+  return ReservationRepo.listReservationsOverlapping(from, to)
+}
+
 function formatCsvDate(value: Date | string): string {
   return new Date(value).toISOString().slice(0, 10)
 }

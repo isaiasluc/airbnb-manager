@@ -29,6 +29,16 @@ export async function fetchOccupancy(
   return res.json()
 }
 
+export async function fetchCalendarReservations(
+  from: string,
+  to: string,
+): Promise<Reservation[]> {
+  const query = buildQuery({ from, to })
+  const res = await authFetch(`${BASE}/reservations/calendar${query}`)
+  if (!res.ok) throw new Error('Erro ao buscar reservas do calendário')
+  return res.json()
+}
+
 export async function exportReservationsCsv(
   filters: ReservationExportFilters = {},
 ): Promise<Blob> {

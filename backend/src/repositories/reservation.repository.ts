@@ -30,6 +30,22 @@ export async function listReservations(
     .orderBy('r.checkin_at', 'desc')
 }
 
+export async function listReservationsOverlapping(
+  from: string,
+  to: string
+): Promise<ReservationWithGuest[]> {
+  return db('reservations as r')
+    .join('guests as g', 'g.id', 'r.guest_id')
+    .select(
+      'r.*',
+      'g.first_name as guest_first_name',
+      'g.last_name  as guest_last_name'
+    )
+    .where('r.checkout_at', '>', from)
+    .where('r.checkin_at', '<=', to)
+    .orderBy('r.checkin_at', 'asc')
+}
+
 export async function listReservationsForOccupancy(
   from: string,
   to: string

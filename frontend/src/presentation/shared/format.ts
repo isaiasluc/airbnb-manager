@@ -24,6 +24,15 @@ export function formatInputDate(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+export function formatMonthLabel(year: number, month: number): string {
+  const label = new Intl.DateTimeFormat('pt-BR', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, month - 1, 1)))
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
 export function formatOccupancyRate(value: number): string {
   return `${new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: value % 1 === 0 ? 0 : 1,
