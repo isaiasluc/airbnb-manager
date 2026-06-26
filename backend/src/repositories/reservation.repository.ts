@@ -42,6 +42,25 @@ export async function listReservationsForOccupancy(
     .orderBy('checkin_at', 'asc')
 }
 
+export async function getOccupancyDateBounds(): Promise<{
+  minCheckin: Date | string | null
+  maxCheckout: Date | string | null
+}> {
+  const row = await db('reservations')
+    .whereIn('status', ['confirmed', 'completed'])
+    .first<
+      { minCheckin: Date | string | null; maxCheckout: Date | string | null } | undefined
+    >(
+      db.raw('min(checkin_at) as "minCheckin"'),
+      db.raw('max(checkout_at) as "maxCheckout"')
+    )
+
+  return {
+    minCheckin: row?.minCheckin ?? null,
+    maxCheckout: row?.maxCheckout ?? null,
+  }
+}
+
 export async function findReservationById(
   id: number
 ): Promise<ReservationWithGuest | undefined> {

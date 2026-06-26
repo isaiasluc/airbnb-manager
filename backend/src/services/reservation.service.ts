@@ -73,6 +73,17 @@ export function resolveOccupancyPeriod(period: OccupancyPeriod = {}): DateRange 
   return getCurrentMonthPeriod()
 }
 
+async function getAllReservationsPeriod(): Promise<DateRange> {
+  const { minCheckin, maxCheckout } = await ReservationRepo.getOccupancyDateBounds()
+  if (!minCheckin || !maxCheckout) return getCurrentMonthPeriod()
+
+  const from = formatDateOnly(new Date(minCheckin))
+  // checkout_at is exclusive (the guest leaves that day), so the last
+  // occupied night is the day before the latest checkout.
+  const to = addDays(formatDateOnly(new Date(maxCheckout)), -1)
+  return { from, to: to < from ? from : to }
+}
+
 function countDays(from: string, exclusiveTo: string): number {
   return Math.max(0, Math.round((parseDateOnly(exclusiveTo).getTime() - parseDateOnly(from).getTime()) / DAY_MS))
 }
@@ -191,7 +202,10 @@ export async function exportReservationsCsv(
 export async function getOccupancyStats(
   periodFilters: OccupancyPeriod = {}
 ): Promise<OccupancyStats> {
-  const period = resolveOccupancyPeriod(periodFilters)
+  const period =
+    periodFilters.from || periodFilters.to
+      ? resolveOccupancyPeriod(periodFilters)
+      : await getAllReservationsPeriod()
   const reservations = await ReservationRepo.listReservationsForOccupancy(period.from, period.to)
   return calculateOccupancyStats(reservations, period)
 }
