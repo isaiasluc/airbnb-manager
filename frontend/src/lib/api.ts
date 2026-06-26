@@ -1,4 +1,4 @@
-import type { Reservation, SyncResult, SyncStatus } from './types';
+import type { OccupancyStats, Reservation, SyncResult, SyncStatus } from './types';
 import { auth } from './firebase';
 
 const BASE = import.meta.env.VITE_API_URL ?? '/api'
@@ -38,6 +38,19 @@ export async function fetchReservations(
   const query = params.size ? `?${params.toString()}` : ''
   const res = await authFetch(`${BASE}/reservations${query}`)
   if (!res.ok) throw new Error('Erro ao buscar reservas')
+  return res.json()
+}
+
+export async function fetchOccupancy(
+  filters: ReservationDateFilters = {},
+): Promise<OccupancyStats> {
+  const params = new URLSearchParams()
+  if (filters.from) params.set('from', filters.from)
+  if (filters.to) params.set('to', filters.to)
+
+  const query = params.size ? `?${params.toString()}` : ''
+  const res = await authFetch(`${BASE}/reservations/occupancy${query}`)
+  if (!res.ok) throw new Error('Erro ao buscar ocupação')
   return res.json()
 }
 

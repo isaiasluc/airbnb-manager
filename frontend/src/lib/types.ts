@@ -24,6 +24,14 @@ export interface Reservation {
   updated_at: string
 }
 
+export interface OccupancyStats {
+  from: string
+  to: string
+  occupiedNights: number
+  totalNights: number
+  occupancyRate: number
+}
+
 export interface SyncResult {
   imported: number
   skipped: number

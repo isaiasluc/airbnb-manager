@@ -49,3 +49,16 @@ export interface ReservationListFilters {
   to?: string
   status?: Reservation['status']
 }
+
+export interface OccupancyPeriod {
+  from?: string
+  to?: string
+}
+
+export interface OccupancyStats {
+  from: string
+  to: string
+  occupiedNights: number
+  totalNights: number
+  occupancyRate: number
+}

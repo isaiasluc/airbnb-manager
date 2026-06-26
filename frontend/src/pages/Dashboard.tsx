@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ThemeToggle from "../components/ThemeToggle";
 import { useAuth } from "../contexts/useAuth";
-import type { Reservation, SyncResult, SyncStatus } from "../lib/types";
+import type { OccupancyStats, Reservation, SyncResult, SyncStatus } from "../lib/types";
 import {
   exportReservationsCsv,
+  fetchOccupancy,
   fetchReservations,
   fetchGoogleAuthStatus,
   fetchSyncStatus,
@@ -106,6 +107,13 @@ function formatSyncSource(source: SyncStatus["lastSyncSource"]) {
   if (source === "cron") return "via cron";
   if (source === "manual") return "manual";
   return "";
+}
+
+function formatOccupancyRate(value: number) {
+  return `${new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: value % 1 === 0 ? 0 : 1,
+    maximumFractionDigits: 1,
+  }).format(value)}%`;
 }
 
 function EmptySyncList({ label }: { label: string }) {
@@ -278,6 +286,7 @@ export default function Dashboard() {
   const [googleAuthenticated, setGoogleAuthenticated] = useState(
     initialGoogleAuth === "success",
   );
+  const [occupancy, setOccupancy] = useState<OccupancyStats | null>(null);
   const [authenticatingGoogle, setAuthenticatingGoogle] = useState(false);
   const [filter, setFilter] = useState<ReservationFilter>(() =>
     getInitialFilter(searchParams.get("filter")),
@@ -303,8 +312,9 @@ export default function Dashboard() {
     async function loadInitialReservations() {
       setLoading(true);
       try {
-        const [data, status, googleAuth] = await Promise.all([
+        const [data, occupancyStats, status, googleAuth] = await Promise.all([
           fetchReservations(dateFilters),
+          fetchOccupancy(dateFilters),
           canSyncGmail ? fetchSyncStatus().catch(() => null) : Promise.resolve(null),
           canSyncGmail
             ? fetchGoogleAuthStatus().catch(() => ({ authenticated: false }))
@@ -312,6 +322,7 @@ export default function Dashboard() {
         ]);
         if (isMounted) {
           setReservations(data);
+          setOccupancy(occupancyStats);
           setSyncStatus(status);
           setGoogleAuthenticated(googleAuth.authenticated);
         }
@@ -379,8 +390,12 @@ export default function Dashboard() {
         `${result.imported} importada(s) · ${result.skipped} ignorada(s) · ${result.errors.length} erro(s)`,
       );
       if (result.imported > 0) {
-        const data = await fetchReservations(getDateFilters());
+        const [data, occupancyStats] = await Promise.all([
+          fetchReservations(getDateFilters()),
+          fetchOccupancy(getDateFilters()),
+        ]);
         setReservations(data);
+        setOccupancy(occupancyStats);
         setPage(1);
       }
     } catch {
@@ -413,8 +428,12 @@ export default function Dashboard() {
     setSyncMsg(null);
 
     try {
-      const data = await fetchReservations();
+      const [data, occupancyStats] = await Promise.all([
+        fetchReservations(),
+        fetchOccupancy(),
+      ]);
       setReservations(data);
+      setOccupancy(occupancyStats);
     } finally {
       setLoading(false);
     }
@@ -645,7 +664,7 @@ export default function Dashboard() {
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           {[
             { label: "Total", value: filtered.length },
             {
@@ -670,6 +689,15 @@ export default function Dashboard() {
                 ),
               ),
             },
+            {
+              label: "Ocupação",
+              value: occupancy
+                ? formatOccupancyRate(occupancy.occupancyRate)
+                : "0%",
+              hint: occupancy
+                ? `${occupancy.occupiedNights}/${occupancy.totalNights} noites`
+                : "0/0 noites",
+            },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -681,6 +709,11 @@ export default function Dashboard() {
               <p className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
                 {stat.value}
               </p>
+              {"hint" in stat && (
+                <p className="mt-1 text-xs text-stone-400 dark:text-stone-500">
+                  {stat.hint}
+                </p>
+              )}
             </div>
           ))}
         </div>

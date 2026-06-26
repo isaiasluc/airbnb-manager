@@ -5,6 +5,7 @@ const router = Router()
 
 router.get('/',        ReservationController.list)
 router.get('/export',  ReservationController.exportCsv)
+router.get('/occupancy', ReservationController.occupancy)
 router.get('/:id',     ReservationController.getOne)
 router.post('/',       ReservationController.create)
 router.post('/:id/send-email', ReservationController.sendEmail)

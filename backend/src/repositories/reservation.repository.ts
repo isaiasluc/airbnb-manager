@@ -1,6 +1,8 @@
 import db from '../db'
 import type { Reservation, ReservationListFilters, ReservationWithGuest } from '../types'
 
+type OccupancyReservation = Pick<Reservation, 'checkin_at' | 'checkout_at' | 'status'>
+
 export async function listReservations(
   filters: ReservationListFilters = {}
 ): Promise<ReservationWithGuest[]> {
@@ -26,6 +28,18 @@ export async function listReservations(
 
   return query
     .orderBy('r.checkin_at', 'desc')
+}
+
+export async function listReservationsForOccupancy(
+  from: string,
+  to: string
+): Promise<OccupancyReservation[]> {
+  return db<Reservation>('reservations')
+    .select('checkin_at', 'checkout_at', 'status')
+    .whereIn('status', ['confirmed', 'completed'])
+    .where('checkout_at', '>', from)
+    .where('checkin_at', '<=', to)
+    .orderBy('checkin_at', 'asc')
 }
 
 export async function findReservationById(

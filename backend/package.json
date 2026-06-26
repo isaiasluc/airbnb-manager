@@ -4,6 +4,7 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
+    "test": "tsx --test tests/**/*.test.ts",
     "build": "tsc",
     "migrate:latest": "knex --knexfile knexfile.ts --env development migrate:latest",
     "migrate:rollback": "knex --knexfile knexfile.ts migrate:rollback"

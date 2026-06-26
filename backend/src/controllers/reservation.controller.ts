@@ -25,6 +25,13 @@ function getListFilters(query: Request['query']): ReservationListFilters {
   }
 }
 
+function getOccupancyPeriod(query: Request['query']) {
+  return {
+    from: getDateParam(query.from),
+    to: getDateParam(query.to),
+  }
+}
+
 function isEmailTimeoutError(error: Error): boolean {
   const message = error.message.toLowerCase()
   const code = (error as Error & { code?: string }).code
@@ -53,6 +60,16 @@ export async function exportCsv(req: Request, res: Response) {
       .setHeader('Content-Type', 'text/csv; charset=utf-8')
       .setHeader('Content-Disposition', 'attachment; filename="reservations.csv"')
       .send(csv)
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+}
+
+export async function occupancy(req: Request, res: Response) {
+  try {
+    const period = getOccupancyPeriod(req.query)
+    const stats = await ReservationService.getOccupancyStats(period)
+    res.json(stats)
   } catch (err) {
     res.status(500).json({ error: (err as Error).message })
   }

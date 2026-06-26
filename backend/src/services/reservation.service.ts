@@ -1,9 +1,29 @@
 import * as GuestRepo from '../repositories/guest.repository'
 import * as ReservationRepo from '../repositories/reservation.repository'
 import { sendCheckinEmail } from './reservation-email.service'
-import type { CreateReservationInput, ReservationListFilters, ReservationWithGuest, Reservation } from '../types'
+import type {
+  CreateReservationInput,
+  OccupancyPeriod,
+  OccupancyStats,
+  ReservationListFilters,
+  ReservationWithGuest,
+  Reservation,
+} from '../types'
 
 const HOST_SERVICE_RATE_CHANGE_DATE = '2026-02-08'
+const DAY_MS = 24 * 60 * 60 * 1000
+
+type DateRange = {
+  from: string
+  to: string
+}
+
+type OccupancyInterval = {
+  start: number
+  end: number
+}
+
+type OccupancyInputReservation = Pick<Reservation, 'checkin_at' | 'checkout_at' | 'status'>
 
 function getHostServiceRate(checkin_at: Date | string): number {
   const checkinDate = new Date(checkin_at).toISOString().slice(0, 10)
@@ -13,6 +33,103 @@ function getHostServiceRate(checkin_at: Date | string): number {
 function calculateHostServiceFee(host_payout: number, checkin_at: Date | string): number {
   const rate = getHostServiceRate(checkin_at)
   return Math.round(host_payout * rate * 100) / 100
+}
+
+function formatDateOnly(date: Date): string {
+  return date.toISOString().slice(0, 10)
+}
+
+function parseDateOnly(value: string): Date {
+  return new Date(`${value}T00:00:00.000Z`)
+}
+
+function addDays(value: string, days: number): string {
+  const date = parseDateOnly(value)
+  date.setUTCDate(date.getUTCDate() + days)
+  return formatDateOnly(date)
+}
+
+function getMonthStart(value: string): string {
+  const date = parseDateOnly(value)
+  return formatDateOnly(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1)))
+}
+
+function getMonthEnd(value: string): string {
+  const date = parseDateOnly(value)
+  return formatDateOnly(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)))
+}
+
+function getCurrentMonthPeriod(): DateRange {
+  const now = new Date()
+  const from = formatDateOnly(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)))
+  const to = formatDateOnly(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)))
+  return { from, to }
+}
+
+export function resolveOccupancyPeriod(period: OccupancyPeriod = {}): DateRange {
+  if (period.from && period.to) return { from: period.from, to: period.to }
+  if (period.from) return { from: period.from, to: getMonthEnd(period.from) }
+  if (period.to) return { from: getMonthStart(period.to), to: period.to }
+  return getCurrentMonthPeriod()
+}
+
+function countDays(from: string, exclusiveTo: string): number {
+  return Math.max(0, Math.round((parseDateOnly(exclusiveTo).getTime() - parseDateOnly(from).getTime()) / DAY_MS))
+}
+
+function dateToTime(value: Date | string): number {
+  return parseDateOnly(formatDateOnly(new Date(value))).getTime()
+}
+
+export function countOccupiedNights(
+  reservations: Pick<Reservation, 'checkin_at' | 'checkout_at'>[],
+  period: DateRange
+): number {
+  const periodStart = parseDateOnly(period.from).getTime()
+  const periodEnd = parseDateOnly(addDays(period.to, 1)).getTime()
+  const intervals = reservations
+    .map((reservation): OccupancyInterval => ({
+      start: Math.max(dateToTime(reservation.checkin_at), periodStart),
+      end: Math.min(dateToTime(reservation.checkout_at), periodEnd),
+    }))
+    .filter((interval) => interval.end > interval.start)
+    .sort((a, b) => a.start - b.start)
+
+  const merged = intervals.reduce<OccupancyInterval[]>((acc, interval) => {
+    const previous = acc.at(-1)
+    if (!previous || interval.start > previous.end) {
+      acc.push({ ...interval })
+      return acc
+    }
+
+    previous.end = Math.max(previous.end, interval.end)
+    return acc
+  }, [])
+
+  return merged.reduce((total, interval) => total + Math.round((interval.end - interval.start) / DAY_MS), 0)
+}
+
+export function calculateOccupancyStats(
+  reservations: OccupancyInputReservation[],
+  period: DateRange
+): OccupancyStats {
+  const exclusiveTo = addDays(period.to, 1)
+  const totalNights = countDays(period.from, exclusiveTo)
+  const occupiableReservations = reservations.filter((reservation) =>
+    reservation.status === 'confirmed' || reservation.status === 'completed'
+  )
+  const occupiedNights = totalNights === 0
+    ? 0
+    : Math.min(countOccupiedNights(occupiableReservations, period), totalNights)
+
+  return {
+    ...period,
+    occupiedNights,
+    totalNights,
+    occupancyRate: totalNights === 0
+      ? 0
+      : Math.round((occupiedNights / totalNights) * 10000) / 100,
+  }
 }
 
 export async function listReservations(
@@ -69,6 +186,14 @@ export async function exportReservationsCsv(
   return [headers, ...rows]
     .map((row) => row.map(escapeCsvValue).join(','))
     .join('\n')
+}
+
+export async function getOccupancyStats(
+  periodFilters: OccupancyPeriod = {}
+): Promise<OccupancyStats> {
+  const period = resolveOccupancyPeriod(periodFilters)
+  const reservations = await ReservationRepo.listReservationsForOccupancy(period.from, period.to)
+  return calculateOccupancyStats(reservations, period)
 }
 
 export async function getReservation(id: number): Promise<ReservationWithGuest> {
