@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import PrivateRoute from "./components/PrivateRoute";
-import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
-import ReservationDetail from "./pages/ReservationDetail";
+import PrivateRoute from "@/presentation/shared/PrivateRoute";
+import Dashboard from "@/presentation/pages/Dashboard";
+import Login from "@/presentation/pages/Login";
+import ReservationDetail from "@/presentation/pages/ReservationDetail";
 
 export default function App() {
   return (

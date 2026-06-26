@@ -5,7 +5,7 @@ import {
   signOut as firebaseSignOut,
   type User,
 } from "firebase/auth";
-import { auth } from "../lib/firebase";
+import { auth } from "./firebase";
 import { AuthContext } from "./auth-context";
 
 const AUTH_SESSION_STARTED_AT_KEY = "airbnb-manager.auth.sessionStartedAt";

@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import type { FirebaseError } from "firebase/app";
-import ThemeToggle from "../components/ThemeToggle";
-import { useAuth } from "../contexts/useAuth";
+import ThemeToggle from "@/presentation/shared/ThemeToggle";
+import { useAuth } from "@/application/auth/useAuth";
 
 type LoginLocationState = {
   from?: {
