@@ -8,7 +8,7 @@ export default function ViewToggle({
   onChange: (view: DashboardView) => void
 }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 mb-5">
       {(['list', 'calendar'] as const).map((option) => (
         <button
           key={option}

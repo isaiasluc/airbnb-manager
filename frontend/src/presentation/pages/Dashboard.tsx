@@ -129,29 +129,28 @@ export default function Dashboard() {
       )}
 
       <main className="max-w-6xl mx-auto px-6 py-8">
-        {isCalendar ? (
-          <CalendarToolbar
-            year={calendar.year}
-            month={calendar.month}
-            view={filters.view}
-            onPrevMonth={() => filters.stepMonth(-1)}
-            onNextMonth={() => filters.stepMonth(1)}
-            onToday={filters.goToCurrentMonth}
-            onChangeView={filters.changeView}
-          />
-        ) : null}
-
         <StatsCards
           reservations={isCalendar ? reservations : filtered}
           occupancy={occupancy}
         />
 
         {isCalendar ? (
-          <OccupancyCalendar
-            weeks={calendar.weeks}
-            loading={calendar.loading}
-            onSelectReservation={(id) => navigate(buildReservationPath(id))}
-          />
+          <>
+            <CalendarToolbar
+              year={calendar.year}
+              month={calendar.month}
+              view={filters.view}
+              onPrevMonth={() => filters.stepMonth(-1)}
+              onNextMonth={() => filters.stepMonth(1)}
+              onToday={filters.goToCurrentMonth}
+              onChangeView={filters.changeView}
+            />
+            <OccupancyCalendar
+              weeks={calendar.weeks}
+              loading={calendar.loading}
+              onSelectReservation={(id) => navigate(buildReservationPath(id))}
+            />
+          </>
         ) : (
           <>
             <div className="flex items-center justify-between gap-3">

@@ -20,8 +20,8 @@ export default function CalendarToolbar({
   onChangeView: (view: DashboardView) => void
 }) {
   return (
-    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-5 flex items-center gap-2">
         <button
           type="button"
           onClick={onPrevMonth}
