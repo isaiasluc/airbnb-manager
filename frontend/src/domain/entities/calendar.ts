@@ -4,6 +4,8 @@ export interface StaySegment {
   reservation: Reservation
   /** True when this day is the reservation's check-in date. */
   isCheckIn: boolean
+  /** True when the reservation is in progress today (check-in ≤ today < check-out). */
+  isActive: boolean
 }
 
 export interface CalendarDay {

@@ -100,6 +100,7 @@ export function buildMonthGrid(
         .map((b) => ({
           reservation: b.reservation,
           isCheckIn: b.checkin === date,
+          isActive: b.checkin <= todayStr && todayStr < b.checkout,
         }))
 
       days.push({

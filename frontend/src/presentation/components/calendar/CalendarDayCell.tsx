@@ -8,13 +8,19 @@ export default function CalendarDayCell({
   day: CalendarDay
   onSelect: (reservationId: number) => void
 }) {
+  const hasActiveStay = day.stays.some(
+    (stay) => stay.isActive && stay.reservation.status !== 'cancelled',
+  )
+
   return (
     <div
       className={`flex min-h-[5.5rem] flex-col gap-1 border-b border-r border-stone-200 p-1.5 dark:border-stone-800 ${
         day.isCurrentMonth
-          ? day.isOccupied
-            ? 'bg-emerald-50/60 dark:bg-emerald-950/20'
-            : 'bg-white dark:bg-stone-900'
+          ? hasActiveStay
+            ? 'bg-red-50/70 dark:bg-red-950/20'
+            : day.isOccupied
+              ? 'bg-emerald-50/60 dark:bg-emerald-950/20'
+              : 'bg-white dark:bg-stone-900'
           : 'bg-stone-50 dark:bg-stone-950/40'
       }`}
     >
@@ -37,6 +43,7 @@ export default function CalendarDayCell({
             stay.reservation.guest_last_name,
           )
           const cancelled = stay.reservation.status === 'cancelled'
+          const active = stay.isActive && !cancelled
 
           return (
             <button
@@ -47,10 +54,12 @@ export default function CalendarDayCell({
               className={`truncate rounded px-1.5 py-0.5 text-left text-[11px] font-medium transition-colors ${
                 cancelled
                   ? 'bg-stone-100 text-stone-400 line-through hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-500'
-                  : 'bg-emerald-500/90 text-white hover:bg-emerald-600'
+                  : active
+                    ? 'bg-red-500/90 text-white hover:bg-red-600'
+                    : 'bg-emerald-500/90 text-white hover:bg-emerald-600'
               }`}
             >
-              {stay.isCheckIn || !day.isOccupied ? name : ' '}
+              {name}
             </button>
           )
         })}
