@@ -22,7 +22,7 @@ app.use('/sync',         verifyFirebaseToken, requireSyncEmail, syncRoutes)
 
 const PORT = process.env.PORT ?? 3000
 app.listen(Number(PORT), '0.0.0.0', () =>
-  console.log(`Backend rodando em http://localhost:${PORT}`)
+  console.log(`Backend rodando em ====> http://localhost:${PORT}`)
 )
 
 startGmailSyncCron()
