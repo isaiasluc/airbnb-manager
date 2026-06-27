@@ -56,15 +56,26 @@ function parseDate(dateStr: string, timeStr: string, referenceDate: Date): Date 
   return buildDate(`${dateWithoutWeekday}, ${baseYear}`, timeStr, dateStr)
 }
 
-function parseHostPayout(text: string): number {
-  const match = text.match(/You earn\s+R\$\s*([\d.,]+)/)
-  if (!match) throw new Error('Não foi possível extrair o host payout')
-  const raw = match[1]
+function parseAmount(raw: string): number {
   // Normaliza BR (1.193,08) e US (1,193.08)
   const normalized = raw.includes(',') && raw.indexOf(',') > raw.indexOf('.')
     ? raw.replace(/\./g, '').replace(',', '.')
     : raw.replace(/,/g, '')
   return parseFloat(normalized)
+}
+
+function parseHostPayout(text: string): number {
+  // Formato novo: "You earn R$ 1.234,56"
+  const newFormat = text.match(/You(?:'ll)?\s+earn\s+(?:R\$|USD|\$)?\s*([\d.,]+)/i)
+  if (newFormat) return parseAmount(newFormat[1])
+
+  // Formato antigo: "R$1.234,56 The money you earn hosting"
+  const oldFormat = text.match(/R\$\s*([\d.,]+)\s+The money you earn hosting/i)
+  if (oldFormat) return parseAmount(oldFormat[1])
+
+  const snippet = text.slice(Math.max(0, text.search(/earn/i) - 30), text.search(/earn/i) + 80)
+  const hint = snippet.length > 0 ? ` | trecho: "${snippet}"` : ' | padrão "earn" não encontrado'
+  throw new Error(`Não foi possível extrair o host payout${hint}`)
 }
 
 function parseGuestCount(text: string): number {
@@ -266,7 +277,10 @@ export async function syncGmailReservations(): Promise<SyncResult> {
         confirmationCode: created.confirmation_code,
       })
     } catch (err) {
-      result.errors.push({ emailId, reason: (err as Error).message })
+      const msg = err instanceof Error
+        ? (err.message || err.constructor.name)
+        : String(err)
+      result.errors.push({ emailId, reason: msg })
     }
   }
 
