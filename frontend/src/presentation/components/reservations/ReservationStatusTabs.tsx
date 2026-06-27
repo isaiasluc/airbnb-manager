@@ -26,17 +26,27 @@ export default function ReservationStatusTabs({
   return (
     <>
       {/* Mobile: dropdown */}
-      <select
-        value={filter}
-        onChange={(e) => onChange(e.target.value as ReservationFilter)}
-        className="sm:hidden mb-5 h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-700 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:focus:border-stone-500"
-      >
-        {RESERVATION_FILTERS.map((f) => (
-          <option key={f} value={f}>
-            {LABEL[f]}
-          </option>
-        ))}
-      </select>
+      <div className="relative sm:hidden mb-5">
+        <select
+          value={filter}
+          onChange={(e) => onChange(e.target.value as ReservationFilter)}
+          className="appearance-none h-9 rounded-lg border border-stone-200 bg-white pl-3 pr-8 text-sm font-medium text-stone-700 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:focus:border-stone-500"
+        >
+          {RESERVATION_FILTERS.map((f) => (
+            <option key={f} value={f}>
+              {LABEL[f]}
+            </option>
+          ))}
+        </select>
+        <svg
+          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 dark:text-stone-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
 
       {/* Desktop: botões */}
       <div className="hidden sm:flex gap-2 mb-5">
