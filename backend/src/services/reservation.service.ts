@@ -12,6 +12,7 @@ import type {
 
 const HOST_SERVICE_RATE_CHANGE_DATE = '2026-02-08'
 const DAY_MS = 24 * 60 * 60 * 1000
+const CHECKIN_EMAIL_WINDOW_DAYS = 7
 
 type DateRange = {
   from: string
@@ -272,6 +273,48 @@ export async function updateReservation(
 export async function sendReservationEmail(id: number): Promise<void> {
   const reservation = await getReservation(id)
   await sendCheckinEmail(reservation)
+  await ReservationRepo.updateReservation(id, { email_sent: true })
+}
+
+export interface DueCheckinEmailsResult {
+  sent: number
+  failed: number
+  errors: { reservationId: number; message: string }[]
+}
+
+/**
+ * Envia o email de check-in para as reservas confirmadas cujo check-in
+ * está dentro da janela de antecedência (7 dias) e que ainda não tiveram
+ * o email enviado. Reservas com check-in para amanhã (antecedência menor
+ * que 7 dias) também entram na janela e são enviadas imediatamente.
+ */
+export async function sendDueCheckinEmails(
+  now: Date = new Date()
+): Promise<DueCheckinEmailsResult> {
+  const today = formatDateOnly(now)
+  const windowEnd = addDays(today, CHECKIN_EMAIL_WINDOW_DAYS)
+  const dueReservations = await ReservationRepo.listReservationsDueForCheckinEmail(
+    today,
+    addDays(windowEnd, 1)
+  )
+
+  const result: DueCheckinEmailsResult = { sent: 0, failed: 0, errors: [] }
+
+  for (const reservation of dueReservations) {
+    try {
+      await sendCheckinEmail(reservation)
+      await ReservationRepo.updateReservation(reservation.id, { email_sent: true })
+      result.sent += 1
+    } catch (err) {
+      result.failed += 1
+      result.errors.push({
+        reservationId: reservation.id,
+        message: (err as Error).message,
+      })
+    }
+  }
+
+  return result
 }
 
 export async function deleteReservation(id: number): Promise<void> {

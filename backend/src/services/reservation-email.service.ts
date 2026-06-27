@@ -5,6 +5,7 @@ import { createGoogleOAuthClient, getAuthenticatedGmailAddress, loadGoogleToken 
 import { getAllowedSyncEmail } from '../middlewares/require-sync-email'
 
 const DEFAULT_APARTMENT = '1203'
+const SENDER_NAME = 'Isaias Lucena'
 
 function requireEnv(name: string): string {
   const value = process.env[name]
@@ -101,7 +102,8 @@ export function buildCheckinEmailText(reservation: ReservationWithGuest): string
 
 export async function sendCheckinEmail(reservation: ReservationWithGuest): Promise<void> {
   const to = requireEnv('RESERVATION_EMAIL_TO')
-  const from = process.env.RESERVATION_EMAIL_FROM ?? getAllowedSyncEmail()
+  const fromAddress = process.env.RESERVATION_EMAIL_FROM ?? getAllowedSyncEmail()
+  const from = `${SENDER_NAME} <${fromAddress}>`
   const email = {
     from,
     to,

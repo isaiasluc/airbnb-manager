@@ -9,6 +9,7 @@ import googleAuthRoutes  from './routes/google-auth.routes'
 import { verifyFirebaseToken } from './middlewares/verify-firebase-token'
 import { requireSyncEmail } from './middlewares/require-sync-email'
 import { startGmailSyncCron } from './services/sync-cron.service'
+import { startCheckinEmailCron } from './services/checkin-email-cron.service'
 
 const app = express()
 app.use(cors())
@@ -25,3 +26,4 @@ app.listen(Number(PORT), '0.0.0.0', () =>
 )
 
 startGmailSyncCron()
+startCheckinEmailCron()
