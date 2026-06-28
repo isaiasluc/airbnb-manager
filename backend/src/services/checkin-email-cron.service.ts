@@ -18,7 +18,7 @@ export function startCheckinEmailCron(): void {
     } catch (err) {
       console.error('[checkin-email-cron] Falha na execução:', (err as Error).message)
     }
-  })
+  }, { timezone: 'America/Sao_Paulo' })
 
-  console.log('[checkin-email-cron] Agendado para executar diariamente às 08:00')
+  console.log('[checkin-email-cron] Agendado para executar diariamente às 08:00 (America/Sao_Paulo)')
 }
