@@ -1,7 +1,7 @@
 import type { Reservation } from '@/domain/entities/reservation'
 import { statusLabel } from '@/presentation/components/reservations/statusPresentation'
 
-const STATUSES = ['confirmed', 'completed', 'cancelled'] as const
+const STATUSES = ['confirmed', 'in_progress', 'completed', 'cancelled'] as const
 
 export default function ReservationActions({
   reservation,

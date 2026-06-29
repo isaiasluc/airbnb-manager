@@ -3,6 +3,7 @@ import type { Reservation, ReservationStatus } from '../entities/reservation'
 export const RESERVATION_FILTERS = [
   'all',
   'confirmed',
+  'in_progress',
   'completed',
   'cancelled',
 ] as const

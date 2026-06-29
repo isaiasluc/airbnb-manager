@@ -70,7 +70,7 @@ export async function listReservationsForOccupancy(
 ): Promise<OccupancyReservation[]> {
   return db<Reservation>('reservations')
     .select('checkin_at', 'checkout_at', 'status')
-    .whereIn('status', ['confirmed', 'completed'])
+    .whereIn('status', ['confirmed', 'in_progress', 'completed'])
     .where('checkout_at', '>', from)
     .where('checkin_at', '<=', to)
     .orderBy('checkin_at', 'asc')
@@ -81,7 +81,7 @@ export async function getOccupancyDateBounds(): Promise<{
   maxCheckout: Date | string | null
 }> {
   const row = await db('reservations')
-    .whereIn('status', ['confirmed', 'completed'])
+    .whereIn('status', ['confirmed', 'in_progress', 'completed'])
     .first<
       { minCheckin: Date | string | null; maxCheckout: Date | string | null } | undefined
     >(

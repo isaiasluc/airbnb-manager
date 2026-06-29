@@ -7,6 +7,7 @@ import { statusLabel } from './statusPresentation'
 const LABEL: Record<ReservationFilter, string> = {
   all: 'Todas',
   confirmed: statusLabel.confirmed,
+  in_progress: statusLabel.in_progress,
   completed: statusLabel.completed,
   cancelled: statusLabel.cancelled,
 }

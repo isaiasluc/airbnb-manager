@@ -19,7 +19,7 @@ export interface Reservation {
   currency: string
   source_email_id: string
   email_sent: boolean
-  status: 'confirmed' | 'cancelled' | 'completed'
+  status: 'confirmed' | 'in_progress' | 'cancelled' | 'completed'
   created_at: Date
   updated_at: Date
 }
