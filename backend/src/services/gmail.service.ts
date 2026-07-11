@@ -196,7 +196,7 @@ function getGuestNameFromSubject(subject: string): string | undefined {
 
 export async function syncGmailReservations(): Promise<SyncResult> {
   const client = createGoogleOAuthClient()
-  loadGoogleToken(client)
+  await loadGoogleToken(client)
 
   const googleEmail = await getAuthenticatedGmailAddress(client)
   if (googleEmail !== getAllowedSyncEmail()) {

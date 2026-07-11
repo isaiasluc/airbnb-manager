@@ -28,8 +28,8 @@ rl.question('Cole o código de autorização aqui: ', async (code) => {
   rl.close()
   try {
     const { tokens } = await client.getToken(code.trim())
-    saveGoogleToken(tokens)
-    console.log('\n✅ Token salvo')
+    await saveGoogleToken(tokens)
+    console.log('\n✅ Token salvo no Secret Manager')
     console.log('Agora pode rodar: curl -X POST http://127.0.0.1:3000/sync\n')
   } catch (err) {
     console.error('❌ Erro ao trocar o código pelo token:', err)

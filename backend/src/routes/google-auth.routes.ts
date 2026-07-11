@@ -17,8 +17,8 @@ function getFrontendUrl(path = '/') {
   return new URL(path, base).toString()
 }
 
-router.get('/status', verifyFirebaseToken, requireSyncEmail, (_req, res) => {
-  res.json({ authenticated: hasGoogleToken() })
+router.get('/status', verifyFirebaseToken, requireSyncEmail, async (_req, res) => {
+  res.json({ authenticated: await hasGoogleToken() })
 })
 
 router.post('/start', verifyFirebaseToken, requireSyncEmail, (_req, res) => {
@@ -49,7 +49,7 @@ router.get('/callback', async (req, res) => {
       return
     }
 
-    saveGoogleToken(tokens)
+    await saveGoogleToken(tokens)
     res.redirect(getFrontendUrl('/?googleAuth=success'))
   } catch {
     res.redirect(getFrontendUrl('/?googleAuth=error'))
