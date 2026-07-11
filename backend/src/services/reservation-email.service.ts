@@ -67,7 +67,7 @@ async function sendWithGmailApi(input: {
   html: string
 }): Promise<void> {
   const client = createGoogleOAuthClient()
-  loadGoogleToken(client)
+  await loadGoogleToken(client)
 
   const googleEmail = await getAuthenticatedGmailAddress(client)
   if (googleEmail !== getAllowedSyncEmail()) {
