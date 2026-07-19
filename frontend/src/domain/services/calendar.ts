@@ -101,6 +101,7 @@ export function buildMonthGrid(
           reservation: b.reservation,
           isCheckIn: b.checkin === date,
           isActive: b.checkin <= todayStr && todayStr < b.checkout,
+          isPast: b.checkout <= todayStr,
         }))
 
       days.push({

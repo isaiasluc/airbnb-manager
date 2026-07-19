@@ -8,9 +8,14 @@ export default function CalendarDayCell({
   day: CalendarDay
   onSelect: (reservationId: number) => void
 }) {
-  const hasActiveStay = day.stays.some(
-    (stay) => stay.isActive && stay.reservation.status !== 'cancelled',
+  const occupyingStays = day.stays.filter(
+    (stay) => stay.reservation.status !== 'cancelled',
   )
+  const hasActiveStay = occupyingStays.some((stay) => stay.isActive)
+  const hasFutureStay = occupyingStays.some(
+    (stay) => !stay.isActive && !stay.isPast,
+  )
+  const hasPastStay = occupyingStays.some((stay) => stay.isPast)
 
   return (
     <div
@@ -18,9 +23,11 @@ export default function CalendarDayCell({
         day.isCurrentMonth
           ? hasActiveStay
             ? 'bg-red-50/70 dark:bg-red-950/20'
-            : day.isOccupied
+            : hasFutureStay
               ? 'bg-emerald-50/60 dark:bg-emerald-950/20'
-              : 'bg-white dark:bg-stone-900'
+              : hasPastStay
+                ? 'bg-stone-100/70 dark:bg-stone-800/30'
+                : 'bg-white dark:bg-stone-900'
           : 'bg-stone-50 dark:bg-stone-950/40'
       }`}
     >
@@ -56,7 +63,9 @@ export default function CalendarDayCell({
                   ? 'bg-stone-100 text-stone-400 line-through hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-500'
                   : active
                     ? 'bg-red-500/90 text-white hover:bg-red-600'
-                    : 'bg-emerald-500/90 text-white hover:bg-emerald-600'
+                    : stay.isPast
+                      ? 'bg-stone-400 text-white hover:bg-stone-500 dark:bg-stone-600 dark:text-stone-100 dark:hover:bg-stone-500'
+                      : 'bg-emerald-500/90 text-white hover:bg-emerald-600'
               }`}
             >
               {name}

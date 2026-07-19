@@ -6,6 +6,8 @@ export interface StaySegment {
   isCheckIn: boolean
   /** True when the reservation is in progress today (check-in ≤ today < check-out). */
   isActive: boolean
+  /** True when the reservation has already ended (check-out ≤ today). */
+  isPast: boolean
 }
 
 export interface CalendarDay {
