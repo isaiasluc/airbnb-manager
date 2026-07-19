@@ -25,8 +25,9 @@ Construído como um monorepo com backend em **Node.js + Express + PostgreSQL** e
 - 🔄 **Sincronização com o Gmail** — lê os e-mails de confirmação do Airbnb via Gmail API e cria as reservas automaticamente (com deduplicação por ID de e-mail).
 - 📊 **Dashboard com estatísticas** — total de reservas, confirmadas, receita total, taxa de host e taxa de ocupação.
 - 📅 **Calendário de ocupação** — visualização mensal das reservas, com navegação entre meses.
-- 📋 **Tabela de reservas** — com filtros por status (confirmada / concluída / cancelada), intervalo de datas e paginação.
+- 📋 **Tabela de reservas** — com filtros por status (confirmada / em andamento / concluída / cancelada), intervalo de datas e paginação.
 - 🧾 **Detalhe da reserva** — datas, número de hóspedes, repasse do host, taxa de serviço e status de pagamento.
+- 🔁 **Status automático** — as reservas viram "em andamento" no check-in e "concluída" no checkout, sem ação manual.
 - ✉️ **E-mails de check-in automáticos** — cron diário que envia as informações de check-in para reservas próximas.
 - 📤 **Exportação CSV** das reservas filtradas.
 - 🌗 **Tema claro/escuro**.
