@@ -3,7 +3,10 @@ import { authFetch, BASE } from '../http/apiClient'
 
 export async function syncEmails(): Promise<SyncResult> {
   const res = await authFetch(`${BASE}/sync`, { method: 'POST' })
-  if (!res.ok) throw new Error('Erro ao sincronizar emails')
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null
+    throw new Error(body?.error ?? 'Erro ao sincronizar emails')
+  }
   return res.json()
 }
 

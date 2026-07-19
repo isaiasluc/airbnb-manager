@@ -7,6 +7,28 @@ import crypto from 'crypto'
 const STATE_TTL_MS = 10 * 60 * 1000
 const states = new Map<string, number>()
 
+// Refresh tokens de apps em modo "Testing" expiram em 7 dias, resultando em
+// `invalid_grant` no sync. Quando isso acontece, marcamos o token como inválido
+// para que o frontend ofereça a reautenticação em vez de continuar falhando.
+let tokenInvalid = false
+
+export function markGoogleTokenInvalid(): void {
+  tokenInvalid = true
+}
+
+export function isGoogleTokenInvalid(): boolean {
+  return tokenInvalid
+}
+
+export function isInvalidGrantError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false
+  const anyErr = err as { message?: string; response?: { data?: { error?: string } } }
+  return (
+    anyErr.message?.includes('invalid_grant') === true ||
+    anyErr.response?.data?.error === 'invalid_grant'
+  )
+}
+
 export const GMAIL_READONLY_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly'
 export const GMAIL_SEND_SCOPE = 'https://www.googleapis.com/auth/gmail.send'
 const GMAIL_SCOPES = [GMAIL_READONLY_SCOPE, GMAIL_SEND_SCOPE]
@@ -53,6 +75,8 @@ export async function saveGoogleToken(tokens: Credentials): Promise<void> {
     parent: getSecretResourceName(),
     payload: { data: Buffer.from(JSON.stringify(tokens)) },
   })
+  // Novo token salvo (reautenticação ou refresh bem-sucedido) → volta a ser válido.
+  tokenInvalid = false
 }
 
 export async function hasGoogleToken(): Promise<boolean> {

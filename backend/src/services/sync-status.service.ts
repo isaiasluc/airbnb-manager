@@ -1,5 +1,6 @@
 import type { SyncResult } from './gmail.service'
 import { syncGmailReservations } from './gmail.service'
+import { isInvalidGrantError, markGoogleTokenInvalid } from './google-auth.service'
 
 export type SyncSource = 'manual' | 'cron'
 
@@ -40,6 +41,7 @@ export async function runGmailSync(source: SyncSource): Promise<SyncResult> {
     return result
   } catch (err) {
     status.lastSyncError = (err as Error).message
+    if (isInvalidGrantError(err)) markGoogleTokenInvalid()
     throw err
   } finally {
     status.isRunning = false

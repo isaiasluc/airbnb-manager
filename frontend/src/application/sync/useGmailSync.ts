@@ -76,8 +76,13 @@ export function useGmailSync({ user, onAfterImport }: UseGmailSyncOptions) {
         `${result.imported} importada(s) · ${result.skipped} ignorada(s) · ${result.errors.length} erro(s)`,
       )
       if (result.imported > 0) await onAfterImport()
-    } catch {
-      setSyncMsg('Erro ao sincronizar.')
+    } catch (err) {
+      if ((err as Error).message?.includes('invalid_grant')) {
+        setGoogleAuthenticated(false)
+        setSyncMsg('Sessão do Google expirou. Clique em "Autenticar Google" para reautenticar.')
+      } else {
+        setSyncMsg('Erro ao sincronizar.')
+      }
     } finally {
       setSyncing(false)
     }

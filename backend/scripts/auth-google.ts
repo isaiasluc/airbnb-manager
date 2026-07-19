@@ -6,6 +6,7 @@ import readline from 'readline'
 import * as dotenv from 'dotenv'
 import {
   GMAIL_READONLY_SCOPE,
+  GMAIL_SEND_SCOPE,
   createGoogleOAuthClient,
   saveGoogleToken,
 } from '../src/services/google-auth.service'
@@ -15,7 +16,7 @@ const client = createGoogleOAuthClient()
 
 const authUrl = client.generateAuthUrl({
   access_type: 'offline',
-  scope: [GMAIL_READONLY_SCOPE],
+  scope: [GMAIL_READONLY_SCOPE, GMAIL_SEND_SCOPE],
   prompt: 'consent', // força retorno do refresh_token
 })
 

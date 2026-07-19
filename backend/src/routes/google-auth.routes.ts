@@ -5,6 +5,7 @@ import {
   createGoogleOAuthClient,
   getAuthenticatedGmailAddress,
   hasGoogleToken,
+  isGoogleTokenInvalid,
   saveGoogleToken,
 } from '../services/google-auth.service'
 import { verifyFirebaseToken } from '../middlewares/verify-firebase-token'
@@ -18,7 +19,7 @@ function getFrontendUrl(path = '/') {
 }
 
 router.get('/status', verifyFirebaseToken, requireSyncEmail, async (_req, res) => {
-  res.json({ authenticated: await hasGoogleToken() })
+  res.json({ authenticated: (await hasGoogleToken()) && !isGoogleTokenInvalid() })
 })
 
 router.post('/start', verifyFirebaseToken, requireSyncEmail, (_req, res) => {
