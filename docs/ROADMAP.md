@@ -23,6 +23,8 @@ Estado do projeto e próximos passos. Atualizado em 2026-07-19.
 
 ### Dashboard e visualização
 - Dashboard com estatísticas (total, confirmadas, receita, taxa de host, ocupação).
+- Painel **"Em andamento agora"** no topo da dashboard — lista as estadias ativas no
+  momento (hóspede, datas, contagem até o checkout), independente do filtro de datas.
 - Tabela de reservas com filtros por status, intervalo de datas e paginação.
 - Calendário mensal de ocupação com navegação entre meses.
 - Cálculo de taxa de ocupação (merge de intervalos, checkout exclusivo).
@@ -47,6 +49,8 @@ Estado do projeto e próximos passos. Atualizado em 2026-07-19.
 - **Persistir estado de token inválido** (hoje é em memória; some em restart).
 - **Histórico/auditoria de mudanças de status** (log de transições).
 - **Dashboard financeiro** por período (receita mensal, comparativos, projeções).
+- **Métricas de dashboard**: receita líquida, diária média (ADR), RevPAR, a receber (serviço pendente).
+- **Agenda operacional**: próximos check-ins / check-outs (complementa "Em andamento agora").
 - **E-mail de checkout/pós-estadia** (agradecimento, avaliação).
 - **Múltiplos imóveis / listings** (hoje o modelo é centrado em um host).
 - **Testes de integração** com banco (hoje só funções puras).

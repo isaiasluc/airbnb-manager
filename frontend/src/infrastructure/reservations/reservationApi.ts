@@ -20,6 +20,12 @@ export async function fetchReservations(
   return res.json()
 }
 
+export async function fetchActiveReservations(): Promise<Reservation[]> {
+  const res = await authFetch(`${BASE}/reservations/active`)
+  if (!res.ok) throw new Error('Erro ao buscar reservas em andamento')
+  return res.json()
+}
+
 export async function fetchOccupancy(
   filters: ReservationDateFilters = {},
 ): Promise<OccupancyStats> {

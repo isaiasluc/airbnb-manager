@@ -52,6 +52,15 @@ export async function list(req: Request, res: Response) {
   }
 }
 
+export async function active(_req: Request, res: Response) {
+  try {
+    const reservations = await ReservationService.listActiveReservations()
+    res.json(reservations)
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message })
+  }
+}
+
 export async function exportCsv(req: Request, res: Response) {
   try {
     const filters = getListFilters(req.query)

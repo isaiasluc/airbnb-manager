@@ -150,6 +150,10 @@ export async function listReservations(
   return ReservationRepo.listReservations(filters)
 }
 
+export async function listActiveReservations(): Promise<ReservationWithGuest[]> {
+  return ReservationRepo.listActiveReservations()
+}
+
 export async function getCalendarReservations(
   period: OccupancyPeriod
 ): Promise<ReservationWithGuest[]> {

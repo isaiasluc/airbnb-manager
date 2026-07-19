@@ -10,6 +10,7 @@ import { filterByStatus } from '@/domain/services/reservationStats'
 import { getMonthRange, parseMonthKey } from '@/domain/services/calendar'
 import DashboardHeader from '@/presentation/components/layout/DashboardHeader'
 import StatsCards from '@/presentation/components/reservations/StatsCards'
+import ActiveReservationsPanel from '@/presentation/components/reservations/ActiveReservationsPanel'
 import ReservationStatusTabs from '@/presentation/components/reservations/ReservationStatusTabs'
 import ReservationsTable from '@/presentation/components/reservations/ReservationsTable'
 import Pagination from '@/presentation/components/reservations/Pagination'
@@ -31,7 +32,7 @@ export default function Dashboard() {
   const activeDateFilters = isCalendar
     ? getMonthRange(monthParts.year, monthParts.month)
     : filters.dateFilters
-  const { reservations, occupancy, loading, setLoading, reload } =
+  const { reservations, active, occupancy, loading, setLoading, reload } =
     useReservations(activeDateFilters)
   const calendar = useCalendar(filters.month)
   const { exportingCsv, exportCsv } = useCsvExport()
@@ -129,6 +130,10 @@ export default function Dashboard() {
       )}
 
       <main className="max-w-6xl mx-auto px-6 py-8">
+        <ActiveReservationsPanel
+          reservations={active}
+          onSelect={(id) => navigate(buildReservationPath(id))}
+        />
         <StatsCards
           reservations={isCalendar ? reservations : filtered}
           occupancy={occupancy}

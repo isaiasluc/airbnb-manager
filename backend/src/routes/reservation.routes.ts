@@ -4,6 +4,7 @@ import * as ReservationController from '../controllers/reservation.controller'
 const router = Router()
 
 router.get('/',        ReservationController.list)
+router.get('/active',  ReservationController.active)
 router.get('/export',  ReservationController.exportCsv)
 router.get('/occupancy', ReservationController.occupancy)
 router.get('/calendar', ReservationController.calendar)
