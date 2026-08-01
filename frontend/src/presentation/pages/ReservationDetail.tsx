@@ -60,7 +60,7 @@ export default function ReservationDetail() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50 text-sm text-stone-300 dark:bg-stone-950 dark:text-stone-600">
+      <div className="flex min-h-screen items-center justify-center bg-paper text-sm text-ink-muted/70 dark:bg-paper-dark dark:text-ink-muted-dark/70">
         Carregando...
       </div>
     )
@@ -68,7 +68,7 @@ export default function ReservationDetail() {
 
   if (!reservation) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50 text-sm text-stone-400 dark:bg-stone-950 dark:text-stone-500">
+      <div className="flex min-h-screen items-center justify-center bg-paper text-sm text-ink-muted dark:bg-paper-dark dark:text-ink-muted-dark">
         Reserva não encontrada.
       </div>
     )
@@ -77,7 +77,7 @@ export default function ReservationDetail() {
   const nights = nightsCount(reservation.checkin_at, reservation.checkout_at)
 
   return (
-    <div className="min-h-screen bg-stone-50 font-sans transition-colors dark:bg-stone-950">
+    <div className="min-h-screen bg-paper font-sans transition-colors dark:bg-paper-dark">
       <DetailHeader
         reservation={reservation}
         onBack={() => navigate(backToDashboardPath)}

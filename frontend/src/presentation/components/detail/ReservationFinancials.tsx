@@ -21,16 +21,16 @@ export default function ReservationFinancials({
   ) => void
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-900">
-      <div className="grid grid-cols-1 divide-y divide-stone-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0 dark:divide-stone-800">
+    <div className="overflow-hidden rounded-xl border border-t-2 border-line border-t-accent bg-surface transition-colors dark:border-line-dark dark:border-t-accent-dark dark:bg-surface-dark">
+      <div className="grid grid-cols-1 divide-y divide-line sm:grid-cols-2 sm:divide-x sm:divide-y-0 dark:divide-line-dark">
         <div className="px-6 py-5">
-          <p className="mb-3 text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">
+          <p className="mb-3 text-xs uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">
             Repasse do host
           </p>
-          <p className="text-3xl font-semibold text-stone-900 dark:text-stone-100">
+          <p className="font-display text-3xl font-semibold tabular-nums text-accent dark:text-accent-dark">
             {formatCurrency(Number(reservation.host_payout), reservation.currency)}
           </p>
-          <p className="mt-1 text-sm text-stone-400 dark:text-stone-500">
+          <p className="mt-1 text-sm text-ink-muted dark:text-ink-muted-dark">
             {formatCurrency(
               Number(reservation.host_payout) / nights,
               reservation.currency,
@@ -39,10 +39,10 @@ export default function ReservationFinancials({
           </p>
         </div>
         <div className="px-6 py-5">
-          <p className="mb-3 text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">
+          <p className="mb-3 text-xs uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">
             Taxa de serviço
           </p>
-          <p className="text-3xl font-semibold text-stone-900 dark:text-stone-100">
+          <p className="font-display text-3xl font-semibold tabular-nums text-accent dark:text-accent-dark">
             {formatCurrency(
               Number(reservation.host_service_fee),
               reservation.currency,
@@ -57,7 +57,7 @@ export default function ReservationFinancials({
                 className={`text-xs px-3 py-1.5 rounded-full font-medium ring-1 transition-colors disabled:opacity-50 ${
                   reservation.host_service_status === status
                     ? hostServiceStatusColor[status]
-                    : 'bg-white text-stone-500 ring-stone-200 hover:bg-stone-50 dark:bg-stone-900 dark:text-stone-300 dark:ring-stone-700 dark:hover:bg-stone-800'
+                    : 'bg-surface text-ink-muted ring-line hover:bg-paper dark:bg-surface-dark dark:text-ink-muted-dark dark:ring-line-dark dark:hover:bg-paper-dark'
                 }`}
               >
                 {hostServiceStatusLabel[status]}

@@ -1,13 +1,38 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: #f5f6f1;
+  --color-paper-dark: #121815;
+  --color-surface: #ffffff;
+  --color-surface-dark: #1a211d;
+  --color-ink: #16211d;
+  --color-ink-dark: #ecefe8;
+  --color-ink-muted: #6e7568;
+  --color-ink-muted-dark: #8b9186;
+  --color-line: #dde3d9;
+  --color-line-dark: #2b332d;
+  --color-accent: #0f7a6c;
+  --color-accent-hover: #0c6459;
+  --color-accent-dark: #2fae97;
+  --color-accent-hover-dark: #45c2ab;
+  --color-accent-soft: #e4f1ee;
+  --color-accent-soft-dark: #17332e;
+  --color-dune: #c08a45;
+  --color-dune-dark: #d8a862;
+}
+
 html {
-  background: #fafaf9;
+  background: #f5f6f1;
 }
 
 html.dark {
-  background: #0c0a09;
+  background: #121815;
 }
 
 button:not(:disabled),

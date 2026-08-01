@@ -1,4 +1,5 @@
 import type { Expense } from '@/domain/entities/expense'
+import { buttonGhost } from '@/presentation/shared/buttonStyles'
 import { formatCurrency, formatDate } from '@/presentation/shared/format'
 import { categoryLabel, statusColor, statusLabel } from './expensePresentation'
 
@@ -17,33 +18,33 @@ export default function ExpensesTable({
     <div className="overflow-x-auto">
       <table className="w-full min-w-[880px] text-sm">
         <thead>
-          <tr className="border-b border-stone-100 dark:border-stone-800">
+          <tr className="border-b border-line dark:border-line-dark">
             {COLUMNS.map((column) => (
               <th
                 key={column}
-                className="px-5 py-3 text-left text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500"
+                className="px-5 py-3 text-left text-xs font-medium uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark"
               >
                 {column}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-stone-50 dark:divide-stone-800">
+        <tbody className="divide-y divide-line/60 dark:divide-line-dark/60">
           {expenses.map((expense) => (
             <tr
               key={expense.id}
-              className="group transition-colors hover:bg-stone-50 dark:hover:bg-stone-800/70"
+              className="group transition-colors hover:bg-accent-soft/50 dark:hover:bg-accent-soft-dark/40"
             >
-              <td className="px-5 py-3.5 text-stone-500 dark:text-stone-400">
+              <td className="px-5 py-3.5 text-ink-muted dark:text-ink-muted-dark">
                 {formatDate(expense.expense_date)}
               </td>
-              <td className="px-5 py-3.5 font-medium text-stone-800 dark:text-stone-200">
+              <td className="px-5 py-3.5 font-medium text-ink dark:text-ink-dark">
                 {expense.description}
               </td>
-              <td className="px-5 py-3.5 text-stone-500 dark:text-stone-400">
+              <td className="px-5 py-3.5 text-ink-muted dark:text-ink-muted-dark">
                 {categoryLabel[expense.category]}
               </td>
-              <td className="px-5 py-3.5 font-medium text-stone-700 dark:text-stone-300">
+              <td className="px-5 py-3.5 font-medium tabular-nums text-ink dark:text-ink-dark">
                 {formatCurrency(Number(expense.amount))}
               </td>
               <td className="px-5 py-3.5">
@@ -55,11 +56,7 @@ export default function ExpensesTable({
               </td>
               <td className="px-5 py-3.5 text-right">
                 <div className="flex justify-end gap-3 opacity-0 transition-opacity group-hover:opacity-100">
-                  <button
-                    type="button"
-                    onClick={() => onEdit(expense)}
-                    className="text-xs font-medium text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-200"
-                  >
+                  <button type="button" onClick={() => onEdit(expense)} className={buttonGhost}>
                     Editar
                   </button>
                   <button

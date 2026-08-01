@@ -13,7 +13,7 @@ export const statusColor: Record<string, string> = {
   cancelled:
     'bg-red-50 text-red-600 ring-red-200 dark:bg-red-950/60 dark:text-red-300 dark:ring-red-800',
   completed:
-    'bg-stone-100 text-stone-500 ring-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:ring-stone-700',
+    'bg-ink-muted/10 text-ink-muted ring-line dark:bg-ink-muted-dark/15 dark:text-ink-muted-dark dark:ring-line-dark',
 }
 
 export const hostServiceStatusLabel: Record<string, string> = {

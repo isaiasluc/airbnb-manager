@@ -10,7 +10,7 @@ export default function SyncMessageBar({
       <button
         type="button"
         onClick={onOpenSyncModal}
-        className="inline-block rounded-md bg-stone-100 px-3 py-1.5 text-xs text-stone-500 transition-colors hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+        className="inline-block rounded-md bg-accent-soft px-3 py-1.5 text-xs text-accent transition-colors hover:bg-accent-soft/70 dark:bg-accent-soft-dark dark:text-accent-dark dark:hover:bg-accent-soft-dark/70"
       >
         {syncMsg}
       </button>

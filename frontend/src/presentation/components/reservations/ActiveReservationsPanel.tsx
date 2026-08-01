@@ -47,10 +47,10 @@ export default function ActiveReservationsPanel({
               onClick={() => onSelect(r.id)}
               className="flex w-full items-center justify-between gap-3 py-2.5 text-left transition-opacity hover:opacity-70"
             >
-              <span className="font-medium text-stone-800 dark:text-stone-100">
+              <span className="font-medium text-ink dark:text-ink-dark">
                 {guestName(r.guest_first_name, r.guest_last_name)}
               </span>
-              <span className="flex items-center gap-3 text-sm text-stone-500 dark:text-stone-400">
+              <span className="flex items-center gap-3 text-sm text-ink-muted dark:text-ink-muted-dark">
                 <span className="hidden sm:inline">
                   {formatDate(r.checkin_at)} → {formatDate(r.checkout_at)}
                 </span>

@@ -17,16 +17,17 @@ export default function StatsCards({
 }) {
   const billable = reservations.filter(isBillable)
   const stats = [
-    { label: 'Total', value: reservations.length },
-    { label: 'Confirmadas', value: countByStatus(reservations, 'confirmed') },
-    { label: 'Receita total', value: formatCurrency(sumPayout(billable)) },
-    { label: 'Taxa host', value: formatCurrency(sumHostServiceFee(billable)) },
+    { label: 'Total', value: reservations.length, money: false },
+    { label: 'Confirmadas', value: countByStatus(reservations, 'confirmed'), money: false },
+    { label: 'Receita total', value: formatCurrency(sumPayout(billable)), money: true },
+    { label: 'Taxa host', value: formatCurrency(sumHostServiceFee(billable)), money: true },
     {
       label: 'Ocupação',
       value: occupancy ? formatOccupancyRate(occupancy.occupancyRate) : '0%',
       hint: occupancy
         ? `${occupancy.occupiedNights}/${occupancy.totalNights} noites`
         : '0/0 noites',
+      money: false,
     },
   ]
 
@@ -35,16 +36,22 @@ export default function StatsCards({
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="rounded-xl border border-stone-200 bg-white px-5 py-4 transition-colors dark:border-stone-800 dark:bg-stone-900"
+          className={`rounded-xl border border-line bg-surface px-5 py-4 transition-colors dark:border-line-dark dark:bg-surface-dark ${
+            stat.money ? 'border-t-2 border-t-accent dark:border-t-accent-dark' : ''
+          }`}
         >
-          <p className="mb-1 text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">
+          <p className={`mb-1 text-xs uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark`}>
             {stat.label}
           </p>
-          <p className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
+          <p
+            className={`font-display text-2xl font-semibold tabular-nums ${
+              stat.money ? 'text-accent dark:text-accent-dark' : 'text-ink dark:text-ink-dark'
+            }`}
+          >
             {stat.value}
           </p>
           {'hint' in stat && (
-            <p className="mt-1 text-xs text-stone-400 dark:text-stone-500">
+            <p className="mt-1 text-xs text-ink-muted dark:text-ink-muted-dark">
               {stat.hint}
             </p>
           )}

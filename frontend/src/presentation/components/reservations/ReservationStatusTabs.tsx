@@ -2,6 +2,7 @@ import {
   RESERVATION_FILTERS,
   type ReservationFilter,
 } from '@/domain/services/reservationStats'
+import SegmentedControl from '@/presentation/shared/SegmentedControl'
 import { statusLabel } from './statusPresentation'
 
 const LABEL: Record<ReservationFilter, string> = {
@@ -11,11 +12,6 @@ const LABEL: Record<ReservationFilter, string> = {
   completed: statusLabel.completed,
   cancelled: statusLabel.cancelled,
 }
-
-const ACTIVE_CLASS =
-  'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950'
-const INACTIVE_CLASS =
-  'bg-white text-stone-500 border border-stone-200 hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500'
 
 export default function ReservationStatusTabs({
   filter,
@@ -31,7 +27,7 @@ export default function ReservationStatusTabs({
         <select
           value={filter}
           onChange={(e) => onChange(e.target.value as ReservationFilter)}
-          className="appearance-none h-9 rounded-lg border border-stone-200 bg-white pl-3 pr-8 text-sm font-medium text-stone-700 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:focus:border-stone-500"
+          className="appearance-none h-9 rounded-lg border border-line bg-surface pl-3 pr-8 text-sm font-medium text-ink outline-none transition-colors focus:border-accent dark:border-line-dark dark:bg-surface-dark dark:text-ink-dark dark:focus:border-accent-dark"
         >
           {RESERVATION_FILTERS.map((f) => (
             <option key={f} value={f}>
@@ -40,7 +36,7 @@ export default function ReservationStatusTabs({
           ))}
         </select>
         <svg
-          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 dark:text-stone-500"
+          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted dark:text-ink-muted-dark"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -49,20 +45,13 @@ export default function ReservationStatusTabs({
         </svg>
       </div>
 
-      {/* Desktop: botões */}
-      <div className="hidden sm:flex gap-2 mb-5">
-        {RESERVATION_FILTERS.map((f) => (
-          <button
-            key={f}
-            type="button"
-            onClick={() => onChange(f)}
-            className={`text-sm px-3 py-1.5 rounded-lg transition-colors font-medium ${
-              filter === f ? ACTIVE_CLASS : INACTIVE_CLASS
-            }`}
-          >
-            {LABEL[f]}
-          </button>
-        ))}
+      {/* Desktop: segmented control */}
+      <div className="hidden sm:block mb-5">
+        <SegmentedControl
+          options={RESERVATION_FILTERS.map((f) => ({ value: f, label: LABEL[f] }))}
+          value={filter}
+          onChange={onChange}
+        />
       </div>
     </>
   )

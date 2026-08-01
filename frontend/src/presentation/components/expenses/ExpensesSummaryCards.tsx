@@ -15,23 +15,23 @@ export default function ExpensesSummaryCards({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-      <div className="rounded-xl border border-stone-200 bg-white px-5 py-4 transition-colors dark:border-stone-800 dark:bg-stone-900">
-        <p className="mb-1 text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">
+      <div className="rounded-xl border border-t-2 border-line border-t-accent bg-surface px-5 py-4 transition-colors dark:border-line-dark dark:border-t-accent-dark dark:bg-surface-dark">
+        <p className="mb-1 text-xs uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">
           Total no período
         </p>
-        <p className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
+        <p className="font-display text-2xl font-semibold tabular-nums text-accent dark:text-accent-dark">
           {formatCurrency(total)}
         </p>
       </div>
       {byCategory.map(({ category, total: categoryTotal }) => (
         <div
           key={category}
-          className="rounded-xl border border-stone-200 bg-white px-5 py-4 transition-colors dark:border-stone-800 dark:bg-stone-900"
+          className="rounded-xl border border-line bg-surface px-5 py-4 transition-colors dark:border-line-dark dark:bg-surface-dark"
         >
-          <p className="mb-1 text-xs uppercase tracking-widest text-stone-400 dark:text-stone-500">
+          <p className="mb-1 text-xs uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">
             {categoryLabel[category]}
           </p>
-          <p className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
+          <p className="font-display text-2xl font-semibold tabular-nums text-ink dark:text-ink-dark">
             {formatCurrency(categoryTotal)}
           </p>
         </div>

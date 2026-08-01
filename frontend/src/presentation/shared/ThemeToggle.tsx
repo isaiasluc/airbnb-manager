@@ -1,4 +1,5 @@
 import { useTheme } from "./theme/useTheme";
+import { iconButton } from "./buttonStyles";
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
@@ -8,7 +9,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-stone-200 bg-white text-stone-500 transition-colors hover:border-stone-400 hover:text-stone-800 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500 dark:hover:text-white"
+      className={iconButton}
       aria-label={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
       title={isDark ? "Ativar modo claro" : "Ativar modo escuro"}
     >

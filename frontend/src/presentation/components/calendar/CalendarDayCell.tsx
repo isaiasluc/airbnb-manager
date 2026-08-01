@@ -19,25 +19,25 @@ export default function CalendarDayCell({
 
   return (
     <div
-      className={`flex min-h-[5.5rem] flex-col gap-1 border-b border-r border-stone-200 p-1.5 dark:border-stone-800 ${
+      className={`flex min-h-[5.5rem] flex-col gap-1 border-b border-r border-line p-1.5 dark:border-line-dark ${
         day.isCurrentMonth
           ? hasActiveStay
             ? 'bg-red-50/70 dark:bg-red-950/20'
             : hasFutureStay
               ? 'bg-emerald-50/60 dark:bg-emerald-950/20'
               : hasPastStay
-                ? 'bg-stone-100/70 dark:bg-stone-800/30'
-                : 'bg-white dark:bg-stone-900'
-          : 'bg-stone-50 dark:bg-stone-950/40'
+                ? 'bg-ink-muted/10 dark:bg-ink-muted-dark/10'
+                : 'bg-surface dark:bg-surface-dark'
+          : 'bg-paper dark:bg-paper-dark/60'
       }`}
     >
       <span
         className={`self-end text-xs font-medium ${
           day.isToday
-            ? 'flex h-5 w-5 items-center justify-center rounded-full bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-950'
+            ? 'flex h-5 w-5 items-center justify-center rounded-full bg-accent text-white dark:bg-accent-dark dark:text-ink'
             : day.isCurrentMonth
-              ? 'text-stone-500 dark:text-stone-400'
-              : 'text-stone-300 dark:text-stone-600'
+              ? 'text-ink-muted dark:text-ink-muted-dark'
+              : 'text-ink-muted/50 dark:text-ink-muted-dark/50'
         }`}
       >
         {day.day}
@@ -60,11 +60,11 @@ export default function CalendarDayCell({
               title={`${name}${cancelled ? ' (cancelada)' : ''}`}
               className={`truncate rounded px-1.5 py-0.5 text-left text-[11px] font-medium transition-colors ${
                 cancelled
-                  ? 'bg-stone-100 text-stone-400 line-through hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-500'
+                  ? 'bg-ink-muted/15 text-ink-muted line-through hover:bg-ink-muted/25 dark:bg-ink-muted-dark/15 dark:text-ink-muted-dark'
                   : active
                     ? 'bg-red-500/90 text-white hover:bg-red-600'
                     : stay.isPast
-                      ? 'bg-stone-400 text-white hover:bg-stone-500 dark:bg-stone-600 dark:text-stone-100 dark:hover:bg-stone-500'
+                      ? 'bg-ink-muted text-white hover:bg-ink-muted/80 dark:bg-ink-muted-dark dark:text-ink dark:hover:bg-ink-muted-dark/80'
                       : 'bg-emerald-500/90 text-white hover:bg-emerald-600'
               }`}
             >

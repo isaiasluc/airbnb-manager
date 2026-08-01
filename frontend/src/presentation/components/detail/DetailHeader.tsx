@@ -1,6 +1,7 @@
 import type { Reservation } from '@/domain/entities/reservation'
 import { guestName } from '@/domain/services/reservationStats'
 import ThemeToggle from '@/presentation/shared/ThemeToggle'
+import { buttonSignOut, iconButton } from '@/presentation/shared/buttonStyles'
 import {
   statusColor,
   statusLabel,
@@ -16,14 +17,10 @@ export default function DetailHeader({
   onSignOut: () => void
 }) {
   return (
-    <header className="sticky top-0 z-10 border-b border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-950">
+    <header className="sticky top-0 z-10 border-b border-line bg-surface transition-colors dark:border-line-dark dark:bg-surface-dark">
       <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
-        <button
-          onClick={onBack}
-          className="text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-200"
-          aria-label="Voltar"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button onClick={onBack} className={iconButton} aria-label="Voltar">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -33,20 +30,16 @@ export default function DetailHeader({
           </svg>
         </button>
         <div>
-          <h1 className="text-xl font-semibold text-stone-900 tracking-tight dark:text-stone-100">
+          <h1 className="font-display text-xl font-semibold tracking-tight text-ink dark:text-ink-dark">
             {guestName(reservation.guest_first_name, reservation.guest_last_name)}
           </h1>
-          <p className="mt-0.5 text-sm text-stone-400 dark:text-stone-500">
+          <p className="mt-0.5 text-sm text-ink-muted dark:text-ink-muted-dark">
             {reservation.confirmation_code}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
-          <button
-            type="button"
-            onClick={onSignOut}
-            className="rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500"
-          >
+          <button type="button" onClick={onSignOut} className={buttonSignOut}>
             Sair
           </button>
           <span

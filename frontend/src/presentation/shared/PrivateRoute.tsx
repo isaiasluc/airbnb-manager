@@ -8,7 +8,7 @@ export default function PrivateRoute({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-stone-50 text-sm text-stone-400 dark:bg-stone-950 dark:text-stone-500">
+      <div className="flex min-h-screen items-center justify-center bg-paper text-sm text-ink-muted dark:bg-paper-dark dark:text-ink-muted-dark">
         Verificando acesso...
       </div>
     );

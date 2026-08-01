@@ -1,18 +1,22 @@
 import type { SyncStatus } from '@/domain/entities/sync'
-import ThemeToggle from '@/presentation/shared/ThemeToggle'
 import {
   getCurrentMonthRange,
   getNext30DaysRange,
 } from '@/presentation/shared/dateRanges'
+import {
+  buttonSecondary,
+  buttonSecondaryActive,
+  inputClass,
+  labelClass,
+} from '@/presentation/shared/buttonStyles'
 import SyncMessageBar from '@/presentation/components/sync/SyncMessageBar'
 import SyncStatusBar from '@/presentation/components/sync/SyncStatusBar'
+import SyncButton from '@/presentation/components/sync/SyncButton'
+
+type QuickRange = 'month' | 'next30' | 'all'
 
 interface DashboardHeaderProps {
-  onHomeClick: () => void
-  onNavigateExpenses: () => void
-  filtersOpen: boolean
-  onToggleFilters: () => void
-  activeFiltersCount: number
+  activeQuickRange: QuickRange | null
   dateFrom: string
   dateTo: string
   onDateFromChange: (value: string) => void
@@ -22,25 +26,19 @@ interface DashboardHeaderProps {
   onExportCsv: () => void
   exporting: boolean
   exportDisabled: boolean
-  onSignOut: () => void
   canSyncGmail: boolean
   syncStatus: SyncStatus | null
   syncMsg: string | null
   onOpenSyncModal: () => void
+  googleAuthenticated: boolean
+  syncing: boolean
+  authenticatingGoogle: boolean
+  onSync: () => void
+  onGoogleAuth: () => void
 }
 
-const FILTER_BUTTON_CLASS =
-  'h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500'
-
-const DATE_INPUT_CLASS =
-  'h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal normal-case tracking-normal text-stone-700 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:focus:border-stone-500'
-
 export default function DashboardHeader({
-  onHomeClick,
-  onNavigateExpenses,
-  filtersOpen,
-  onToggleFilters,
-  activeFiltersCount,
+  activeQuickRange,
   dateFrom,
   dateTo,
   onDateFromChange,
@@ -50,116 +48,91 @@ export default function DashboardHeader({
   onExportCsv,
   exporting,
   exportDisabled,
-  onSignOut,
   canSyncGmail,
   syncStatus,
   syncMsg,
   onOpenSyncModal,
+  googleAuthenticated,
+  syncing,
+  authenticatingGoogle,
+  onSync,
+  onGoogleAuth,
 }: DashboardHeaderProps) {
   return (
-    <header className="sticky top-0 z-10 border-b border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-950">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex items-start justify-between gap-3 lg:justify-start">
-          <button type="button" onClick={onHomeClick} className="text-left group">
-            <h1 className="text-xl font-semibold text-stone-900 tracking-tight transition-colors group-hover:text-stone-600 dark:text-stone-100 dark:group-hover:text-stone-300">
-              Hospedagens
-            </h1>
-            <p className="mt-0.5 text-sm text-stone-400 dark:text-stone-500">
-              Apê dos sonhos em Ponta Negra
-            </p>
-          </button>
-          <button
-            type="button"
-            onClick={onNavigateExpenses}
-            className={`${FILTER_BUTTON_CLASS} lg:ml-4`}
-          >
-            Despesas
-          </button>
-        </div>
-        <div className="flex flex-1 flex-col gap-3">
-          <div className="flex items-center justify-between gap-2 sm:hidden">
+    <header className="sticky top-0 z-10 border-b border-line bg-surface transition-colors dark:border-line-dark dark:bg-surface-dark">
+      <div className="max-w-6xl mx-auto px-6 pt-5 pb-3">
+        <h1 className="font-display text-xl font-semibold tracking-tight text-ink dark:text-ink-dark">
+          Hospedagens
+        </h1>
+      </div>
+
+      <div className="border-t border-line bg-paper/60 dark:border-line-dark dark:bg-paper-dark/40">
+        <div className="max-w-6xl mx-auto px-6 py-3 flex flex-wrap items-end gap-x-3 gap-y-2">
+          <label className={`flex flex-col gap-1 ${labelClass}`}>
+            Início
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(event) => onDateFromChange(event.target.value)}
+              className={inputClass}
+            />
+          </label>
+          <label className={`flex flex-col gap-1 ${labelClass}`}>
+            Fim
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(event) => onDateToChange(event.target.value)}
+              className={inputClass}
+            />
+          </label>
+
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={onToggleFilters}
-              aria-expanded={filtersOpen}
-              className={FILTER_BUTTON_CLASS}
+              onClick={() => onApplyDateRange(getCurrentMonthRange())}
+              className={activeQuickRange === 'month' ? buttonSecondaryActive : buttonSecondary}
             >
-              Filtros{activeFiltersCount > 0 ? ` (${activeFiltersCount})` : ''}
+              Este mês
             </button>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <button
-                type="button"
-                onClick={onSignOut}
-                className={FILTER_BUTTON_CLASS}
-              >
-                Sair
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => onApplyDateRange(getNext30DaysRange())}
+              className={activeQuickRange === 'next30' ? buttonSecondaryActive : buttonSecondary}
+            >
+              Próximos 30 dias
+            </button>
+            <button
+              type="button"
+              onClick={onClearDates}
+              className={activeQuickRange === 'all' ? buttonSecondaryActive : buttonSecondary}
+            >
+              Todos
+            </button>
           </div>
-          <div className={`${filtersOpen ? 'flex' : 'hidden'} flex-col gap-3 sm:flex`}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
-                  Início
-                  <input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(event) => onDateFromChange(event.target.value)}
-                    className={DATE_INPUT_CLASS}
-                  />
-                </label>
-                <label className="flex flex-col gap-1 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
-                  Fim
-                  <input
-                    type="date"
-                    value={dateTo}
-                    onChange={(event) => onDateToChange(event.target.value)}
-                    className={DATE_INPUT_CLASS}
-                  />
-                </label>
-              </div>
-              <div className="hidden items-center gap-2 sm:flex sm:justify-end">
-                <ThemeToggle />
-                <button
-                  type="button"
-                  onClick={onSignOut}
-                  className={FILTER_BUTTON_CLASS}
-                >
-                  Sair
-                </button>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              <button
-                type="button"
-                onClick={() => onApplyDateRange(getCurrentMonthRange())}
-                className={FILTER_BUTTON_CLASS}
-              >
-                Este mês
-              </button>
-              <button
-                type="button"
-                onClick={() => onApplyDateRange(getNext30DaysRange())}
-                className={FILTER_BUTTON_CLASS}
-              >
-                Próximos 30 dias
-              </button>
-              <button type="button" onClick={onClearDates} className={FILTER_BUTTON_CLASS}>
-                Todos
-              </button>
-              <button
-                type="button"
-                onClick={onExportCsv}
-                disabled={exportDisabled}
-                className="h-9 rounded-lg bg-stone-900 px-3 text-sm font-medium text-white transition-colors hover:bg-stone-700 disabled:opacity-50 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-stone-300"
-              >
-                {exporting ? 'Exportando...' : 'Exportar CSV'}
-              </button>
-            </div>
+
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {canSyncGmail && (
+              <SyncButton
+                googleAuthenticated={googleAuthenticated}
+                syncing={syncing}
+                authenticatingGoogle={authenticatingGoogle}
+                onSync={onSync}
+                onGoogleAuth={onGoogleAuth}
+              />
+            )}
+            <button
+              type="button"
+              onClick={onExportCsv}
+              disabled={exportDisabled}
+              className={buttonSecondary}
+            >
+              {exporting ? 'Exportando...' : 'Exportar CSV'}
+            </button>
           </div>
         </div>
       </div>
+
       {canSyncGmail && <SyncStatusBar syncStatus={syncStatus} />}
       {syncMsg && (
         <SyncMessageBar syncMsg={syncMsg} onOpenSyncModal={onOpenSyncModal} />

@@ -2,7 +2,7 @@ import type { SyncResult } from '@/domain/entities/sync'
 
 function EmptySyncList({ label }: { label: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-stone-200 py-8 text-stone-300 dark:border-stone-700 dark:text-stone-500">
+    <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-line py-8 text-ink-muted/70 dark:border-line-dark dark:text-ink-muted-dark/70">
       <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path
           strokeLinecap="round"
@@ -27,23 +27,23 @@ export default function SyncResultModal({
 }) {
   return (
     <div
-      className={`sync-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-stone-950/40 px-4 py-6 ${
+      className={`sync-modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-4 py-6 dark:bg-black/60 ${
         isClosing ? 'sync-modal-overlay-exit' : 'sync-modal-overlay-enter'
       }`}
       onClick={onClose}
     >
       <div
-        className={`sync-modal-panel max-h-[86vh] w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-xl dark:bg-stone-900 ${
+        className={`sync-modal-panel max-h-[86vh] w-full max-w-3xl overflow-hidden rounded-xl bg-surface shadow-xl dark:bg-surface-dark ${
           isClosing ? 'sync-modal-panel-exit' : 'sync-modal-panel-enter'
         }`}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-stone-100 px-5 py-4 dark:border-stone-800">
+        <div className="flex items-center justify-between border-b border-line px-5 py-4 dark:border-line-dark">
           <div>
-            <h2 className="text-base font-semibold text-stone-900 dark:text-stone-100">
+            <h2 className="font-display text-base font-semibold text-ink dark:text-ink-dark">
               Detalhes da sincronização
             </h2>
-            <p className="mt-0.5 text-xs text-stone-400 dark:text-stone-500">
+            <p className="mt-0.5 text-xs text-ink-muted dark:text-ink-muted-dark">
               {result.imported} importada(s) · {result.skipped} ignorada(s) ·{' '}
               {result.errors.length} erro(s)
             </p>
@@ -51,7 +51,7 @@ export default function SyncResultModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-200"
+            className="rounded-full p-2 text-ink-muted transition-colors hover:bg-paper hover:text-ink dark:text-ink-muted-dark dark:hover:bg-paper-dark dark:hover:text-ink-dark"
             aria-label="Fechar modal"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -67,19 +67,19 @@ export default function SyncResultModal({
 
         <div className="max-h-[calc(86vh-82px)] overflow-y-auto px-5 py-5 space-y-6">
           <section>
-            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
+            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">
               Importadas
             </h3>
             {result.importedItems.length === 0 ? (
               <EmptySyncList label="Nenhuma reserva importada" />
             ) : (
-              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100 dark:divide-stone-800 dark:border-stone-800">
+              <div className="divide-y divide-line rounded-lg border border-line dark:divide-line-dark dark:border-line-dark">
                 {result.importedItems.map((item) => (
                   <div key={item.emailId} className="px-4 py-3">
-                    <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
+                    <p className="text-sm font-medium text-ink dark:text-ink-dark">
                       {item.guestName || item.subject || item.emailId}
                     </p>
-                    <p className="mt-1 text-xs text-stone-400 dark:text-stone-500">
+                    <p className="mt-1 text-xs text-ink-muted dark:text-ink-muted-dark">
                       {item.confirmationCode
                         ? `Código ${item.confirmationCode}`
                         : item.emailId}
@@ -91,19 +91,19 @@ export default function SyncResultModal({
           </section>
 
           <section>
-            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
+            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">
               Ignoradas
             </h3>
             {result.skippedItems.length === 0 ? (
               <EmptySyncList label="Nenhuma reserva ignorada" />
             ) : (
-              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100 dark:divide-stone-800 dark:border-stone-800">
+              <div className="divide-y divide-line rounded-lg border border-line dark:divide-line-dark dark:border-line-dark">
                 {result.skippedItems.map((item) => (
                   <div key={item.emailId} className="px-4 py-3">
-                    <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
+                    <p className="text-sm font-medium text-ink dark:text-ink-dark">
                       {item.guestName || item.subject || item.emailId}
                     </p>
-                    <p className="mt-1 text-xs text-stone-400 dark:text-stone-500">
+                    <p className="mt-1 text-xs text-ink-muted dark:text-ink-muted-dark">
                       {item.reason || 'Ignorada'} · {item.emailId}
                     </p>
                   </div>
@@ -113,16 +113,16 @@ export default function SyncResultModal({
           </section>
 
           <section>
-            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
+            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">
               Erros
             </h3>
             {result.errors.length === 0 ? (
               <EmptySyncList label="Nenhum erro encontrado" />
             ) : (
-              <div className="divide-y divide-stone-100 rounded-lg border border-stone-100 dark:divide-stone-800 dark:border-stone-800">
+              <div className="divide-y divide-line rounded-lg border border-line dark:divide-line-dark dark:border-line-dark">
                 {result.errors.map((error) => (
                   <div key={error.emailId} className="px-4 py-3">
-                    <p className="text-sm font-medium text-stone-800 dark:text-stone-200">
+                    <p className="text-sm font-medium text-ink dark:text-ink-dark">
                       {error.emailId}
                     </p>
                     <p className="text-xs text-rose-500 mt-1">{error.reason}</p>

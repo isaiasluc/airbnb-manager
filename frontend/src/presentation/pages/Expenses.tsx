@@ -1,25 +1,24 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/application/auth/useAuth'
 import { useExpenses } from '@/application/expenses/useExpenses'
 import type { CreateExpenseInput, Expense, ExpenseCategory } from '@/domain/entities/expense'
 import { createExpense, deleteExpense, updateExpense } from '@/infrastructure/expenses/expenseApi'
 import { getCurrentMonthRange } from '@/presentation/shared/dateRanges'
-import ThemeToggle from '@/presentation/shared/ThemeToggle'
+import {
+  buttonPrimary,
+  buttonSecondary,
+  buttonSecondaryActive,
+  inputClass,
+  labelClass,
+} from '@/presentation/shared/buttonStyles'
+import AppShell from '@/presentation/components/layout/AppShell'
 import ExpensesSummaryCards from '@/presentation/components/expenses/ExpensesSummaryCards'
 import ExpensesTable from '@/presentation/components/expenses/ExpensesTable'
 import ExpenseFormModal from '@/presentation/components/expenses/ExpenseFormModal'
 import DeleteExpenseModal from '@/presentation/components/expenses/DeleteExpenseModal'
 import { categoryLabel, categoryOptions } from '@/presentation/components/expenses/expensePresentation'
 
-const FILTER_BUTTON_CLASS =
-  'h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-500 transition-colors hover:border-stone-400 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-300 dark:hover:border-stone-500'
-
-const DATE_INPUT_CLASS =
-  'h-9 rounded-lg border border-stone-200 bg-white px-3 text-sm font-normal text-stone-700 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:focus:border-stone-500'
-
 export default function Expenses() {
-  const navigate = useNavigate()
   const { signOut } = useAuth()
   const [{ from, to }, setRange] = useState(getCurrentMonthRange())
   const [category, setCategory] = useState<ExpenseCategory | ''>('')
@@ -67,52 +66,42 @@ export default function Expenses() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-stone-50 font-sans transition-colors dark:bg-stone-950">
-      <header className="sticky top-0 z-10 border-b border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-950">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="text-stone-400 transition-colors hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-200"
-              aria-label="Voltar"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-            <div>
-              <h1 className="text-xl font-semibold text-stone-900 tracking-tight dark:text-stone-100">
-                Despesas
-              </h1>
-              <p className="mt-0.5 text-sm text-stone-400 dark:text-stone-500">
-                Gastos mensais do apê
-              </p>
-            </div>
-          </div>
+  const isCurrentMonth =
+    from === getCurrentMonthRange().from && to === getCurrentMonthRange().to
 
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="date"
-              value={from}
-              onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))}
-              className={DATE_INPUT_CLASS}
-            />
-            <input
-              type="date"
-              value={to}
-              onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))}
-              className={DATE_INPUT_CLASS}
-            />
+  return (
+    <AppShell onSignOut={() => void signOut()}>
+      <header className="sticky top-0 z-10 border-b border-line bg-surface transition-colors dark:border-line-dark dark:bg-surface-dark">
+        <div className="max-w-6xl mx-auto px-6 pt-5 pb-3">
+          <h1 className="font-display text-xl font-semibold tracking-tight text-ink dark:text-ink-dark">
+            Despesas
+          </h1>
+        </div>
+
+        <div className="border-t border-line bg-paper/60 dark:border-line-dark dark:bg-paper-dark/40">
+          <div className="max-w-6xl mx-auto px-6 py-3 flex flex-wrap items-end gap-x-3 gap-y-2">
+            <label className={`flex flex-col gap-1 ${labelClass}`}>
+              Início
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))}
+                className={inputClass}
+              />
+            </label>
+            <label className={`flex flex-col gap-1 ${labelClass}`}>
+              Fim
+              <input
+                type="date"
+                value={to}
+                onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))}
+                className={inputClass}
+              />
+            </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as ExpenseCategory | '')}
-              className={DATE_INPUT_CLASS}
+              className={inputClass}
             >
               <option value="">Todas as categorias</option>
               {categoryOptions.map((c) => (
@@ -124,14 +113,16 @@ export default function Expenses() {
             <button
               type="button"
               onClick={() => setRange(getCurrentMonthRange())}
-              className={FILTER_BUTTON_CLASS}
+              className={isCurrentMonth ? buttonSecondaryActive : buttonSecondary}
             >
               Este mês
             </button>
-            <ThemeToggle />
-            <button type="button" onClick={() => void signOut()} className={FILTER_BUTTON_CLASS}>
-              Sair
-            </button>
+
+            <div className="ml-auto">
+              <button type="button" onClick={() => setModalExpense('new')} className={buttonPrimary}>
+                Nova despesa
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -139,26 +130,16 @@ export default function Expenses() {
       <main className="max-w-6xl mx-auto px-6 py-8">
         <ExpensesSummaryCards summary={summary} />
 
-        <div className="mb-4 flex justify-end">
-          <button
-            type="button"
-            onClick={() => setModalExpense('new')}
-            className="h-9 rounded-lg bg-stone-900 px-3 text-sm font-medium text-white transition-colors hover:bg-stone-700 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-stone-300"
-          >
-            Nova despesa
-          </button>
-        </div>
-
         {loading ? (
-          <div className="flex items-center justify-center py-24 text-sm text-stone-300 dark:text-stone-600">
+          <div className="flex items-center justify-center py-24 text-sm text-ink-muted/70 dark:text-ink-muted-dark/70">
             Carregando...
           </div>
         ) : expenses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-24 text-stone-300 dark:text-stone-600">
+          <div className="flex flex-col items-center justify-center gap-2 py-24 text-ink-muted/70 dark:text-ink-muted-dark/70">
             <span className="text-sm">Nenhuma despesa encontrada</span>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-900">
+          <div className="overflow-hidden rounded-xl border border-line bg-surface transition-colors dark:border-line-dark dark:bg-surface-dark">
             <ExpensesTable
               expenses={expenses}
               onEdit={(expense) => setModalExpense(expense)}
@@ -189,6 +170,6 @@ export default function Expenses() {
           onClose={() => setDeletingExpense(null)}
         />
       )}
-    </div>
+    </AppShell>
   )
 }

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/application/auth/useAuth'
 import { useReservations } from '@/application/reservations/useReservations'
@@ -8,6 +7,8 @@ import { useCsvExport } from '@/application/reservations/useCsvExport'
 import { useGmailSync } from '@/application/sync/useGmailSync'
 import { filterByStatus } from '@/domain/services/reservationStats'
 import { getMonthRange, parseMonthKey } from '@/domain/services/calendar'
+import { getCurrentMonthRange, getNext30DaysRange } from '@/presentation/shared/dateRanges'
+import AppShell from '@/presentation/components/layout/AppShell'
 import DashboardHeader from '@/presentation/components/layout/DashboardHeader'
 import StatsCards from '@/presentation/components/reservations/StatsCards'
 import ActiveReservationsPanel from '@/presentation/components/reservations/ActiveReservationsPanel'
@@ -17,8 +18,16 @@ import Pagination from '@/presentation/components/reservations/Pagination'
 import OccupancyCalendar from '@/presentation/components/calendar/OccupancyCalendar'
 import CalendarToolbar from '@/presentation/components/calendar/CalendarToolbar'
 import ViewToggle from '@/presentation/components/calendar/ViewToggle'
-import SyncButton from '@/presentation/components/sync/SyncButton'
 import SyncResultModal from '@/presentation/components/sync/SyncResultModal'
+
+function getActiveQuickRange(dateFrom: string, dateTo: string): 'month' | 'next30' | 'all' | null {
+  if (!dateFrom && !dateTo) return 'all'
+  const month = getCurrentMonthRange()
+  if (dateFrom === month.from && dateTo === month.to) return 'month'
+  const next30 = getNext30DaysRange()
+  if (dateFrom === next30.from && dateTo === next30.to) return 'next30'
+  return null
+}
 
 const PAGE_SIZE = 10
 
@@ -32,7 +41,7 @@ export default function Dashboard() {
   const activeDateFilters = isCalendar
     ? getMonthRange(monthParts.year, monthParts.month)
     : filters.dateFilters
-  const { reservations, active, occupancy, loading, setLoading, reload } =
+  const { reservations, active, occupancy, loading, reload } =
     useReservations(activeDateFilters)
   const calendar = useCalendar(filters.month)
   const { exportingCsv, exportCsv } = useCsvExport()
@@ -44,8 +53,6 @@ export default function Dashboard() {
     },
   })
 
-  const [filtersOpen, setFiltersOpen] = useState(false)
-
   const filtered = filterByStatus(reservations, filters.filter)
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(filters.page, totalPages)
@@ -53,10 +60,6 @@ export default function Dashboard() {
   const paginated = filtered.slice(pageStart, pageStart + PAGE_SIZE)
   const showingStart = filtered.length === 0 ? 0 : pageStart + 1
   const showingEnd = Math.min(pageStart + PAGE_SIZE, filtered.length)
-  const activeFiltersCount =
-    (filters.filter === 'all' ? 0 : 1) +
-    (filters.dateFrom ? 1 : 0) +
-    (filters.dateTo ? 1 : 0)
 
   function buildReservationPath(id: number) {
     const params = new URLSearchParams()
@@ -72,18 +75,6 @@ export default function Dashboard() {
     return `/reservations/${id}?${params.toString()}`
   }
 
-  async function handleHomeClick() {
-    navigate('/', { replace: true })
-    filters.reset()
-    sync.setSyncMsg(null)
-    setLoading(true)
-    try {
-      await reload({})
-    } finally {
-      setLoading(false)
-    }
-  }
-
   async function handleExportCsv() {
     sync.setSyncMsg(null)
     try {
@@ -97,13 +88,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 font-sans transition-colors dark:bg-stone-950">
+    <AppShell onSignOut={() => void signOut()}>
       <DashboardHeader
-        onHomeClick={handleHomeClick}
-        onNavigateExpenses={() => navigate('/expenses')}
-        filtersOpen={filtersOpen}
-        onToggleFilters={() => setFiltersOpen((current) => !current)}
-        activeFiltersCount={activeFiltersCount}
+        activeQuickRange={getActiveQuickRange(filters.dateFrom, filters.dateTo)}
         dateFrom={filters.dateFrom}
         dateTo={filters.dateTo}
         onDateFromChange={filters.changeDateFrom}
@@ -113,22 +100,16 @@ export default function Dashboard() {
         onExportCsv={handleExportCsv}
         exporting={exportingCsv}
         exportDisabled={loading || exportingCsv || filtered.length === 0}
-        onSignOut={() => void signOut()}
         canSyncGmail={sync.canSyncGmail}
         syncStatus={sync.syncStatus}
         syncMsg={sync.syncMsg}
         onOpenSyncModal={sync.openSyncModal}
+        googleAuthenticated={sync.googleAuthenticated}
+        syncing={sync.syncing}
+        authenticatingGoogle={sync.authenticatingGoogle}
+        onSync={sync.handleSync}
+        onGoogleAuth={sync.handleGoogleAuth}
       />
-
-      {sync.canSyncGmail && (
-        <SyncButton
-          googleAuthenticated={sync.googleAuthenticated}
-          syncing={sync.syncing}
-          authenticatingGoogle={sync.authenticatingGoogle}
-          onSync={sync.handleSync}
-          onGoogleAuth={sync.handleGoogleAuth}
-        />
-      )}
 
       <main className="max-w-6xl mx-auto px-6 py-8">
         <ActiveReservationsPanel
@@ -169,11 +150,11 @@ export default function Dashboard() {
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center py-24 text-sm text-stone-300 dark:text-stone-600">
+              <div className="flex items-center justify-center py-24 text-sm text-ink-muted/70 dark:text-ink-muted-dark/70">
                 Carregando...
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-2 py-24 text-stone-300 dark:text-stone-600">
+              <div className="flex flex-col items-center justify-center gap-2 py-24 text-ink-muted/70 dark:text-ink-muted-dark/70">
                 <svg
                   className="w-10 h-10"
                   fill="none"
@@ -190,7 +171,7 @@ export default function Dashboard() {
                 <span className="text-sm">Nenhuma reserva encontrada</span>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-xl border border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-900">
+              <div className="overflow-hidden rounded-xl border border-line bg-surface transition-colors dark:border-line-dark dark:bg-surface-dark">
                 <ReservationsTable
                   reservations={paginated}
                   fadeKey={`${filters.filter}-${currentPage}`}
@@ -221,6 +202,6 @@ export default function Dashboard() {
           onClose={sync.closeSyncModal}
         />
       )}
-    </div>
+    </AppShell>
   )
 }

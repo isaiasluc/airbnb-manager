@@ -13,12 +13,12 @@ export default function OccupancyCalendar({
   onSelectReservation: (reservationId: number) => void
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-900">
-      <div className="grid grid-cols-7 border-b border-stone-200 dark:border-stone-800">
+    <div className="overflow-hidden rounded-xl border border-line bg-surface transition-colors dark:border-line-dark dark:bg-surface-dark">
+      <div className="grid grid-cols-7 border-b border-line dark:border-line-dark">
         {WEEKDAYS.map((weekday) => (
           <div
             key={weekday}
-            className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wide text-stone-400 dark:text-stone-500"
+            className="px-2 py-2 text-center text-xs font-medium uppercase tracking-wide text-ink-muted dark:text-ink-muted-dark"
           >
             {weekday}
           </div>
@@ -34,7 +34,7 @@ export default function OccupancyCalendar({
           />
         ))}
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-stone-400 dark:text-stone-500">
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-ink-muted dark:text-ink-muted-dark">
             Carregando...
           </div>
         )}

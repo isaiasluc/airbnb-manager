@@ -53,26 +53,26 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 font-sans transition-colors dark:bg-stone-950">
+    <div className="min-h-screen bg-paper font-sans transition-colors dark:bg-paper-dark">
       <header className="flex justify-end px-6 py-4">
         <ThemeToggle />
       </header>
       <main className="mx-auto flex min-h-[calc(100vh-72px)] w-full max-w-md items-center px-6 pb-16">
         <form
           onSubmit={handleSubmit}
-          className="w-full rounded-xl border border-stone-200 bg-white px-6 py-7 shadow-sm transition-colors dark:border-stone-800 dark:bg-stone-900"
+          className="w-full rounded-xl border border-line bg-surface px-6 py-7 shadow-sm transition-colors dark:border-line-dark dark:bg-surface-dark"
         >
           <div className="mb-7">
-            <p className="text-sm font-medium text-stone-400 dark:text-stone-500">
+            <p className="text-sm font-medium text-ink-muted dark:text-ink-muted-dark">
               Airbnb Manager
             </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-stone-900 dark:text-stone-100">
+            <h1 className="font-display mt-1 text-2xl font-semibold tracking-tight text-ink dark:text-ink-dark">
               Entrar
             </h1>
           </div>
 
           <div className="space-y-4">
-            <label className="block text-sm font-medium text-stone-600 dark:text-stone-300">
+            <label className="block text-sm font-medium text-ink-muted dark:text-ink-muted-dark">
               E-mail
               <input
                 type="email"
@@ -80,11 +80,11 @@ export default function Login() {
                 onChange={(event) => setEmail(event.target.value)}
                 autoComplete="email"
                 required
-                className="mt-1 h-11 w-full rounded-lg border border-stone-200 bg-white px-3 text-stone-900 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+                className="mt-1 h-11 w-full rounded-lg border border-line bg-surface px-3 text-ink outline-none transition-colors focus:border-accent dark:border-line-dark dark:bg-paper-dark dark:text-ink-dark dark:focus:border-accent-dark"
               />
             </label>
 
-            <label className="block text-sm font-medium text-stone-600 dark:text-stone-300">
+            <label className="block text-sm font-medium text-ink-muted dark:text-ink-muted-dark">
               Senha
               <input
                 type="password"
@@ -92,7 +92,7 @@ export default function Login() {
                 onChange={(event) => setPassword(event.target.value)}
                 autoComplete="current-password"
                 required
-                className="mt-1 h-11 w-full rounded-lg border border-stone-200 bg-white px-3 text-stone-900 outline-none transition-colors focus:border-stone-500 dark:border-stone-700 dark:bg-stone-950 dark:text-stone-100"
+                className="mt-1 h-11 w-full rounded-lg border border-line bg-surface px-3 text-ink outline-none transition-colors focus:border-accent dark:border-line-dark dark:bg-paper-dark dark:text-ink-dark dark:focus:border-accent-dark"
               />
             </label>
           </div>
@@ -106,7 +106,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading || submitting}
-            className="mt-6 h-11 w-full rounded-lg bg-stone-900 px-4 text-sm font-medium text-white transition-colors hover:bg-stone-700 disabled:opacity-50 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-stone-300"
+            className="mt-6 h-11 w-full rounded-lg bg-accent px-4 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50 dark:bg-accent-dark dark:text-ink dark:hover:bg-accent-hover-dark"
           >
             {submitting ? "Entrando..." : "Entrar"}
           </button>
