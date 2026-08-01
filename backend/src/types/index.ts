@@ -62,3 +62,37 @@ export interface OccupancyStats {
   totalNights: number
   occupancyRate: number
 }
+
+export interface Expense {
+  id: number
+  description: string
+  category: 'despesas' | 'reparos' | 'limpeza' | 'compras'
+  amount: number
+  expense_date: Date
+  status: 'paid' | 'pending'
+  paid_at: Date | null
+  created_at: Date
+  updated_at: Date
+}
+
+export type CreateExpenseInput = {
+  description: string
+  category: Expense['category']
+  amount: number
+  expense_date: Date | string
+  status?: Expense['status']
+  paid_at?: Date | string | null
+}
+
+export interface ExpenseListFilters {
+  from?: string
+  to?: string
+  category?: Expense['category']
+  status?: Expense['status']
+}
+
+export interface MonthlyExpenseSummary {
+  month: string
+  total: number
+  byCategory: Record<Expense['category'], number>
+}

@@ -9,6 +9,7 @@ import SyncStatusBar from '@/presentation/components/sync/SyncStatusBar'
 
 interface DashboardHeaderProps {
   onHomeClick: () => void
+  onNavigateExpenses: () => void
   filtersOpen: boolean
   onToggleFilters: () => void
   activeFiltersCount: number
@@ -36,6 +37,7 @@ const DATE_INPUT_CLASS =
 
 export default function DashboardHeader({
   onHomeClick,
+  onNavigateExpenses,
   filtersOpen,
   onToggleFilters,
   activeFiltersCount,
@@ -57,14 +59,23 @@ export default function DashboardHeader({
   return (
     <header className="sticky top-0 z-10 border-b border-stone-200 bg-white transition-colors dark:border-stone-800 dark:bg-stone-950">
       <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <button type="button" onClick={onHomeClick} className="text-left group">
-          <h1 className="text-xl font-semibold text-stone-900 tracking-tight transition-colors group-hover:text-stone-600 dark:text-stone-100 dark:group-hover:text-stone-300">
-            Hospedagens
-          </h1>
-          <p className="mt-0.5 text-sm text-stone-400 dark:text-stone-500">
-            Apê dos sonhos em Ponta Negra
-          </p>
-        </button>
+        <div className="flex items-start justify-between gap-3 lg:justify-start">
+          <button type="button" onClick={onHomeClick} className="text-left group">
+            <h1 className="text-xl font-semibold text-stone-900 tracking-tight transition-colors group-hover:text-stone-600 dark:text-stone-100 dark:group-hover:text-stone-300">
+              Hospedagens
+            </h1>
+            <p className="mt-0.5 text-sm text-stone-400 dark:text-stone-500">
+              Apê dos sonhos em Ponta Negra
+            </p>
+          </button>
+          <button
+            type="button"
+            onClick={onNavigateExpenses}
+            className={`${FILTER_BUTTON_CLASS} lg:ml-4`}
+          >
+            Despesas
+          </button>
+        </div>
         <div className="flex flex-1 flex-col gap-3">
           <div className="flex items-center justify-between gap-2 sm:hidden">
             <button

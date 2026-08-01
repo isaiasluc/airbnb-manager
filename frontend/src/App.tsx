@@ -3,6 +3,7 @@ import PrivateRoute from "@/presentation/shared/PrivateRoute";
 import Dashboard from "@/presentation/pages/Dashboard";
 import Login from "@/presentation/pages/Login";
 import ReservationDetail from "@/presentation/pages/ReservationDetail";
+import Expenses from "@/presentation/pages/Expenses";
 
 export default function App() {
   return (
@@ -22,6 +23,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <ReservationDetail />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/expenses"
+          element={
+            <PrivateRoute>
+              <Expenses />
             </PrivateRoute>
           }
         />

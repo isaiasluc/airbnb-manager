@@ -100,6 +100,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-stone-50 font-sans transition-colors dark:bg-stone-950">
       <DashboardHeader
         onHomeClick={handleHomeClick}
+        onNavigateExpenses={() => navigate('/expenses')}
         filtersOpen={filtersOpen}
         onToggleFilters={() => setFiltersOpen((current) => !current)}
         activeFiltersCount={activeFiltersCount}

@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv'
 dotenv.config()
 
 import reservationRoutes from './routes/reservation.routes'
+import expenseRoutes     from './routes/expense.routes'
 import syncRoutes        from './routes/sync.routes'
 import googleAuthRoutes  from './routes/google-auth.routes'
 import adminRoutes       from './routes/admin.routes'
@@ -22,6 +23,7 @@ app.get('/health', (_req, res) => res.json({ ok: true }))
 app.use('/google-auth', googleAuthRoutes)
 app.use('/cron',         cronRoutes)
 app.use('/reservations', verifyFirebaseToken, reservationRoutes)
+app.use('/expenses',     verifyFirebaseToken, expenseRoutes)
 app.use('/sync',         verifyFirebaseToken, requireSyncEmail, syncRoutes)
 app.use('/admin',        verifyFirebaseToken, requireSyncEmail, adminRoutes)
 

@@ -1,0 +1,1130 @@
+[
+  {
+    "description": "Energia",
+    "category": "despesas",
+    "amount": 20.59,
+    "expense_date": "2023-08-15",
+    "status": "paid",
+    "paid_at": "2023-08-15"
+  },
+  {
+    "description": "Energia",
+    "category": "despesas",
+    "amount": 21.63,
+    "expense_date": "2023-08-15",
+    "status": "paid",
+    "paid_at": "2023-08-15"
+  },
+  {
+    "description": "Internet",
+    "category": "despesas",
+    "amount": 121.25,
+    "expense_date": "2023-08-15",
+    "status": "paid",
+    "paid_at": "2023-08-15"
+  },
+  {
+    "description": "Cortina do quarto",
+    "category": "despesas",
+    "amount": 268.8,
+    "expense_date": "2023-08-15",
+    "status": "paid",
+    "paid_at": "2023-08-15"
+  },
+  {
+    "description": "Reparo do banheiro, pia, e ducha + Mão-de-obra",
+    "category": "reparos",
+    "amount": 248,
+    "expense_date": "2023-09-22",
+    "status": "paid",
+    "paid_at": "2023-09-22"
+  },
+  {
+    "description": "Serviço de Limpeza (Saharok Al)",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2023-08-29",
+    "status": "paid",
+    "paid_at": "2023-08-29"
+  },
+  {
+    "description": "Produtos de Limpeza",
+    "category": "limpeza",
+    "amount": 36.58,
+    "expense_date": "2023-08-29",
+    "status": "paid",
+    "paid_at": "2023-08-29"
+  },
+  {
+    "description": "Serviço de Limpeza (Ivanna Lima)",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2023-09-04",
+    "status": "paid",
+    "paid_at": "2023-09-07"
+  },
+  {
+    "description": "Reparo do banheiro: vazamento na pia da suíte, massa corrida no sanitário e troca de registro do chuveiro do banheiro social",
+    "category": "reparos",
+    "amount": 280,
+    "expense_date": "2023-10-05",
+    "status": "paid",
+    "paid_at": "2023-11-16"
+  },
+  {
+    "description": "Serviço de limpeza + produtos de limpeza",
+    "category": "limpeza",
+    "amount": 163.56,
+    "expense_date": "2023-10-24",
+    "status": "paid",
+    "paid_at": "2023-11-08"
+  },
+  {
+    "description": "Serviço de Limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2023-11-07",
+    "status": "paid",
+    "paid_at": "2023-11-08"
+  },
+  {
+    "description": "Serviço de limpeza + produtos de limpeza",
+    "category": "limpeza",
+    "amount": 182.22,
+    "expense_date": "2023-12-15",
+    "status": "paid",
+    "paid_at": "2023-12-22"
+  },
+  {
+    "description": "Serviço de Limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2023-12-20",
+    "status": "paid",
+    "paid_at": "2023-12-22"
+  },
+  {
+    "description": "Serviço de Limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2023-12-30",
+    "status": "paid",
+    "paid_at": "2024-01-04"
+  },
+  {
+    "description": "Serviço de limpeza + produtos de limpeza",
+    "category": "limpeza",
+    "amount": 167.41,
+    "expense_date": "2024-01-02",
+    "status": "paid",
+    "paid_at": "2024-01-04"
+  },
+  {
+    "description": "Troca de todas as tomadas + reparo do banheiro da suíte + uber para ida a conjol ",
+    "category": "reparos",
+    "amount": 370,
+    "expense_date": "2024-01-13",
+    "status": "paid",
+    "paid_at": "2024-01-13"
+  },
+  {
+    "description": "Limpeza de ar condicionado (300,00) + Registro banheiro suíte (130,00) + Mão de obra (100,00) ",
+    "category": "reparos",
+    "amount": 530,
+    "expense_date": "2024-01-24",
+    "status": "paid",
+    "paid_at": "2024-01-24"
+  },
+  {
+    "description": "Serviço de Limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2024-01-24",
+    "status": "paid",
+    "paid_at": "2024-02-25"
+  },
+  {
+    "description": "Serviço de Limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2024-02-05",
+    "status": "paid",
+    "paid_at": "2024-02-25"
+  },
+  {
+    "description": "Reparo do ralo nos dois banheiros",
+    "category": "reparos",
+    "amount": 300,
+    "expense_date": "2024-02-22",
+    "status": "paid",
+    "paid_at": "2024-02-25"
+  },
+  {
+    "description": "Serviço de limpeza + produtos de limpeza",
+    "category": "limpeza",
+    "amount": 168.54,
+    "expense_date": "2024-02-23",
+    "status": "paid",
+    "paid_at": "2024-02-25"
+  },
+  {
+    "description": "Reparo da pia da cozinha",
+    "category": "reparos",
+    "amount": 160,
+    "expense_date": "2024-02-27",
+    "status": "paid",
+    "paid_at": "2024-03-19"
+  },
+  {
+    "description": "Serviço de Limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2024-03-05",
+    "status": "paid",
+    "paid_at": "2024-04-01"
+  },
+  {
+    "description": "Energia referente ao mês de Janeiro 2024",
+    "category": "despesas",
+    "amount": 23.68,
+    "expense_date": "2024-03-06",
+    "status": "paid",
+    "paid_at": "2024-03-19"
+  },
+  {
+    "description": "Energia referente ao mês de Fevereiro 2024",
+    "category": "despesas",
+    "amount": 21.96,
+    "expense_date": "2024-03-06",
+    "status": "paid",
+    "paid_at": "2024-03-19"
+  },
+  {
+    "description": "Serviço de limpeza + produtos de limpeza",
+    "category": "limpeza",
+    "amount": 167.58,
+    "expense_date": "2024-03-20",
+    "status": "paid",
+    "paid_at": "2024-04-01"
+  },
+  {
+    "description": "4 travesseiros",
+    "category": "despesas",
+    "amount": 94.64,
+    "expense_date": "2024-06-29",
+    "status": "paid",
+    "paid_at": "2024-07-15"
+  },
+  {
+    "description": "Energia - Maio",
+    "category": "despesas",
+    "amount": 23.62,
+    "expense_date": "2024-07-18",
+    "status": "paid",
+    "paid_at": "2024-08-23"
+  },
+  {
+    "description": "Energia - Junho",
+    "category": "despesas",
+    "amount": 25.08,
+    "expense_date": "2024-07-18",
+    "status": "paid",
+    "paid_at": "2024-08-23"
+  },
+  {
+    "description": "Serviço de limpeza + produtos de limpeza",
+    "category": "despesas",
+    "amount": 169.31,
+    "expense_date": "2024-07-30",
+    "status": "paid",
+    "paid_at": "2024-08-23"
+  },
+  {
+    "description": "Cuscuzeira",
+    "category": "despesas",
+    "amount": 69.9,
+    "expense_date": "2024-07-31",
+    "status": "paid",
+    "paid_at": "2024-08-23"
+  },
+  {
+    "description": "Energia - Julho",
+    "category": "despesas",
+    "amount": 25.24,
+    "expense_date": "2024-08-23",
+    "status": "paid",
+    "paid_at": "2024-08-23"
+  },
+  {
+    "description": "Reparo do interfone",
+    "category": "reparos",
+    "amount": 100,
+    "expense_date": "2024-09-05",
+    "status": "paid",
+    "paid_at": "2024-09-16"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2024-09-07",
+    "status": "paid",
+    "paid_at": "2024-09-16"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2024-10-12",
+    "status": "paid",
+    "paid_at": "2024-10-16"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 35.85,
+    "expense_date": "2024-10-12",
+    "status": "paid",
+    "paid_at": "2024-10-16"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2024-10-16",
+    "status": "paid",
+    "paid_at": "2024-10-16"
+  },
+  {
+    "description": "Fechamento de 4 buracos no teto do corredor após instalação da internet Claro",
+    "category": "reparos",
+    "amount": 120,
+    "expense_date": "2024-10-25",
+    "status": "paid",
+    "paid_at": "2024-11-11"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2024-11-11",
+    "status": "paid",
+    "paid_at": "2024-11-11"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2024-11-18",
+    "status": "paid",
+    "paid_at": "2024-11-18"
+  },
+  {
+    "description": "Serviço de limpeza + água sanitária",
+    "category": "limpeza",
+    "amount": 132.75,
+    "expense_date": "2024-11-30",
+    "status": "paid",
+    "paid_at": "2024-12-09"
+  },
+  {
+    "description": "Serviço de limpeza + produtos de limpeza",
+    "category": "limpeza",
+    "amount": 162.35,
+    "expense_date": "2024-12-10",
+    "status": "paid",
+    "paid_at": "2024-12-12"
+  },
+  {
+    "description": "Faturas energia",
+    "category": "despesas",
+    "amount": 123.28,
+    "expense_date": "2025-01-06",
+    "status": "paid",
+    "paid_at": "2025-01-13"
+  },
+  {
+    "description": "Fatura Energia do mês Dezembro 2024",
+    "category": "despesas",
+    "amount": 23.64,
+    "expense_date": "2025-02-18",
+    "status": "paid",
+    "paid_at": "2025-03-05"
+  },
+  {
+    "description": "Fatura Energia do mês Janeiro 2025",
+    "category": "despesas",
+    "amount": 26.3,
+    "expense_date": "2025-02-18",
+    "status": "paid",
+    "paid_at": "2025-03-05"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-03-01",
+    "status": "paid",
+    "paid_at": "2025-03-05"
+  },
+  {
+    "description": "Lava + seca de roupas na lavanderia",
+    "category": "limpeza",
+    "amount": 79.65,
+    "expense_date": "2025-03-01",
+    "status": "paid",
+    "paid_at": "2025-03-05"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-03-04",
+    "status": "paid",
+    "paid_at": "2025-03-05"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 34.73,
+    "expense_date": "2025-03-04",
+    "status": "paid",
+    "paid_at": "2025-03-05"
+  },
+  {
+    "description": "Uber moto ida e volta Neize",
+    "category": "limpeza",
+    "amount": 27.21,
+    "expense_date": "2025-03-04",
+    "status": "paid",
+    "paid_at": "2025-03-05"
+  },
+  {
+    "description": "Serviço de limpeza + papel higiênico",
+    "category": "limpeza",
+    "amount": 138.36,
+    "expense_date": "2025-03-14",
+    "status": "paid",
+    "paid_at": "2025-04-05"
+  },
+  {
+    "description": "Manutenção da descarga da suíte",
+    "category": "reparos",
+    "amount": 180,
+    "expense_date": "2025-03-20",
+    "status": "paid",
+    "paid_at": "2025-04-05"
+  },
+  {
+    "description": "Serviço de limpeza + produtos de limpeza",
+    "category": "limpeza",
+    "amount": 159.74,
+    "expense_date": "2025-03-25",
+    "status": "paid",
+    "paid_at": "2025-04-05"
+  },
+  {
+    "description": "Fatura Energia do mês Fevereiro 2025",
+    "category": "despesas",
+    "amount": 25.24,
+    "expense_date": "2025-03-25",
+    "status": "paid",
+    "paid_at": "2025-04-05"
+  },
+  {
+    "description": "Fatura Energia do mês Março 2025",
+    "category": "despesas",
+    "amount": 24.16,
+    "expense_date": "2025-04-05",
+    "status": "paid",
+    "paid_at": "2025-04-05"
+  },
+  {
+    "description": "Serviço de limpeza + produtos de limpeza",
+    "category": "limpeza",
+    "amount": 175.4,
+    "expense_date": "2025-05-02",
+    "status": "paid",
+    "paid_at": "2025-05-08"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-05-13",
+    "status": "paid",
+    "paid_at": "2025-06-09"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-05-20",
+    "status": "paid",
+    "paid_at": "2025-06-09"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-05-27",
+    "status": "paid",
+    "paid_at": "2025-06-09"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-06-03",
+    "status": "paid",
+    "paid_at": "2025-06-09"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-06-13",
+    "status": "paid",
+    "paid_at": "2025-07-07"
+  },
+  {
+    "description": "Serviço de limpeza + produtos de limpeza",
+    "category": "limpeza",
+    "amount": 168.51,
+    "expense_date": "2025-06-24",
+    "status": "paid",
+    "paid_at": "2025-07-07"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-07-04",
+    "status": "paid",
+    "paid_at": "2025-07-07"
+  },
+  {
+    "description": "Conserto da cadeira ",
+    "category": "reparos",
+    "amount": 70,
+    "expense_date": "2025-07-07",
+    "status": "paid",
+    "paid_at": "2025-07-07"
+  },
+  {
+    "description": "Fatura Energia do mês Abril 2025",
+    "category": "despesas",
+    "amount": 23.54,
+    "expense_date": "2025-07-18",
+    "status": "paid",
+    "paid_at": "2025-08-21"
+  },
+  {
+    "description": "Fatura Energia do mês Maio 2025",
+    "category": "despesas",
+    "amount": 24.07,
+    "expense_date": "2025-07-18",
+    "status": "paid",
+    "paid_at": "2025-08-21"
+  },
+  {
+    "description": "Fatura Energia do mês Junho 2025",
+    "category": "despesas",
+    "amount": 24.57,
+    "expense_date": "2025-07-18",
+    "status": "paid",
+    "paid_at": "2025-08-21"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-07-18",
+    "status": "paid",
+    "paid_at": "2025-08-21"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-07-21",
+    "status": "paid",
+    "paid_at": "2025-08-21"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-08-04",
+    "status": "paid",
+    "paid_at": "2025-08-04"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 49.05,
+    "expense_date": "2025-08-04",
+    "status": "paid",
+    "paid_at": "2025-08-21"
+  },
+  {
+    "description": "Reparo de infiltração na suíte",
+    "category": "reparos",
+    "amount": 230,
+    "expense_date": "2025-08-07",
+    "status": "paid",
+    "paid_at": "2025-08-21"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-08-28",
+    "status": "paid",
+    "paid_at": "2025-09-05"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-09-26",
+    "status": "paid",
+    "paid_at": "2025-10-06"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 74.29,
+    "expense_date": "2025-09-26",
+    "status": "paid",
+    "paid_at": "2025-10-06"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-10-13",
+    "status": "paid",
+    "paid_at": "2025-11-07"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-10-21",
+    "status": "paid",
+    "paid_at": "2025-11-07"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 32.14,
+    "expense_date": "2025-10-21",
+    "status": "paid",
+    "paid_at": "2025-11-07"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-10-27",
+    "status": "paid",
+    "paid_at": "2025-11-07"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 63.86,
+    "expense_date": "2025-10-27",
+    "status": "paid",
+    "paid_at": "2025-11-07"
+  },
+  {
+    "description": "Varal de chão gigante + adaptador 20a secador + removedor tinta caneta + 3 prededores de porta + acendedor fogão",
+    "category": "compras",
+    "amount": 269.32,
+    "expense_date": "2025-10-31",
+    "status": "paid",
+    "paid_at": "2025-10-31"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-11-08",
+    "status": "paid",
+    "paid_at": "2025-12-08"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 41.92,
+    "expense_date": "2025-11-08",
+    "status": "paid",
+    "paid_at": "2025-12-08"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-11-11",
+    "status": "paid",
+    "paid_at": "2025-12-08"
+  },
+  {
+    "description": "Dedetização",
+    "category": "reparos",
+    "amount": 195,
+    "expense_date": "2025-11-12",
+    "status": "paid",
+    "paid_at": "2025-12-08"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 31.43,
+    "expense_date": "2025-11-24",
+    "status": "paid",
+    "paid_at": "2025-12-08"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-11-24",
+    "status": "paid",
+    "paid_at": "2025-12-08"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-12-01",
+    "status": "paid",
+    "paid_at": "2026-01-06"
+  },
+  {
+    "description": "Faturas de Energia",
+    "category": "despesas",
+    "amount": 102.63,
+    "expense_date": "2025-12-08",
+    "status": "paid",
+    "paid_at": "2026-01-06"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-12-09",
+    "status": "paid",
+    "paid_at": "2026-01-06"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 66.32,
+    "expense_date": "2025-12-09",
+    "status": "paid",
+    "paid_at": "2026-01-06"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2025-12-15",
+    "status": "paid",
+    "paid_at": "2026-01-06"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2026-01-08",
+    "status": "paid",
+    "paid_at": "2026-02-07"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2026-01-15",
+    "status": "paid",
+    "paid_at": "2026-02-07"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 130,
+    "expense_date": "2026-01-23",
+    "status": "paid",
+    "paid_at": "2026-02-07"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 50.89,
+    "expense_date": "2026-01-23",
+    "status": "paid",
+    "paid_at": "2026-02-07"
+  },
+  {
+    "description": "Secagem de roupas na lavanderia",
+    "category": "limpeza",
+    "amount": 16.95,
+    "expense_date": "2026-01-27",
+    "status": "paid",
+    "paid_at": "2026-02-07"
+  },
+  {
+    "description": "Serviço de desentupimento do ralo do banheiro suíte",
+    "category": "limpeza",
+    "amount": 250,
+    "expense_date": "2026-01-30",
+    "status": "paid",
+    "paid_at": "2026-02-07"
+  },
+  {
+    "description": "Serviço de reparo do registro do banheiro social",
+    "category": "reparos",
+    "amount": 260,
+    "expense_date": "2026-02-03",
+    "status": "paid",
+    "paid_at": "2026-03-05"
+  },
+  {
+    "description": "MSV p/ registro de pressão Deca",
+    "category": "reparos",
+    "amount": 139.68,
+    "expense_date": "2026-02-03",
+    "status": "paid",
+    "paid_at": "2026-03-05"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-02-05",
+    "status": "paid",
+    "paid_at": "2026-03-05"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 57.73,
+    "expense_date": "2026-02-12",
+    "status": "paid",
+    "paid_at": "2026-03-05"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-02-12",
+    "status": "paid",
+    "paid_at": "2026-03-05"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-02-19",
+    "status": "paid",
+    "paid_at": "2026-03-05"
+  },
+  {
+    "description": "Reparo da cadeira da sala",
+    "category": "reparos",
+    "amount": 80,
+    "expense_date": "2026-02-20",
+    "status": "paid",
+    "paid_at": "2026-03-05"
+  },
+  {
+    "description": "Kit p/ caixa acoplada + fita veda rosca + engate branco",
+    "category": "reparos",
+    "amount": 231.16,
+    "expense_date": "2026-02-20",
+    "status": "paid",
+    "paid_at": "2026-03-05"
+  },
+  {
+    "description": "Serviço de troca da descarga do banheiro suíte",
+    "category": "reparos",
+    "amount": 180,
+    "expense_date": "2026-02-20",
+    "status": "paid",
+    "paid_at": "2026-03-05"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-02-24",
+    "status": "paid",
+    "paid_at": "2026-03-05"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 47.64,
+    "expense_date": "2026-02-24",
+    "status": "paid",
+    "paid_at": "2026-03-05"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-03-02",
+    "status": "paid",
+    "paid_at": "2026-04-07"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 49.75,
+    "expense_date": "2026-03-09",
+    "status": "paid",
+    "paid_at": "2026-04-07"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-03-09",
+    "status": "paid",
+    "paid_at": "2026-04-07"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-03-13",
+    "status": "paid",
+    "paid_at": "2026-04-07"
+  },
+  {
+    "description": "4 pilhas AA para fechadura eletrônica",
+    "category": "compras",
+    "amount": 17.97,
+    "expense_date": "2026-03-13",
+    "status": "paid",
+    "paid_at": "2026-04-07"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 44.19,
+    "expense_date": "2026-03-17",
+    "status": "paid",
+    "paid_at": "2026-04-07"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-03-17",
+    "status": "paid",
+    "paid_at": "2026-04-07"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 39.96,
+    "expense_date": "2026-03-26",
+    "status": "paid",
+    "paid_at": "2026-04-07"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-03-26",
+    "status": "paid",
+    "paid_at": "2026-04-07"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-04-09",
+    "status": "paid",
+    "paid_at": "2026-05-08"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 53.8,
+    "expense_date": "2026-04-18",
+    "status": "paid",
+    "paid_at": "2026-05-08"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-04-18",
+    "status": "paid",
+    "paid_at": "2026-05-08"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-04-24",
+    "status": "paid",
+    "paid_at": "2026-05-08"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 52.35,
+    "expense_date": "2026-05-06",
+    "status": "paid",
+    "paid_at": "2026-06-04"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-05-07",
+    "status": "paid",
+    "paid_at": "2026-06-04"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-05-14",
+    "status": "paid",
+    "paid_at": "2026-06-04"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-05-21",
+    "status": "paid",
+    "paid_at": "2026-06-04"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-05-26",
+    "status": "paid",
+    "paid_at": "2026-06-04"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 42.37,
+    "expense_date": "2026-05-26",
+    "status": "paid",
+    "paid_at": "2026-06-04"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-06-16",
+    "status": "paid",
+    "paid_at": "2026-07-01"
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-06-26",
+    "status": "paid",
+    "paid_at": "2026-07-01"
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 43.95,
+    "expense_date": "2026-07-02",
+    "status": "pending",
+    "paid_at": null
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-07-03",
+    "status": "pending",
+    "paid_at": null
+  },
+  {
+    "description": "4 Pilhas AA para fechadura eletrônica + 1 Bateria 9V",
+    "category": "compras",
+    "amount": 45.76,
+    "expense_date": "2026-07-08",
+    "status": "pending",
+    "paid_at": null
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-07-11",
+    "status": "pending",
+    "paid_at": null
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 36.22,
+    "expense_date": "2026-07-12",
+    "status": "pending",
+    "paid_at": null
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-07-13",
+    "status": "pending",
+    "paid_at": null
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-07-19",
+    "status": "pending",
+    "paid_at": null
+  },
+  {
+    "description": "Uber de ida e volta (R$ 30,94 + 29,94)",
+    "category": "despesas",
+    "amount": 60.88,
+    "expense_date": "2026-07-19",
+    "status": "pending",
+    "paid_at": null
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-07-27",
+    "status": "pending",
+    "paid_at": null
+  },
+  {
+    "description": "Serviço de limpeza",
+    "category": "limpeza",
+    "amount": 140,
+    "expense_date": "2026-08-01",
+    "status": "pending",
+    "paid_at": null
+  },
+  {
+    "description": "Produtos de limpeza",
+    "category": "limpeza",
+    "amount": 57.44,
+    "expense_date": "2026-08-01",
+    "status": "pending",
+    "paid_at": null
+  }
+]
