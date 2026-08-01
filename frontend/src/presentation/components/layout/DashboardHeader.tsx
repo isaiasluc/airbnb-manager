@@ -59,7 +59,7 @@ export default function DashboardHeader({
   onGoogleAuth,
 }: DashboardHeaderProps) {
   return (
-    <header className="sticky top-0 z-10 border-b border-line bg-surface transition-colors dark:border-line-dark dark:bg-surface-dark">
+    <header className="sticky top-14 z-10 border-b border-line bg-surface transition-colors md:top-0 dark:border-line-dark dark:bg-surface-dark">
       <div className="max-w-6xl mx-auto px-6 pt-5 pb-3">
         <h1 className="font-display text-xl font-semibold tracking-tight text-ink dark:text-ink-dark">
           Hospedagens
