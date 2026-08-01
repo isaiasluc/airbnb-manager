@@ -32,7 +32,7 @@ Estado do projeto e próximos passos. Atualizado em 2026-07-19.
 
 ### E-mails
 - E-mails de check-in automáticos (cron diário 08:00 America/Sao_Paulo) para reservas
-  com check-in dentro de 7 dias e ainda não notificadas.
+  com check-in dentro de 2 dias e ainda não notificadas.
 - Envio manual do e-mail de check-in pela tela de detalhe.
 - Marcação de "e-mail enviado".
 

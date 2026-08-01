@@ -77,7 +77,7 @@ Config via `.env` (não versionado). Variáveis principais: `DATABASE_URL`,
   confirmação do Airbnb, faz parse e cria reservas (dedupe por `source_email_id`).
 - **E-mails de check-in** (`reservation.service.sendDueCheckinEmails`): cron diário 08:00
   America/Sao_Paulo + `POST /cron/checkin-emails` (externo, header `x-cron-secret`).
-  Envia para reservas `confirmed`, `email_sent=false`, com check-in dentro de 7 dias.
+  Envia para reservas `confirmed`, `email_sent=false`, com check-in dentro de 2 dias.
 - **Atualização automática de status** (`reservation-status.service.ts`, cron horário +
   startup + `POST /cron/reservation-status`): avança `confirmed → in_progress` no
   check-in e `confirmed/in_progress → completed` no checkout. Comparação por timestamp
