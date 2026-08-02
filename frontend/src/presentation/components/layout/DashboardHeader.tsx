@@ -59,7 +59,7 @@ export default function DashboardHeader({
       </div>
 
       <div className="border-t border-line bg-paper/60 dark:border-line-dark dark:bg-paper-dark/40">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex flex-wrap items-center gap-2">
+        <div className="max-w-6xl mx-auto px-6 py-3 flex flex-wrap items-center justify-between gap-2">
           <DateRangePicker
             dateFrom={dateFrom}
             dateTo={dateTo}
@@ -67,7 +67,7 @@ export default function DashboardHeader({
             onApply={onApplyDateRange}
           />
 
-          <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {canSyncGmail && (
               <SyncButton
                 googleAuthenticated={googleAuthenticated}

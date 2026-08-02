@@ -75,31 +75,31 @@ export default function Expenses() {
         </div>
 
         <div className="border-t border-line bg-paper/60 dark:border-line-dark dark:bg-paper-dark/40">
-          <div className="max-w-6xl mx-auto px-6 py-3 flex flex-wrap items-center gap-2">
-            <DateRangePicker
-              dateFrom={from}
-              dateTo={to}
-              presets={datePresets}
-              onApply={(range) => setRange(range)}
-            />
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as ExpenseCategory | '')}
-              className={inputClass}
-            >
-              <option value="">Todas as categorias</option>
-              {categoryOptions.map((c) => (
-                <option key={c} value={c}>
-                  {categoryLabel[c]}
-                </option>
-              ))}
-            </select>
-
-            <div className="ml-auto">
-              <button type="button" onClick={() => setModalExpense('new')} className={buttonPrimary}>
-                Nova despesa
-              </button>
+          <div className="max-w-6xl mx-auto px-6 py-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <DateRangePicker
+                dateFrom={from}
+                dateTo={to}
+                presets={datePresets}
+                onApply={(range) => setRange(range)}
+              />
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as ExpenseCategory | '')}
+                className={inputClass}
+              >
+                <option value="">Todas as categorias</option>
+                {categoryOptions.map((c) => (
+                  <option key={c} value={c}>
+                    {categoryLabel[c]}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            <button type="button" onClick={() => setModalExpense('new')} className={buttonPrimary}>
+              Nova despesa
+            </button>
           </div>
         </div>
       </header>
