@@ -3,26 +3,22 @@ import {
   getCurrentMonthRange,
   getNext30DaysRange,
 } from '@/presentation/shared/dateRanges'
-import {
-  buttonSecondary,
-  buttonSecondaryActive,
-  inputClass,
-  labelClass,
-} from '@/presentation/shared/buttonStyles'
+import { buttonSecondary } from '@/presentation/shared/buttonStyles'
+import DateRangePicker, { type DateRangePreset } from '@/presentation/shared/DateRangePicker'
 import SyncMessageBar from '@/presentation/components/sync/SyncMessageBar'
 import SyncStatusBar from '@/presentation/components/sync/SyncStatusBar'
 import SyncButton from '@/presentation/components/sync/SyncButton'
 
-type QuickRange = 'month' | 'next30' | 'all'
+const DATE_PRESETS: DateRangePreset[] = [
+  { key: 'month', label: 'Este mês', ...getCurrentMonthRange() },
+  { key: 'next30', label: 'Próximos 30 dias', ...getNext30DaysRange() },
+  { key: 'all', label: 'Todos', from: '', to: '' },
+]
 
 interface DashboardHeaderProps {
-  activeQuickRange: QuickRange | null
   dateFrom: string
   dateTo: string
-  onDateFromChange: (value: string) => void
-  onDateToChange: (value: string) => void
   onApplyDateRange: (range: { from: string; to: string }) => void
-  onClearDates: () => void
   onExportCsv: () => void
   exporting: boolean
   exportDisabled: boolean
@@ -38,13 +34,9 @@ interface DashboardHeaderProps {
 }
 
 export default function DashboardHeader({
-  activeQuickRange,
   dateFrom,
   dateTo,
-  onDateFromChange,
-  onDateToChange,
   onApplyDateRange,
-  onClearDates,
   onExportCsv,
   exporting,
   exportDisabled,
@@ -67,49 +59,13 @@ export default function DashboardHeader({
       </div>
 
       <div className="border-t border-line bg-paper/60 dark:border-line-dark dark:bg-paper-dark/40">
-        <div className="max-w-6xl mx-auto px-6 py-3 flex flex-wrap items-end gap-x-3 gap-y-2">
-          <label className={`flex flex-col gap-1 ${labelClass}`}>
-            Início
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(event) => onDateFromChange(event.target.value)}
-              className={inputClass}
-            />
-          </label>
-          <label className={`flex flex-col gap-1 ${labelClass}`}>
-            Fim
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(event) => onDateToChange(event.target.value)}
-              className={inputClass}
-            />
-          </label>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onApplyDateRange(getCurrentMonthRange())}
-              className={activeQuickRange === 'month' ? buttonSecondaryActive : buttonSecondary}
-            >
-              Este mês
-            </button>
-            <button
-              type="button"
-              onClick={() => onApplyDateRange(getNext30DaysRange())}
-              className={activeQuickRange === 'next30' ? buttonSecondaryActive : buttonSecondary}
-            >
-              Próximos 30 dias
-            </button>
-            <button
-              type="button"
-              onClick={onClearDates}
-              className={activeQuickRange === 'all' ? buttonSecondaryActive : buttonSecondary}
-            >
-              Todos
-            </button>
-          </div>
+        <div className="max-w-6xl mx-auto px-6 py-3 flex flex-wrap items-center gap-2">
+          <DateRangePicker
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            presets={DATE_PRESETS}
+            onApply={onApplyDateRange}
+          />
 
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {canSyncGmail && (

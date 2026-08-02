@@ -7,7 +7,6 @@ import { useCsvExport } from '@/application/reservations/useCsvExport'
 import { useGmailSync } from '@/application/sync/useGmailSync'
 import { filterByStatus } from '@/domain/services/reservationStats'
 import { getMonthRange, parseMonthKey } from '@/domain/services/calendar'
-import { getCurrentMonthRange, getNext30DaysRange } from '@/presentation/shared/dateRanges'
 import AppShell from '@/presentation/components/layout/AppShell'
 import DashboardHeader from '@/presentation/components/layout/DashboardHeader'
 import StatsCards from '@/presentation/components/reservations/StatsCards'
@@ -19,15 +18,6 @@ import OccupancyCalendar from '@/presentation/components/calendar/OccupancyCalen
 import CalendarToolbar from '@/presentation/components/calendar/CalendarToolbar'
 import ViewToggle from '@/presentation/components/calendar/ViewToggle'
 import SyncResultModal from '@/presentation/components/sync/SyncResultModal'
-
-function getActiveQuickRange(dateFrom: string, dateTo: string): 'month' | 'next30' | 'all' | null {
-  if (!dateFrom && !dateTo) return 'all'
-  const month = getCurrentMonthRange()
-  if (dateFrom === month.from && dateTo === month.to) return 'month'
-  const next30 = getNext30DaysRange()
-  if (dateFrom === next30.from && dateTo === next30.to) return 'next30'
-  return null
-}
 
 const PAGE_SIZE = 10
 
@@ -90,13 +80,9 @@ export default function Dashboard() {
   return (
     <AppShell onSignOut={() => void signOut()}>
       <DashboardHeader
-        activeQuickRange={getActiveQuickRange(filters.dateFrom, filters.dateTo)}
         dateFrom={filters.dateFrom}
         dateTo={filters.dateTo}
-        onDateFromChange={filters.changeDateFrom}
-        onDateToChange={filters.changeDateTo}
         onApplyDateRange={filters.applyDateRange}
-        onClearDates={filters.clearDateRange}
         onExportCsv={handleExportCsv}
         exporting={exportingCsv}
         exportDisabled={loading || exportingCsv || filtered.length === 0}

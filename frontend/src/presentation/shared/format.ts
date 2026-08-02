@@ -24,6 +24,25 @@ export function formatInputDate(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+export function formatDateRangeLabel(from: string, to: string): string {
+  if (!from && !to) return 'Todos os períodos'
+  if (!from || !to) return 'Selecione um período'
+
+  const fromDate = new Date(`${from}T00:00:00Z`)
+  const toDate = new Date(`${to}T00:00:00Z`)
+  const sameYear = fromDate.getUTCFullYear() === toDate.getUTCFullYear()
+
+  const format = (date: Date, withYear: boolean) =>
+    new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+      year: withYear ? 'numeric' : undefined,
+      timeZone: 'UTC',
+    }).format(date)
+
+  return `${format(fromDate, !sameYear)} – ${format(toDate, true)}`
+}
+
 export function formatMonthLabel(year: number, month: number): string {
   const label = new Intl.DateTimeFormat('pt-BR', {
     month: 'long',

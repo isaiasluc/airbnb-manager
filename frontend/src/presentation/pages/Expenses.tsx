@@ -4,13 +4,8 @@ import { useExpenses } from '@/application/expenses/useExpenses'
 import type { CreateExpenseInput, Expense, ExpenseCategory } from '@/domain/entities/expense'
 import { createExpense, deleteExpense, updateExpense } from '@/infrastructure/expenses/expenseApi'
 import { getCurrentMonthRange } from '@/presentation/shared/dateRanges'
-import {
-  buttonPrimary,
-  buttonSecondary,
-  buttonSecondaryActive,
-  inputClass,
-  labelClass,
-} from '@/presentation/shared/buttonStyles'
+import { buttonPrimary, inputClass } from '@/presentation/shared/buttonStyles'
+import DateRangePicker, { type DateRangePreset } from '@/presentation/shared/DateRangePicker'
 import AppShell from '@/presentation/components/layout/AppShell'
 import ExpensesSummaryCards from '@/presentation/components/expenses/ExpensesSummaryCards'
 import ExpensesTable from '@/presentation/components/expenses/ExpensesTable'
@@ -66,8 +61,9 @@ export default function Expenses() {
     }
   }
 
-  const isCurrentMonth =
-    from === getCurrentMonthRange().from && to === getCurrentMonthRange().to
+  const datePresets: DateRangePreset[] = [
+    { key: 'month', label: 'Este mês', ...getCurrentMonthRange() },
+  ]
 
   return (
     <AppShell onSignOut={() => void signOut()}>
@@ -79,25 +75,13 @@ export default function Expenses() {
         </div>
 
         <div className="border-t border-line bg-paper/60 dark:border-line-dark dark:bg-paper-dark/40">
-          <div className="max-w-6xl mx-auto px-6 py-3 flex flex-wrap items-end gap-x-3 gap-y-2">
-            <label className={`flex flex-col gap-1 ${labelClass}`}>
-              Início
-              <input
-                type="date"
-                value={from}
-                onChange={(e) => setRange((r) => ({ ...r, from: e.target.value }))}
-                className={inputClass}
-              />
-            </label>
-            <label className={`flex flex-col gap-1 ${labelClass}`}>
-              Fim
-              <input
-                type="date"
-                value={to}
-                onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))}
-                className={inputClass}
-              />
-            </label>
+          <div className="max-w-6xl mx-auto px-6 py-3 flex flex-wrap items-center gap-2">
+            <DateRangePicker
+              dateFrom={from}
+              dateTo={to}
+              presets={datePresets}
+              onApply={(range) => setRange(range)}
+            />
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as ExpenseCategory | '')}
@@ -110,13 +94,6 @@ export default function Expenses() {
                 </option>
               ))}
             </select>
-            <button
-              type="button"
-              onClick={() => setRange(getCurrentMonthRange())}
-              className={isCurrentMonth ? buttonSecondaryActive : buttonSecondary}
-            >
-              Este mês
-            </button>
 
             <div className="ml-auto">
               <button type="button" onClick={() => setModalExpense('new')} className={buttonPrimary}>
