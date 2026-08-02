@@ -27,7 +27,7 @@ export default function ReservationDates({
           <p className="font-display text-xl font-semibold text-ink dark:text-ink-dark">
             {formatDate(reservation.checkout_at)}
           </p>
-          <p className="mt-0.5 text-sm text-ink-muted dark:text-ink-muted-dark">12:00</p>
+          <p className="mt-0.5 text-sm text-ink-muted dark:text-ink-muted-dark">11:00</p>
         </div>
       </div>
       <div className="flex items-center gap-6 border-t border-line px-6 py-4 text-sm text-ink-muted dark:border-line-dark dark:text-ink-muted-dark">

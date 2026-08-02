@@ -65,9 +65,12 @@ Config via `.env` (não versionado). Variáveis principais: `DATABASE_URL`,
 `reservations` (1 guest N reservations):
 - `status`: `confirmed | in_progress | cancelled | completed` (check constraint).
 - `host_service_status`: `pending | paid | cancelled`.
-- `checkin_at` / `checkout_at`: `timestamptz`, gravados no horário real em **GMT-3**
-  (check-in ~15h, checkout ~11h). **`checkout_at` é exclusivo**: o hóspede sai nesse dia,
-  então a última noite ocupada é o dia anterior ao checkout.
+- `checkin_at` / `checkout_at`: colunas **`DATE`** (sem hora — a migração
+  `20240002_alter_reservations.ts` converteu de `TIMESTAMPTZ` para `DATE` de propósito,
+  descartando a hora). A regra de transição de status (`reservation-status.service.ts`)
+  não tem hora real disponível, então assume um horário fixo de corte, horário de
+  Brasília: check-in às **14h**, checkout às **11h**. **`checkout_at` é exclusivo**: o
+  hóspede sai nesse dia, então a última noite ocupada é o dia anterior ao checkout.
 - `host_service_fee`: calculado (10% até 2026-02-08, 12% a partir daí — ver
   `reservation.service.ts`).
 
@@ -80,9 +83,13 @@ Config via `.env` (não versionado). Variáveis principais: `DATABASE_URL`,
   Envia para reservas `confirmed`, `email_sent=false`, com check-in dentro de 2 dias.
 - **Atualização automática de status** (`reservation-status.service.ts`, cron horário +
   startup + `POST /cron/reservation-status`): avança `confirmed → in_progress` no
-  check-in e `confirmed/in_progress → completed` no checkout. Comparação por timestamp
-  absoluto contra `now()`. **`cancelled` e `completed` nunca são revertidos** (override
-  manual é respeitado). Fonte de verdade da regra: `resolveReservationStatus`.
+  check-in e `confirmed/in_progress → completed` no checkout. Como `checkin_at`/
+  `checkout_at` só têm data (sem hora), a comparação usa o horário fixo de corte
+  (14h/11h, horário de Brasília) contra `now()`, não a data pura — senão a reserva
+  viraria "em andamento" à meia-noite do dia do check-in. **`cancelled` e `completed`
+  nunca são revertidos** (override manual é respeitado), e o cron só avança status, nunca
+  volta `in_progress` para `confirmed` (uma correção manual de status errado precisa ser
+  feita direto no banco). Fonte de verdade da regra: `resolveReservationStatus`.
 - **Reautenticação Google**: quando o token expira, o sync falha com `invalid_grant`; o
   backend marca o token inválido e o frontend mostra "Autenticar Google". Ver Gotchas.
 
