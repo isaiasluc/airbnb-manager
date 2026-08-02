@@ -61,8 +61,8 @@ export default function Sidebar({
               key={item.to}
               to={item.to}
               title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                collapsed ? 'justify-center' : ''
+              className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                collapsed ? 'justify-center' : 'gap-2.5'
               } ${
                 active
                   ? 'bg-accent-soft text-accent dark:bg-accent-soft-dark dark:text-accent-dark'
