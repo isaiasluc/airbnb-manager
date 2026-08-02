@@ -106,7 +106,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading || submitting}
-            className="mt-6 h-11 w-full rounded-lg bg-accent px-4 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50 dark:bg-accent-dark dark:text-ink dark:hover:bg-accent-hover-dark"
+            className="mt-6 h-11 w-full rounded-lg bg-gradient-to-r from-[var(--color-accent-grad-from)] to-[var(--color-accent-grad-to)] px-4 text-sm font-medium text-white transition-[filter] hover:brightness-110 disabled:opacity-50 dark:from-[var(--color-accent-grad-from-dark)] dark:to-[var(--color-accent-grad-to-dark)] dark:text-ink"
           >
             {submitting ? "Entrando..." : "Entrar"}
           </button>

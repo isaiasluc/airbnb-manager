@@ -1,5 +1,5 @@
 export const buttonPrimary =
-  'inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-accent px-3.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 dark:bg-accent-dark dark:text-ink dark:hover:bg-accent-hover-dark'
+  'inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-gradient-to-r from-[var(--color-accent-grad-from)] to-[var(--color-accent-grad-to)] px-3.5 text-sm font-medium text-white transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 dark:from-[var(--color-accent-grad-from-dark)] dark:to-[var(--color-accent-grad-to-dark)] dark:text-ink'
 
 export const buttonSecondary =
   'inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-surface px-3.5 text-sm font-medium text-ink-muted transition-colors hover:border-accent/40 hover:text-ink disabled:cursor-not-allowed disabled:opacity-50 dark:border-line-dark dark:bg-surface-dark dark:text-ink-muted-dark dark:hover:border-accent-dark/40 dark:hover:text-ink-dark'
@@ -20,7 +20,7 @@ export const iconButton =
   'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-surface text-ink-muted transition-colors hover:border-accent/40 hover:text-ink disabled:cursor-not-allowed disabled:opacity-50 dark:border-line-dark dark:bg-surface-dark dark:text-ink-muted-dark dark:hover:border-accent-dark/40 dark:hover:text-ink-dark'
 
 export const iconButtonPrimary =
-  'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 dark:bg-accent-dark dark:text-ink dark:hover:bg-accent-hover-dark'
+  'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-[var(--color-accent-grad-from)] to-[var(--color-accent-grad-to)] text-white transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 dark:from-[var(--color-accent-grad-from-dark)] dark:to-[var(--color-accent-grad-to-dark)] dark:text-ink'
 
 export const inputClass =
   'h-9 rounded-lg border border-line bg-surface px-3 text-sm font-normal normal-case tracking-normal text-ink outline-none transition-colors focus:border-accent dark:border-line-dark dark:bg-surface-dark dark:text-ink-dark dark:focus:border-accent-dark'

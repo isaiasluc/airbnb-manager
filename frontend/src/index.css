@@ -17,12 +17,16 @@
   --color-ink-muted-dark: #8b9186;
   --color-line: #dde3d9;
   --color-line-dark: #2b332d;
-  --color-accent: #0f7a6c;
-  --color-accent-hover: #0c6459;
-  --color-accent-dark: #2fae97;
-  --color-accent-hover-dark: #45c2ab;
-  --color-accent-soft: #e4f1ee;
-  --color-accent-soft-dark: #17332e;
+  --color-accent: #c1502e;
+  --color-accent-hover: #a8431f;
+  --color-accent-dark: #e2794f;
+  --color-accent-hover-dark: #eb9068;
+  --color-accent-soft: #fbeae1;
+  --color-accent-soft-dark: #3a2015;
+  --color-accent-grad-from: #dd7a3a;
+  --color-accent-grad-to: #c1502e;
+  --color-accent-grad-from-dark: #f0a274;
+  --color-accent-grad-to-dark: #e2794f;
   --color-dune: #c08a45;
   --color-dune-dark: #d8a862;
 }
