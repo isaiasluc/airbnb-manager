@@ -85,15 +85,17 @@ export default function ReservationDetail() {
       />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:items-start">
-          <div className="space-y-5 lg:col-span-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          <div className="flex flex-col gap-5 lg:col-span-2">
             <ReservationDates reservation={reservation} nights={nights} />
-            <ReservationFinancials
-              reservation={reservation}
-              nights={nights}
-              saving={saving}
-              onChangeHostServiceStatus={changeHostServiceStatus}
-            />
+            <div className="flex flex-1 flex-col justify-end">
+              <ReservationFinancials
+                reservation={reservation}
+                nights={nights}
+                saving={saving}
+                onChangeHostServiceStatus={changeHostServiceStatus}
+              />
+            </div>
           </div>
           <div className="space-y-5">
             <ReservationActions
