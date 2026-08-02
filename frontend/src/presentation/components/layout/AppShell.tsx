@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import Sidebar from './Sidebar'
 import MobileTopBar from './MobileTopBar'
+import MobileNavDrawer from './MobileNavDrawer'
 
 const STORAGE_KEY = 'sidebar-collapsed'
 
@@ -17,6 +18,7 @@ export default function AppShell({
   children: ReactNode
 }) {
   const [collapsed, setCollapsed] = useState(getInitialCollapsed)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, String(collapsed))
@@ -24,7 +26,10 @@ export default function AppShell({
 
   return (
     <div className="min-h-screen bg-paper font-sans transition-colors dark:bg-paper-dark">
-      <MobileTopBar onSignOut={onSignOut} />
+      <MobileTopBar onOpenMenu={() => setDrawerOpen(true)} />
+      {drawerOpen && (
+        <MobileNavDrawer onClose={() => setDrawerOpen(false)} onSignOut={onSignOut} />
+      )}
       <Sidebar
         collapsed={collapsed}
         onToggleCollapsed={() => setCollapsed((current) => !current)}

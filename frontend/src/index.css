@@ -120,3 +120,59 @@ button:disabled,
 .sync-modal-panel-exit {
   animation: sync-modal-panel-exit 180ms ease-in both;
 }
+
+@keyframes drawer-overlay-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-overlay-exit {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes drawer-panel-enter {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawer-panel-exit {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.drawer-overlay-enter {
+  animation: drawer-overlay-enter 200ms ease-out both;
+}
+
+.drawer-overlay-exit {
+  animation: drawer-overlay-exit 200ms ease-in both;
+}
+
+.drawer-panel-enter {
+  animation: drawer-panel-enter 220ms ease-out both;
+}
+
+.drawer-panel-exit {
+  animation: drawer-panel-exit 200ms ease-in both;
+}
