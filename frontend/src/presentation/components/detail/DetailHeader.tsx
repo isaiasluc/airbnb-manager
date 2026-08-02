@@ -18,7 +18,7 @@ export default function DetailHeader({
 }) {
   return (
     <header className="sticky top-0 z-10 border-b border-line bg-surface transition-colors dark:border-line-dark dark:bg-surface-dark">
-      <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
+      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
         <button onClick={onBack} className={iconButton} aria-label="Voltar">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -37,16 +37,18 @@ export default function DetailHeader({
             {reservation.confirmation_code}
           </p>
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle />
-          <button type="button" onClick={onSignOut} className={buttonSignOut}>
-            Sair
-          </button>
+        <div className="ml-auto flex items-center gap-3">
           <span
             className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ring-1 ${statusColor[reservation.status]}`}
           >
             {statusLabel[reservation.status]}
           </span>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button type="button" onClick={onSignOut} className={buttonSignOut}>
+              Sair
+            </button>
+          </div>
         </div>
       </div>
     </header>

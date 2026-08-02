@@ -84,24 +84,30 @@ export default function ReservationDetail() {
         onSignOut={() => void signOut()}
       />
 
-      <main className="max-w-3xl mx-auto px-6 py-8 space-y-5">
-        <ReservationDates reservation={reservation} nights={nights} />
-        <ReservationFinancials
-          reservation={reservation}
-          nights={nights}
-          saving={saving}
-          onChangeHostServiceStatus={changeHostServiceStatus}
-        />
-        <ReservationActions
-          reservation={reservation}
-          saving={saving}
-          sendingEmail={sendingEmail}
-          emailError={emailError}
-          onSendEmail={handleSendEmail}
-          onToggleEmailSent={toggleEmailSent}
-          onChangeStatus={changeStatus}
-        />
-        <DangerZone deleting={deleting} onDelete={handleDelete} />
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:items-start">
+          <div className="space-y-5 lg:col-span-2">
+            <ReservationDates reservation={reservation} nights={nights} />
+            <ReservationFinancials
+              reservation={reservation}
+              nights={nights}
+              saving={saving}
+              onChangeHostServiceStatus={changeHostServiceStatus}
+            />
+          </div>
+          <div className="space-y-5">
+            <ReservationActions
+              reservation={reservation}
+              saving={saving}
+              sendingEmail={sendingEmail}
+              emailError={emailError}
+              onSendEmail={handleSendEmail}
+              onToggleEmailSent={toggleEmailSent}
+              onChangeStatus={changeStatus}
+            />
+            <DangerZone deleting={deleting} onDelete={handleDelete} />
+          </div>
+        </div>
       </main>
     </div>
   )
