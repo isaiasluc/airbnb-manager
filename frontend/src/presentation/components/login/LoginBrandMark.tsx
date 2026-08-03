@@ -1,18 +1,8 @@
-/** Selo com o gradiente da marca — usado no topo dos layouts de login. */
-export default function LoginBrandMark({
-  className = 'h-11 w-11',
-  onDark = false,
-}: {
-  className?: string
-  onDark?: boolean
-}) {
+/** Selo com o gradiente da marca — usado no topo da tela de login. */
+export default function LoginBrandMark({ className = 'h-11 w-11' }: { className?: string }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-xl ${
-        onDark
-          ? 'bg-white/15 text-white ring-1 ring-white/25 backdrop-blur-sm'
-          : 'bg-gradient-to-br from-[var(--color-accent-grad-from)] to-[var(--color-accent-grad-to)] text-white shadow-sm dark:from-[var(--color-accent-grad-from-dark)] dark:to-[var(--color-accent-grad-to-dark)] dark:text-ink'
-      } ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--color-accent-grad-from)] to-[var(--color-accent-grad-to)] text-white shadow-sm dark:from-[var(--color-accent-grad-from-dark)] dark:to-[var(--color-accent-grad-to-dark)] dark:text-ink ${className}`}
       aria-hidden="true"
     >
       <svg className="h-1/2 w-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.9}>

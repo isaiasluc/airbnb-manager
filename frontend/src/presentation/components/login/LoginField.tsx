@@ -14,8 +14,6 @@ type LoginFieldProps = {
   autoComplete: string
   placeholder?: string
   invalid?: boolean
-  /** `glass` clareia o fundo do campo para uso sobre superfícies translúcidas. */
-  tone?: 'default' | 'glass'
 }
 
 export default function LoginField({
@@ -26,17 +24,11 @@ export default function LoginField({
   autoComplete,
   placeholder,
   invalid = false,
-  tone = 'default',
 }: LoginFieldProps) {
   const id = useId()
   const [revealed, setRevealed] = useState(false)
   const isPassword = type === 'password'
   const inputType = isPassword && revealed ? 'text' : type
-
-  const background =
-    tone === 'glass'
-      ? 'bg-surface/70 dark:bg-paper-dark/50'
-      : 'bg-surface dark:bg-paper-dark'
 
   return (
     <div>
@@ -66,7 +58,7 @@ export default function LoginField({
           placeholder={placeholder}
           required
           aria-invalid={invalid || undefined}
-          className={`h-12 w-full rounded-xl border border-line ${background} pl-11 ${
+          className={`h-12 w-full rounded-xl border border-line bg-surface pl-11 dark:bg-paper-dark ${
             isPassword ? 'pr-11' : 'pr-3.5'
           } text-sm text-ink outline-none transition-[border-color,box-shadow] placeholder:text-ink-muted/60 focus:border-accent focus:ring-2 focus:ring-accent/20 dark:border-line-dark dark:text-ink-dark dark:placeholder:text-ink-muted-dark/60 dark:focus:border-accent-dark dark:focus:ring-accent-dark/25`}
         />

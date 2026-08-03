@@ -2,9 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import type { FirebaseError } from "firebase/app";
 import { useAuth } from "@/application/auth/useAuth";
-// Layouts disponíveis: LoginSplit (A), LoginCard (B), LoginHero (C).
-// Troque o import abaixo para alternar o visual da tela.
-import LoginLayout from "@/presentation/components/login/LoginSplit";
+import LoginCard from "@/presentation/components/login/LoginCard";
 
 type LoginLocationState = {
   from?: {
@@ -55,7 +53,7 @@ export default function Login() {
   }
 
   return (
-    <LoginLayout
+    <LoginCard
       email={email}
       password={password}
       onEmailChange={setEmail}

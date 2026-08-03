@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react'
 
-/** Props compartilhados pelos layouts de login (toda a lógica fica em `pages/Login.tsx`). */
+/** Props do layout de login — toda a lógica de autenticação fica em `pages/Login.tsx`. */
 export type LoginLayoutProps = {
   email: string
   password: string
