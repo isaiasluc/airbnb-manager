@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import type { FirebaseError } from "firebase/app";
-import ThemeToggle from "@/presentation/shared/ThemeToggle";
 import { useAuth } from "@/application/auth/useAuth";
+// Layouts disponíveis: LoginSplit (A), LoginCard (B), LoginHero (C).
+// Troque o import abaixo para alternar o visual da tela.
+import LoginLayout from "@/presentation/components/login/LoginSplit";
 
 type LoginLocationState = {
   from?: {
@@ -53,65 +55,15 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-paper font-sans transition-colors dark:bg-paper-dark">
-      <header className="flex justify-end px-6 py-4">
-        <ThemeToggle />
-      </header>
-      <main className="mx-auto flex min-h-[calc(100vh-72px)] w-full max-w-md items-center px-6 pb-16">
-        <form
-          onSubmit={handleSubmit}
-          className="w-full rounded-xl border border-line bg-surface px-6 py-7 shadow-sm transition-colors dark:border-line-dark dark:bg-surface-dark"
-        >
-          <div className="mb-7">
-            <p className="text-sm font-medium text-ink-muted dark:text-ink-muted-dark">
-              Airbnb Manager
-            </p>
-            <h1 className="font-display mt-1 text-2xl font-semibold tracking-tight text-ink dark:text-ink-dark">
-              Entrar
-            </h1>
-          </div>
-
-          <div className="space-y-4">
-            <label className="block text-sm font-medium text-ink-muted dark:text-ink-muted-dark">
-              E-mail
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                autoComplete="email"
-                required
-                className="mt-1 h-11 w-full rounded-lg border border-line bg-surface px-3 text-ink outline-none transition-colors focus:border-accent dark:border-line-dark dark:bg-paper-dark dark:text-ink-dark dark:focus:border-accent-dark"
-              />
-            </label>
-
-            <label className="block text-sm font-medium text-ink-muted dark:text-ink-muted-dark">
-              Senha
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                autoComplete="current-password"
-                required
-                className="mt-1 h-11 w-full rounded-lg border border-line bg-surface px-3 text-ink outline-none transition-colors focus:border-accent dark:border-line-dark dark:bg-paper-dark dark:text-ink-dark dark:focus:border-accent-dark"
-              />
-            </label>
-          </div>
-
-          {error && (
-            <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-300">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading || submitting}
-            className="mt-6 h-11 w-full rounded-lg bg-gradient-to-r from-[var(--color-accent-grad-from)] to-[var(--color-accent-grad-to)] px-4 text-sm font-medium text-white transition-[filter] hover:brightness-110 disabled:opacity-50 dark:from-[var(--color-accent-grad-from-dark)] dark:to-[var(--color-accent-grad-to-dark)] dark:text-ink"
-          >
-            {submitting ? "Entrando..." : "Entrar"}
-          </button>
-        </form>
-      </main>
-    </div>
+    <LoginLayout
+      email={email}
+      password={password}
+      onEmailChange={setEmail}
+      onPasswordChange={setPassword}
+      onSubmit={handleSubmit}
+      error={error}
+      submitting={submitting}
+      disabled={loading || submitting}
+    />
   );
 }
