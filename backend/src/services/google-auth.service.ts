@@ -70,6 +70,36 @@ export function createGoogleOAuthClient(): OAuth2Client {
   )
 }
 
+// Quantas versões do secret manter ativas. O Secret Manager cobra por versão
+// ativa por mês, então versões antigas do token (já inúteis) viram custo puro.
+// Mantemos mais de uma só para permitir rollback manual em caso de gravação ruim.
+const KEEP_SECRET_VERSIONS = 2
+
+function versionNumber(name: string): number {
+  return Number(name.split('/').pop())
+}
+
+// Best-effort: uma falha aqui não pode quebrar o fluxo de autenticação.
+async function destroyOldSecretVersions(): Promise<void> {
+  try {
+    const [versions] = await getSecretClient().listSecretVersions({
+      parent: getSecretResourceName(),
+      filter: 'state:ENABLED',
+    })
+
+    const obsolete = versions
+      .filter((version): version is typeof version & { name: string } => Boolean(version.name))
+      .sort((a, b) => versionNumber(b.name) - versionNumber(a.name))
+      .slice(KEEP_SECRET_VERSIONS)
+
+    for (const version of obsolete) {
+      await getSecretClient().destroySecretVersion({ name: version.name })
+    }
+  } catch (err) {
+    console.error('Falha ao limpar versões antigas do secret do token Google', err)
+  }
+}
+
 export async function saveGoogleToken(tokens: Credentials): Promise<void> {
   await getSecretClient().addSecretVersion({
     parent: getSecretResourceName(),
@@ -77,6 +107,8 @@ export async function saveGoogleToken(tokens: Credentials): Promise<void> {
   })
   // Novo token salvo (reautenticação ou refresh bem-sucedido) → volta a ser válido.
   tokenInvalid = false
+
+  await destroyOldSecretVersions()
 }
 
 export async function hasGoogleToken(): Promise<boolean> {
@@ -104,7 +136,21 @@ export async function loadGoogleToken(client: OAuth2Client): Promise<void> {
 
   client.setCredentials(token)
   client.on('tokens', async (newTokens) => {
-    await saveGoogleToken({ ...token, ...newTokens })
+    // O evento dispara a cada renovação do access_token — ou seja, uma vez por
+    // execução do cron. Só o refresh_token precisa ser persistido; o access_token
+    // vale 1h e é renovado sozinho no próximo load. Gravar sempre criava uma
+    // versão nova do secret por hora, e cada versão ativa é cobrada por mês.
+    if (!newTokens.refresh_token || newTokens.refresh_token === token.refresh_token) {
+      // Refresh bem-sucedido já prova que o token continua válido.
+      tokenInvalid = false
+      return
+    }
+
+    try {
+      await saveGoogleToken({ ...token, ...newTokens })
+    } catch (err) {
+      console.error('Falha ao salvar o novo refresh token do Google', err)
+    }
   })
 }
 

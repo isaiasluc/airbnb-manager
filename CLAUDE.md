@@ -113,6 +113,13 @@ Endpoints `/cron/*` exigem header `x-cron-secret` == `CRON_SECRET` (para agendad
 - **Token Google no Secret Manager**, não em arquivo. `loadGoogleToken` renova via evento
   `tokens`. A flag de token inválido é **em memória** (reseta em restart do Railway; o
   cron horário re-detecta).
+- **Não grave uma versão nova do secret a cada refresh.** O Secret Manager cobra por
+  **versão ativa por mês** (~$0,06). O evento `tokens` dispara a cada execução do cron
+  horário; gravar sempre acumulava ~720 versões/mês e a conta chegou a ~$43/mês. Hoje
+  `saveGoogleToken` só é chamado quando o **refresh_token muda**, e depois de gravar
+  `destroyOldSecretVersions` mantém apenas `KEEP_SECRET_VERSIONS` (2) ativas. A service
+  account tem `secretmanager.secretVersionManager` **escopado a esse secret** para poder
+  destruir versões.
 - **`checkout_at` é exclusivo** em toda a lógica de ocupação e datas.
 - **Ocupação** considera `confirmed`, `in_progress` e `completed` (não `cancelled`).
 - **Testes não tocam o banco** — testam funções puras. Ao adicionar lógica, extraia a
