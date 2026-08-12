@@ -76,8 +76,15 @@ Config via `.env` (não versionado). Variáveis principais: `DATABASE_URL`,
 
 ## Fluxos-chave
 
-- **Sync Gmail** (`gmail.service.ts`, cron horário + `POST /sync` manual): lê e-mails de
-  confirmação do Airbnb, faz parse e cria reservas (dedupe por `source_email_id`).
+- **Sync Gmail** (`gmail.service.ts`, cron horário + `POST /sync` manual): roda em dois
+  passos, nesta ordem — (1) lê os e-mails de confirmação do Airbnb (`subject:"Reservation
+  confirmed"`), faz parse e cria reservas (dedupe por `source_email_id`); (2) lê os
+  e-mails de cancelamento (`Canceled: Reservation <código> for ...`), extrai o código de
+  confirmação (do assunto, com o corpo como fallback) e marca a reserva como `cancelled`
+  via `cancelReservationByConfirmationCode`. O e-mail de cancelamento não repete os dados
+  da reserva, só o código — por isso ele casa pelo `confirmation_code`, não pelo
+  `source_email_id` (que continua sendo o do e-mail de confirmação). O passo 2 é
+  idempotente: reserva já cancelada ou nunca importada só conta como ignorada.
 - **E-mails de check-in** (`reservation.service.sendDueCheckinEmails`): cron diário 08:00
   America/Sao_Paulo + `POST /cron/checkin-emails` (externo, header `x-cron-secret`).
   Envia para reservas `confirmed`, `email_sent=false`, com check-in dentro de 2 dias.

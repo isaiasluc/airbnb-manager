@@ -1,8 +1,10 @@
 export interface SyncResult {
   imported: number
   skipped: number
+  cancelled: number
   importedItems: SyncItem[]
   skippedItems: SyncItem[]
+  cancelledItems: SyncItem[]
   errors: { emailId: string; reason: string }[]
   syncStatus?: SyncStatus
 }

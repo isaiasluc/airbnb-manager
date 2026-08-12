@@ -73,9 +73,9 @@ export function useGmailSync({ user, onAfterImport }: UseGmailSyncOptions) {
       if (result.syncStatus) setSyncStatus(result.syncStatus)
       setSyncResult(result)
       setSyncMsg(
-        `${result.imported} importada(s) · ${result.skipped} ignorada(s) · ${result.errors.length} erro(s)`,
+        `${result.imported} importada(s) · ${result.cancelled} cancelada(s) · ${result.skipped} ignorada(s) · ${result.errors.length} erro(s)`,
       )
-      if (result.imported > 0) await onAfterImport()
+      if (result.imported > 0 || result.cancelled > 0) await onAfterImport()
     } catch (err) {
       if ((err as Error).message?.includes('invalid_grant')) {
         setGoogleAuthenticated(false)

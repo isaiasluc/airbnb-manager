@@ -252,6 +252,28 @@ export async function createReservation(
   })
 }
 
+export type CancelReservationResult =
+  | { outcome: 'cancelled'; reservation: ReservationWithGuest }
+  | { outcome: 'already_cancelled'; reservation: ReservationWithGuest }
+  | { outcome: 'not_found' }
+
+/**
+ * Cancela a reserva de um código de confirmação — usado pelo sync quando o
+ * e-mail de cancelamento do Airbnb chega. Não lança erro quando a reserva não
+ * existe (o e-mail de confirmação pode nunca ter sido importado) nem quando
+ * ela já está cancelada, para o sync poder rodar quantas vezes for preciso.
+ */
+export async function cancelReservationByConfirmationCode(
+  confirmation_code: string
+): Promise<CancelReservationResult> {
+  const reservation = await ReservationRepo.findReservationByConfirmationCode(confirmation_code)
+  if (!reservation) return { outcome: 'not_found' }
+  if (reservation.status === 'cancelled') return { outcome: 'already_cancelled', reservation }
+
+  await ReservationRepo.updateReservation(reservation.id, { status: 'cancelled' })
+  return { outcome: 'cancelled', reservation: { ...reservation, status: 'cancelled' } }
+}
+
 export async function updateReservation(
   id: number,
   data: Parameters<typeof ReservationRepo.updateReservation>[1]

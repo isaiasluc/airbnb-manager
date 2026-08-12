@@ -121,6 +121,20 @@ export async function findReservationById(
     .first()
 }
 
+export async function findReservationByConfirmationCode(
+  confirmation_code: string
+): Promise<ReservationWithGuest | undefined> {
+  return db('reservations as r')
+    .join('guests as g', 'g.id', 'r.guest_id')
+    .select(
+      'r.*',
+      'g.first_name as guest_first_name',
+      'g.last_name  as guest_last_name'
+    )
+    .where('r.confirmation_code', confirmation_code)
+    .first()
+}
+
 export async function createReservation(
   data: Omit<Reservation, 'id' | 'created_at' | 'updated_at'>
 ): Promise<Reservation> {

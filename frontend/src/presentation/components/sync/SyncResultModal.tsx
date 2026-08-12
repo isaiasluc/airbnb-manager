@@ -1,4 +1,4 @@
-import type { SyncResult } from '@/domain/entities/sync'
+import type { SyncItem, SyncResult } from '@/domain/entities/sync'
 
 function EmptySyncList({ label }: { label: string }) {
   return (
@@ -13,6 +13,42 @@ function EmptySyncList({ label }: { label: string }) {
       </svg>
       <span className="text-sm">{label}</span>
     </div>
+  )
+}
+
+function SyncSection({
+  title,
+  items,
+  emptyLabel,
+  detail,
+}: {
+  title: string
+  items: SyncItem[]
+  emptyLabel: string
+  detail: (item: SyncItem) => string
+}) {
+  return (
+    <section>
+      <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">
+        {title}
+      </h3>
+      {items.length === 0 ? (
+        <EmptySyncList label={emptyLabel} />
+      ) : (
+        <div className="divide-y divide-line rounded-lg border border-line dark:divide-line-dark dark:border-line-dark">
+          {items.map((item) => (
+            <div key={item.emailId} className="px-4 py-3">
+              <p className="text-sm font-medium text-ink dark:text-ink-dark">
+                {item.guestName || item.subject || item.emailId}
+              </p>
+              <p className="mt-1 text-xs text-ink-muted dark:text-ink-muted-dark">
+                {detail(item)}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -44,8 +80,8 @@ export default function SyncResultModal({
               Detalhes da sincronização
             </h2>
             <p className="mt-0.5 text-xs text-ink-muted dark:text-ink-muted-dark">
-              {result.imported} importada(s) · {result.skipped} ignorada(s) ·{' '}
-              {result.errors.length} erro(s)
+              {result.imported} importada(s) · {result.cancelled} cancelada(s) ·{' '}
+              {result.skipped} ignorada(s) · {result.errors.length} erro(s)
             </p>
           </div>
           <button
@@ -66,51 +102,30 @@ export default function SyncResultModal({
         </div>
 
         <div className="max-h-[calc(86vh-82px)] overflow-y-auto px-5 py-5 space-y-6">
-          <section>
-            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">
-              Importadas
-            </h3>
-            {result.importedItems.length === 0 ? (
-              <EmptySyncList label="Nenhuma reserva importada" />
-            ) : (
-              <div className="divide-y divide-line rounded-lg border border-line dark:divide-line-dark dark:border-line-dark">
-                {result.importedItems.map((item) => (
-                  <div key={item.emailId} className="px-4 py-3">
-                    <p className="text-sm font-medium text-ink dark:text-ink-dark">
-                      {item.guestName || item.subject || item.emailId}
-                    </p>
-                    <p className="mt-1 text-xs text-ink-muted dark:text-ink-muted-dark">
-                      {item.confirmationCode
-                        ? `Código ${item.confirmationCode}`
-                        : item.emailId}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+          <SyncSection
+            title="Importadas"
+            items={result.importedItems}
+            emptyLabel="Nenhuma reserva importada"
+            detail={(item) =>
+              item.confirmationCode ? `Código ${item.confirmationCode}` : item.emailId
+            }
+          />
 
-          <section>
-            <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">
-              Ignoradas
-            </h3>
-            {result.skippedItems.length === 0 ? (
-              <EmptySyncList label="Nenhuma reserva ignorada" />
-            ) : (
-              <div className="divide-y divide-line rounded-lg border border-line dark:divide-line-dark dark:border-line-dark">
-                {result.skippedItems.map((item) => (
-                  <div key={item.emailId} className="px-4 py-3">
-                    <p className="text-sm font-medium text-ink dark:text-ink-dark">
-                      {item.guestName || item.subject || item.emailId}
-                    </p>
-                    <p className="mt-1 text-xs text-ink-muted dark:text-ink-muted-dark">
-                      {item.reason || 'Ignorada'} · {item.emailId}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+          <SyncSection
+            title="Canceladas"
+            items={result.cancelledItems}
+            emptyLabel="Nenhuma reserva cancelada"
+            detail={(item) =>
+              item.confirmationCode ? `Código ${item.confirmationCode}` : item.emailId
+            }
+          />
+
+          <SyncSection
+            title="Ignoradas"
+            items={result.skippedItems}
+            emptyLabel="Nenhuma reserva ignorada"
+            detail={(item) => `${item.reason || 'Ignorada'} · ${item.emailId}`}
+          />
 
           <section>
             <h3 className="mb-3 text-xs font-medium uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">
