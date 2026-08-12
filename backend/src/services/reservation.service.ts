@@ -270,15 +270,30 @@ export async function cancelReservationByConfirmationCode(
   if (!reservation) return { outcome: 'not_found' }
   if (reservation.status === 'cancelled') return { outcome: 'already_cancelled', reservation }
 
-  await ReservationRepo.updateReservation(reservation.id, { status: 'cancelled' })
-  return { outcome: 'cancelled', reservation: { ...reservation, status: 'cancelled' } }
+  const updated = await updateReservation(reservation.id, { status: 'cancelled' })
+  return { outcome: 'cancelled', reservation: { ...reservation, ...updated } }
+}
+
+type ReservationUpdate = Parameters<typeof ReservationRepo.updateReservation>[1]
+
+/**
+ * Reserva cancelada não gera repasse, então a taxa de serviço do host é
+ * cancelada junto. Um `host_service_status` explícito no mesmo update tem
+ * prioridade — assim dá para ajustar na mão quando a taxa já foi paga.
+ */
+export function shouldCancelHostService(update: ReservationUpdate): boolean {
+  return update.status === 'cancelled' && update.host_service_status === undefined
 }
 
 export async function updateReservation(
   id: number,
-  data: Parameters<typeof ReservationRepo.updateReservation>[1]
+  data: ReservationUpdate
 ): Promise<Reservation> {
   const updateData = { ...data }
+
+  if (shouldCancelHostService(updateData)) {
+    updateData.host_service_status = 'cancelled'
+  }
 
   if (updateData.host_payout !== undefined || updateData.checkin_at !== undefined) {
     const reservation = await ReservationRepo.findReservationById(id)

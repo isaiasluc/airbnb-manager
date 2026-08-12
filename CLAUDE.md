@@ -64,7 +64,10 @@ Config via `.env` (não versionado). Variáveis principais: `DATABASE_URL`,
 
 `reservations` (1 guest N reservations):
 - `status`: `confirmed | in_progress | cancelled | completed` (check constraint).
-- `host_service_status`: `pending | paid | cancelled`.
+- `host_service_status`: `pending | paid | cancelled`. Cancelar a reserva (pelo sync ou
+  na mão) leva o repasse junto para `cancelled` — regra em `shouldCancelHostService`,
+  aplicada dentro de `reservation.service.updateReservation`, que é por onde passam os
+  dois caminhos. Um `host_service_status` explícito no mesmo update tem prioridade.
 - `checkin_at` / `checkout_at`: colunas **`DATE`** (sem hora — a migração
   `20240002_alter_reservations.ts` converteu de `TIMESTAMPTZ` para `DATE` de propósito,
   descartando a hora). A regra de transição de status (`reservation-status.service.ts`)
