@@ -12,6 +12,8 @@ export default function ReservationFinancials({
   nights,
   saving,
   onChangeHostServiceStatus,
+  onEditPayout,
+  onDismissPayoutReview,
 }: {
   reservation: Reservation
   nights: number
@@ -19,9 +21,40 @@ export default function ReservationFinancials({
   onChangeHostServiceStatus: (
     status: Reservation['host_service_status'],
   ) => void
+  onEditPayout: () => void
+  onDismissPayoutReview: () => void
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-t-2 border-line border-t-accent bg-surface transition-colors dark:border-line-dark dark:border-t-accent-dark dark:bg-surface-dark">
+      {reservation.payout_needs_review && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-amber-200 bg-amber-50 px-6 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/60 dark:text-amber-200"
+        >
+          <p className="flex-1 basis-64">
+            <strong className="font-semibold">Conferir payout no Airbnb.</strong> A reserva foi
+            alterada no Airbnb e o e-mail não traz o valor novo do repasse.
+          </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onEditPayout}
+              disabled={saving}
+              className="font-medium underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              Ajustar valor
+            </button>
+            <button
+              type="button"
+              onClick={onDismissPayoutReview}
+              disabled={saving}
+              className="font-medium underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              Payout está certo
+            </button>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 divide-y divide-line sm:grid-cols-2 sm:divide-x sm:divide-y-0 dark:divide-line-dark">
         <div className="px-6 py-5">
           <p className="mb-3 text-xs uppercase tracking-widest text-ink-muted dark:text-ink-muted-dark">

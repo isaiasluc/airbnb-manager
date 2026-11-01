@@ -75,8 +75,8 @@ export async function updateReservation(
       | 'checkout_at'
       | 'guests_count'
       | 'host_payout'
-      | 'host_service_fee'
       | 'host_service_status'
+      | 'payout_needs_review'
     >
   >,
 ): Promise<Reservation> {
@@ -85,7 +85,10 @@ export async function updateReservation(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
-  if (!res.ok) throw new Error('Erro ao atualizar reserva')
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null
+    throw new Error(body?.error ?? 'Erro ao atualizar reserva')
+  }
   return res.json()
 }
 

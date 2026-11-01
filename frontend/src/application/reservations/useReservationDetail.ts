@@ -14,6 +14,7 @@ export function useReservationDetail(id: string | undefined) {
   const [sendingEmail, setSendingEmail] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchReservation(Number(id))
@@ -32,6 +33,31 @@ export function useReservationDetail(id: string | undefined) {
     } finally {
       setSaving(false)
     }
+  }
+
+  /** Edição manual de datas, hóspedes e payout. Retorna true se salvou. */
+  async function saveDetails(
+    data: Pick<
+      Parameters<typeof updateReservation>[1],
+      'checkin_at' | 'checkout_at' | 'guests_count' | 'host_payout'
+    >,
+  ): Promise<boolean> {
+    setEditError(null)
+    try {
+      await patch(data)
+      return true
+    } catch (error) {
+      setEditError((error as Error).message)
+      return false
+    }
+  }
+
+  function clearEditError() {
+    setEditError(null)
+  }
+
+  function dismissPayoutReview() {
+    return patch({ payout_needs_review: false })
   }
 
   async function toggleEmailSent() {
@@ -83,6 +109,10 @@ export function useReservationDetail(id: string | undefined) {
     sendingEmail,
     emailError,
     deleting,
+    editError,
+    saveDetails,
+    clearEditError,
+    dismissPayoutReview,
     toggleEmailSent,
     handleSendEmail,
     changeStatus,

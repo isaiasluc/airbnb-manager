@@ -1,9 +1,13 @@
+import { useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/application/auth/useAuth'
 import { useReservationDetail } from '@/application/reservations/useReservationDetail'
 import { nightsCount } from '@/domain/services/reservationStats'
 import DetailHeader from '@/presentation/components/detail/DetailHeader'
 import ReservationDates from '@/presentation/components/detail/ReservationDates'
+import ReservationEditForm, {
+  type ReservationEditValues,
+} from '@/presentation/components/detail/ReservationEditForm'
 import ReservationFinancials from '@/presentation/components/detail/ReservationFinancials'
 import ReservationActions from '@/presentation/components/detail/ReservationActions'
 import DangerZone from '@/presentation/components/detail/DangerZone'
@@ -44,6 +48,10 @@ export default function ReservationDetail() {
     sendingEmail,
     emailError,
     deleting,
+    editError,
+    saveDetails,
+    clearEditError,
+    dismissPayoutReview,
     toggleEmailSent,
     handleSendEmail,
     changeStatus,
@@ -51,7 +59,17 @@ export default function ReservationDetail() {
     remove,
   } = useReservationDetail(id)
 
+  const [editing, setEditing] = useState(false)
   const backToDashboardPath = buildBackToDashboardPath(searchParams)
+
+  function startEditing() {
+    clearEditError()
+    setEditing(true)
+  }
+
+  async function handleSaveDetails(values: Partial<ReservationEditValues>) {
+    if (await saveDetails(values)) setEditing(false)
+  }
 
   async function handleDelete() {
     await remove()
@@ -87,13 +105,25 @@ export default function ReservationDetail() {
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <div className="flex flex-col gap-5 lg:col-span-2">
-            <ReservationDates reservation={reservation} nights={nights} />
+            {editing ? (
+              <ReservationEditForm
+                reservation={reservation}
+                saving={saving}
+                error={editError}
+                onSave={(values) => void handleSaveDetails(values)}
+                onCancel={() => setEditing(false)}
+              />
+            ) : (
+              <ReservationDates reservation={reservation} nights={nights} onEdit={startEditing} />
+            )}
             <div className="flex flex-1 flex-col justify-end">
               <ReservationFinancials
                 reservation={reservation}
                 nights={nights}
                 saving={saving}
                 onChangeHostServiceStatus={changeHostServiceStatus}
+                onEditPayout={startEditing}
+                onDismissPayoutReview={() => void dismissPayoutReview()}
               />
             </div>
           </div>

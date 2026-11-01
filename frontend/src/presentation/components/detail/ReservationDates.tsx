@@ -4,9 +4,11 @@ import { formatDate } from '@/presentation/shared/format'
 export default function ReservationDates({
   reservation,
   nights,
+  onEdit,
 }: {
   reservation: Reservation
   nights: number
+  onEdit: () => void
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-line bg-surface transition-colors dark:border-line-dark dark:bg-surface-dark">
@@ -30,7 +32,7 @@ export default function ReservationDates({
           <p className="mt-0.5 text-sm text-ink-muted dark:text-ink-muted-dark">11:00</p>
         </div>
       </div>
-      <div className="flex items-center gap-6 border-t border-line px-6 py-4 text-sm text-ink-muted dark:border-line-dark dark:text-ink-muted-dark">
+      <div className="flex flex-wrap items-center gap-6 border-t border-line px-6 py-4 text-sm text-ink-muted dark:border-line-dark dark:text-ink-muted-dark">
         <span>
           <strong className="text-ink dark:text-ink-dark">{nights}</strong>{' '}
           noite{nights !== 1 ? 's' : ''}
@@ -41,6 +43,13 @@ export default function ReservationDates({
           </strong>{' '}
           hóspede{reservation.guests_count !== 1 ? 's' : ''}
         </span>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="ml-auto text-sm font-medium text-accent transition-colors hover:underline dark:text-accent-dark"
+        >
+          Editar datas, hóspedes e payout
+        </button>
       </div>
     </div>
   )

@@ -19,10 +19,10 @@
 
 ## 4. Frontend
 
-- [ ] 4.1 Tipos `Reservation` (`payout_needs_review`, `last_alteration_at`) e `SyncResult` (`updated`, `updatedItems`) em `frontend/src/domain`; `updateReservation` da infraestrutura aceita `payout_needs_review`
-- [ ] 4.2 (ui-designer) Mockup em `docs/mockups/` da edição de datas/hóspedes/payout no detalhe da reserva, do aviso "Conferir payout no Airbnb" e do indicador na tabela — aguarda aprovação do dono
-- [ ] 4.3 (ui-designer) Implementar a edição no detalhe (`ReservationDates`/`ReservationFinancials`) com prévia de noites, aviso de payout com "Payout está certo" e indicador na `ReservationsTable`
-- [ ] 4.4 (ui-designer) Painel de sync mostra as reservas atualizadas (`updatedItems`) junto com importadas e canceladas
+- [x] 4.1 Tipos `Reservation` (`payout_needs_review`, `last_alteration_at`) e `SyncResult` (`updated`, `updatedItems`) em `frontend/src/domain`; `updateReservation` da infraestrutura aceita `payout_needs_review`
+- [x] 4.2 (ui-designer) Mockup em `docs/mockups/` da edição de datas/hóspedes/payout no detalhe da reserva, do aviso "Conferir payout no Airbnb" e do indicador na tabela — **dispensado**: o dono pediu para seguir direto; a tela reaproveita os componentes e estilos existentes e a revisão é feita na tela real
+- [x] 4.3 (ui-designer) Implementar a edição no detalhe (`ReservationDates`/`ReservationFinancials`) com prévia de noites, aviso de payout com "Payout está certo" e indicador na `ReservationsTable`
+- [x] 4.4 (ui-designer) Painel de sync mostra as reservas atualizadas (`updatedItems`) junto com importadas e canceladas
 
 ## 5. Fechamento
 

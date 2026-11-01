@@ -5,6 +5,9 @@ export interface SyncResult {
   importedItems: SyncItem[]
   skippedItems: SyncItem[]
   cancelledItems: SyncItem[]
+  /** Ausente em resultados de sync anteriores ao passo de alterações. */
+  updated?: number
+  updatedItems?: SyncItem[]
   errors: { emailId: string; reason: string }[]
   syncStatus?: SyncStatus
 }
@@ -15,6 +18,7 @@ export interface SyncItem {
   guestName?: string
   confirmationCode?: string
   reason?: string
+  changedFields?: string[]
 }
 
 export interface SyncStatus {

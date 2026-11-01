@@ -1,5 +1,19 @@
 import type { SyncItem, SyncResult } from '@/domain/entities/sync'
 
+const CHANGED_FIELD_LABEL: Record<string, string> = {
+  checkin_at: 'check-in',
+  checkout_at: 'check-out',
+  guests_count: 'hóspedes',
+}
+
+function describeUpdate(item: SyncItem): string {
+  const code = item.confirmationCode ? `Código ${item.confirmationCode}` : item.emailId
+  const fields = (item.changedFields ?? []).map((field) => CHANGED_FIELD_LABEL[field] ?? field)
+  return fields.length > 0
+    ? `${code} · alterou ${fields.join(', ')} · conferir payout`
+    : code
+}
+
 function EmptySyncList({ label }: { label: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-line py-8 text-ink-muted/70 dark:border-line-dark dark:text-ink-muted-dark/70">
@@ -81,6 +95,7 @@ export default function SyncResultModal({
             </h2>
             <p className="mt-0.5 text-xs text-ink-muted dark:text-ink-muted-dark">
               {result.imported} importada(s) · {result.cancelled} cancelada(s) ·{' '}
+              {result.updated ?? 0} atualizada(s) ·{' '}
               {result.skipped} ignorada(s) · {result.errors.length} erro(s)
             </p>
           </div>
@@ -118,6 +133,13 @@ export default function SyncResultModal({
             detail={(item) =>
               item.confirmationCode ? `Código ${item.confirmationCode}` : item.emailId
             }
+          />
+
+          <SyncSection
+            title="Atualizadas"
+            items={result.updatedItems ?? []}
+            emptyLabel="Nenhuma reserva atualizada"
+            detail={describeUpdate}
           />
 
           <SyncSection

@@ -70,6 +70,15 @@ export default function ReservationsTable({
               </td>
               <td className="px-5 py-3.5 font-medium tabular-nums text-ink dark:text-ink-dark">
                 {formatCurrency(Number(r.host_payout))}
+                {r.payout_needs_review && (
+                  <span
+                    title="Conferir payout no Airbnb: a reserva foi alterada"
+                    aria-label="Conferir payout no Airbnb"
+                    className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-100 align-middle text-[10px] font-bold text-amber-700 ring-1 ring-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-800"
+                  >
+                    !
+                  </span>
+                )}
               </td>
               <td className="px-5 py-3.5 font-medium tabular-nums text-ink dark:text-ink-dark">
                 {formatCurrency(Number(r.host_service_fee), r.currency)}

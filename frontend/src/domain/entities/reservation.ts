@@ -20,6 +20,9 @@ export interface Reservation {
   source_email_id: string
   email_sent: boolean
   status: 'confirmed' | 'in_progress' | 'cancelled' | 'completed'
+  /** Alteração no Airbnb mudou datas/hóspedes e o payout novo não veio no e-mail. */
+  payout_needs_review: boolean
+  last_alteration_at: string | null
   created_at: string
   updated_at: string
 }
