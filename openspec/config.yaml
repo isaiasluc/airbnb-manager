@@ -1,0 +1,58 @@
+schema: spec-driven
+
+context: |
+  Projeto: Airbnb Manager — painel de gestão de reservas de UM apartamento no Airbnb ("Apê dos
+  sonhos em Ponta Negra"), usado só pelo dono. Importa reservas dos e-mails automáticos do
+  Airbnb no Gmail, mostra dashboard (tabela + calendário de ocupação), calcula estatísticas
+  financeiras e despesas, envia e-mail de check-in ao hóspede e avança o status das reservas
+  conforme as datas. Contexto completo e gotchas em CLAUDE.md (fonte de verdade do "como").
+
+  Stack: monorepo sem workspaces. backend/ = Node + Express 5 + TypeScript + knex + PostgreSQL,
+  camadas routes → controllers (finos) → services (regra) → repositories (knex). frontend/ =
+  React 19 + Vite + TypeScript + Tailwind, camadas domain (puro) / application (hooks) /
+  infrastructure (HTTP, Firebase) / presentation. Auth do painel via Firebase; sync restrito
+  ao e-mail em VITE_SYNC_ALLOWED_EMAIL. Token Google OAuth no Secret Manager (projeto
+  airbnb-manager-428ff; o client OAuth vive em airbnb-manager-498714). Deploy no Railway
+  (produção: https://airbnb-manager-production-d4a9.up.railway.app).
+
+  Testes: backend com node:test via `tsx --test tests/**/*.test.ts`. Testes NÃO tocam o banco
+  nem a rede: testam funções puras (parsers de e-mail, regras como resolveReservationStatus,
+  shouldCancelHostService). Toda regra nova é extraída como função pura testável.
+  Typecheck: `npx tsc --noEmit` (backend) e `npm run build` (frontend).
+
+  Domínio: guests 1—N reservations. reservations.status ∈ confirmed | in_progress | cancelled
+  | completed; host_service_status ∈ pending | paid | cancelled; checkin_at/checkout_at são
+  DATE (sem hora) e checkout_at é EXCLUSIVO; corte fixo 14h check-in / 11h checkout em horário
+  de Brasília; host_service_fee = 10% do payout até 2026-02-08 e 12% a partir daí, recalculado
+  em reservation.service.updateReservation. cancelled e completed nunca são revertidos pelo
+  cron. Ocupação conta confirmed, in_progress e completed.
+
+  Sync Gmail (gmail.service.ts, cron horário + POST /sync): passos em ordem — importar
+  "Reservation confirmed" (dedupe por source_email_id) e depois processar e-mails que só
+  identificam a reserva pelo confirmation_code (ex.: cancelamento). Todo passo do sync é
+  idempotente (rodar de novo não muda nada) e um e-mail com erro não derruba os outros.
+  E-mails do Airbnb chegam em inglês, de automated@airbnb.com; o código de confirmação aparece
+  no link hosting/reservations/details/<CODIGO>.
+
+  Idioma: specs, docs, commits, comentários e logs em português; identificadores em inglês.
+  Commits em Conventional Commits (feat:, fix:, docs:, test:).
+
+rules:
+  proposal:
+    - Citar exemplos reais de e-mail (assunto + trecho relevante) quando a change tocar o sync do Gmail
+    - Dizer o que fica explicitamente fora e as decisões que dependem do dono
+  specs:
+    - Requisitos SHALL com cenários "#### Scenario:" no formato WHEN/THEN, testáveis sem banco
+    - Todo passo novo do sync tem cenários de idempotência (rodar duas vezes), reserva não importada e e-mail fora do formato
+    - Toda mudança de datas ou payout tem cenário do recálculo de host_service_fee (10%/12% conforme o check-in)
+    - Cenários de data usam datas concretas e respeitam checkout_at exclusivo
+    - Rotas citam método + caminho + status HTTP
+  design:
+    - Seguir as camadas (controller fino → service → repository) e as convenções do CLAUDE.md
+    - Regra de negócio nova vira função pura exportada, testável sem DB
+    - Explicitar a ordem dos passos do sync e como a change interage com cancelamento, status automático e e-mail de check-in
+  tasks:
+    - Grupos numerados com tasks pequenas e sequenciais, implementáveis uma a uma por um agente novo sem contexto
+    - Cada task fecha com `npx tsc --noEmit` + `npm test` verdes no backend (e `npm run build` se tocou o frontend) + commit em português
+    - Tasks de tela são marcadas "(ui-designer)"
+    - O último grupo atualiza o CLAUDE.md quando a change mexe em fluxo-chave ou gotcha
