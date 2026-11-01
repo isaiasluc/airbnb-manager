@@ -26,5 +26,5 @@
 
 ## 5. Fechamento
 
-- [ ] 5.1 Atualizar o `CLAUDE.md`: sync em três passos (importar → cancelar → alterar), formato dos dois e-mails de alteração, colunas novas no modelo de dados e o aviso de payout
-- [ ] 5.2 Validação real: com o backend local apontado para um banco de dev com cópia das reservas HMK95EPSFN e HMCRW3C395, rodar `POST /sync` duas vezes e conferir datas, hóspedes, taxa, `email_sent`, aviso de payout e a idempotência; `code-reviewer` no diff do grupo
+- [x] 5.1 Atualizar o `CLAUDE.md`: sync em três passos (importar → cancelar → alterar), formato dos dois e-mails de alteração, colunas novas no modelo de dados e o aviso de payout
+- [x] 5.2 Validação real: com o backend local apontado para um banco de dev com cópia das reservas HMK95EPSFN e HMCRW3C395, rodar `POST /sync` duas vezes e conferir datas, hóspedes, taxa, `email_sent`, aviso de payout e a idempotência; `code-reviewer` no diff do grupo

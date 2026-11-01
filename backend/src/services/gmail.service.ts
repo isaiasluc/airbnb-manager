@@ -333,6 +333,16 @@ export function normalizeGuestName(name: string): string {
 }
 
 /**
+ * Mesmo hóspede pelo primeiro nome. O Airbnb às vezes usa o nome composto
+ * ("Thais Luiza wants to change…") enquanto a reserva guarda só o primeiro
+ * ("Thais"), então compara só a primeira palavra.
+ */
+export function isSameGuestFirstName(a: string, b: string): boolean {
+  const firstWord = (name: string) => normalizeGuestName(name).split(/\s+/)[0]
+  return firstWord(a) !== '' && firstWord(a) === firstWord(b)
+}
+
+/**
  * Pedido de alteração que corresponde a um aceite: o mais recente do mesmo
  * hóspede (primeiro nome, sem acento/caixa) recebido até o aceite.
  */
@@ -341,11 +351,9 @@ export function findAlterationRequest(
   guestFirstName: string,
   acceptedAt: Date,
 ): AlterationRequest | undefined {
-  const name = normalizeGuestName(guestFirstName)
-
   return requests
     .filter((request) =>
-      normalizeGuestName(request.guestFirstName) === name
+      isSameGuestFirstName(request.guestFirstName, guestFirstName)
       && request.receivedAt.getTime() <= acceptedAt.getTime()
     )
     .sort((a, b) => b.receivedAt.getTime() - a.receivedAt.getTime())[0]
@@ -417,12 +425,39 @@ interface EmailContent {
   receivedAt: Date
 }
 
+/** Cota por minuto da Gmail API estourada (429 / rateLimitExceeded / "Quota exceeded"). */
+export function isGmailRateLimitError(err: unknown): boolean {
+  const error = err as { code?: number | string; status?: number; message?: string }
+  return error?.code === 429
+    || error?.status === 429
+    || /quota exceeded|rate ?limit/i.test(error?.message ?? '')
+}
+
+const RATE_LIMIT_RETRY_DELAYS_MS = [5_000, 15_000, 45_000]
+
+/**
+ * A cota da Gmail API é por minuto: com três passos lendo e-mails na mesma
+ * rodada, ela pode estourar. Espera e tenta de novo em vez de perder o item.
+ */
+async function withRateLimitRetry<T>(call: () => Promise<T>): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await call()
+    } catch (err) {
+      const delay = RATE_LIMIT_RETRY_DELAYS_MS[attempt]
+      if (delay === undefined || !isGmailRateLimitError(err)) throw err
+      console.warn(`[gmail-sync] Cota da Gmail API estourada; nova tentativa em ${delay / 1000}s`)
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
+  }
+}
+
 async function fetchEmail(gmail: gmail_v1.Gmail, emailId: string): Promise<EmailContent> {
-  const full = await gmail.users.messages.get({
+  const full = await withRateLimitRetry(() => gmail.users.messages.get({
     userId: 'me',
     id: emailId,
     format: 'full',
-  })
+  }))
 
   const parts    = full.data.payload?.parts ?? []
   const headers  = full.data.payload?.headers ?? []
@@ -604,7 +639,7 @@ async function applyReservationAlterationsFromEmails(
 
       // O nome do aceite precisa ser o da reserva; sem nome no aceite, vale o da reserva.
       const name = guestFirstName ?? reservation.guest_first_name
-      if (normalizeGuestName(name) !== normalizeGuestName(reservation.guest_first_name)) {
+      if (!isSameGuestFirstName(name, reservation.guest_first_name)) {
         result.errors.push({
           emailId,
           reason: `Hóspede do aceite (${name}) não confere com a reserva ${confirmation_code} (${reservation.guest_first_name})`,

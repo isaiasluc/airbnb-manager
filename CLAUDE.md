@@ -76,10 +76,18 @@ Config via `.env` (não versionado). Variáveis principais: `DATABASE_URL`,
   hóspede sai nesse dia, então a última noite ocupada é o dia anterior ao checkout.
 - `host_service_fee`: calculado (10% até 2026-02-08, 12% a partir daí — ver
   `reservation.service.ts`).
+- `payout_needs_review`: `true` quando uma alteração do Airbnb mudou datas/hóspedes (os
+  e-mails não trazem o payout novo). Painel mostra "Conferir payout no Airbnb"; editar
+  `host_payout` limpa a flag (regra `shouldClearPayoutReview`), salvo flag explícita.
+- `last_alteration_at`: recebimento do último "Reservation updated" aplicado — o sync
+  ignora aceites recebidos até esse instante (idempotência de alterações em sequência).
+- Edição manual: `PATCH /reservations/:id` passa por `editReservation`, que aceita só os
+  campos de `pickEditableReservationFields` e valida com `validateReservationEdit`
+  (datas `AAAA-MM-DD`, checkout > check-in contra o gravado) → 400/404.
 
 ## Fluxos-chave
 
-- **Sync Gmail** (`gmail.service.ts`, cron horário + `POST /sync` manual): roda em dois
+- **Sync Gmail** (`gmail.service.ts`, cron horário + `POST /sync` manual): roda em três
   passos, nesta ordem — (1) lê os e-mails de confirmação do Airbnb (`subject:"Reservation
   confirmed"`), faz parse e cria reservas (dedupe por `source_email_id`); (2) lê os
   e-mails de cancelamento (`Canceled: Reservation <código> for ...`), extrai o código de
@@ -88,6 +96,19 @@ Config via `.env` (não versionado). Variáveis principais: `DATABASE_URL`,
   da reserva, só o código — por isso ele casa pelo `confirmation_code`, não pelo
   `source_email_id` (que continua sendo o do e-mail de confirmação). O passo 2 é
   idempotente: reserva já cancelada ou nunca importada só conta como ignorada.
+  (3) aplica as **alterações aceitas** (`applyReservationAlterationsFromEmails`). O Airbnb
+  manda dois e-mails por alteração, cada um com metade da informação: o pedido
+  (`<Nome> wants to change their reservation`: datas "Nov 14, 2026 - Nov 21, 2026" e/ou
+  "Original Guests 1 guest / Requested Guests 4 guests", **sem código**) e o aceite
+  (`Reservation updated`: só o código, no `href` `hosting/reservations/details/<CODIGO>`
+  — por isso o parser lê o HTML cru). O aceite é casado com o pedido mais recente do
+  mesmo primeiro nome (sem acento/caixa) recebido antes dele (`findAlterationRequest`), e
+  os valores **originais** do pedido precisam bater com a reserva (`buildAlterationPatch`;
+  divergência vira erro do item, nunca alteração silenciosa). Aplica via
+  `updateReservation` (recalcula a taxa), volta `email_sent` para `false` se o check-in
+  mudou, liga `payout_needs_review` e grava `last_alteration_at`. Não muda o status; ignora
+  reserva `cancelled`; corrige também `completed`. Pedido recusado não gera aceite, então
+  não muda nada.
 - **E-mails de check-in** (`reservation.service.sendDueCheckinEmails`): cron diário 08:00
   America/Sao_Paulo + `POST /cron/checkin-emails` (externo, header `x-cron-secret`).
   Envia para reservas `confirmed`, `email_sent=false`, com check-in dentro de 2 dias.

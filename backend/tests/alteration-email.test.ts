@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   findAlterationRequest,
+  isGmailRateLimitError,
+  isSameGuestFirstName,
   parseAlterationAcceptedEmail,
   parseAlterationRequestEmail,
   parseDateRange,
@@ -146,7 +148,28 @@ test('casamento: ignora acento e caixa no nome', () => {
   assert.equal(found?.guestFirstName, 'André')
 })
 
+test('casamento: nome composto do Airbnb casa com o primeiro nome da reserva', () => {
+  assert.equal(isSameGuestFirstName('Thais Luiza', 'Thais'), true)
+  assert.equal(isSameGuestFirstName('Thaís', 'THAIS luiza'), true)
+  assert.equal(isSameGuestFirstName('Thais', 'Thiago'), false)
+  assert.equal(isSameGuestFirstName('', ''), false)
+
+  const requests = [request('Thais Luiza', '2024-09-05T10:00:00Z')]
+  const found = findAlterationRequest(requests, 'Thais', new Date('2024-09-05T12:00:00Z'))
+  assert.equal(found?.guestFirstName, 'Thais Luiza')
+})
+
 test('casamento: aceite sem pedido', () => {
   const requests = [request('Maria', '2026-10-21T21:00:00Z')]
   assert.equal(findAlterationRequest(requests, 'Eduardo', new Date('2026-10-21T22:41:44Z')), undefined)
+})
+
+test('reconhece estouro de cota da Gmail API', () => {
+  assert.equal(isGmailRateLimitError({ code: 429 }), true)
+  assert.equal(
+    isGmailRateLimitError(new Error("Quota exceeded for quota metric 'Total Query Cost' and limit 'Units per minute per user'")),
+    true,
+  )
+  assert.equal(isGmailRateLimitError(new Error('invalid_grant')), false)
+  assert.equal(isGmailRateLimitError({ code: 404 }), false)
 })

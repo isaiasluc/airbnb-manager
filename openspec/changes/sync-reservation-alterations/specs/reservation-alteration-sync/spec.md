@@ -53,6 +53,10 @@ com o do e-mail de alteração aceita e com `guest_first_name` da reserva.
 - **WHEN** há pedido de Eduardo às 21:32, pedido de Maria às 22:00 e o aceite de Eduardo às 22:41
 - **THEN** o aceite de Eduardo é casado com o pedido de Eduardo, não com o de Maria
 
+#### Scenario: Nome composto no e-mail
+- **WHEN** o pedido tem assunto "Thais Luiza wants to change their reservation" e a reserva tem `guest_first_name = "Thais"`
+- **THEN** o aceite é casado com esse pedido (a comparação usa só a primeira palavra do nome)
+
 #### Scenario: Aceite sem pedido
 - **WHEN** não existe pedido do mesmo hóspede antes do aceite
 - **THEN** a reserva não é alterada e o e-mail entra em `errors` com "Pedido de alteração não encontrado"
