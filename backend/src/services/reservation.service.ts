@@ -2,6 +2,8 @@ import * as GuestRepo from '../repositories/guest.repository'
 import * as ReservationRepo from '../repositories/reservation.repository'
 import { sendCheckinEmail } from './reservation-email.service'
 import type {
+  AlterationRequest,
+  AlterationValues,
   CreateReservationInput,
   OccupancyPeriod,
   OccupancyStats,
@@ -31,7 +33,7 @@ function getHostServiceRate(checkin_at: Date | string): number {
   return checkinDate >= HOST_SERVICE_RATE_CHANGE_DATE ? 0.12 : 0.10
 }
 
-function calculateHostServiceFee(host_payout: number, checkin_at: Date | string): number {
+export function calculateHostServiceFee(host_payout: number, checkin_at: Date | string): number {
   const rate = getHostServiceRate(checkin_at)
   return Math.round(host_payout * rate * 100) / 100
 }
@@ -275,6 +277,79 @@ export async function cancelReservationByConfirmationCode(
 }
 
 type ReservationUpdate = Parameters<typeof ReservationRepo.updateReservation>[1]
+
+type AlterableReservation = Pick<Reservation, 'checkin_at' | 'checkout_at' | 'guests_count'>
+type AlterationField = keyof AlterationValues
+
+export type AlterationPatchResult =
+  | { outcome: 'apply'; patch: AlterationValues; changedFields: AlterationField[] }
+  | { outcome: 'already_applied' }
+  | { outcome: 'mismatch' }
+
+function currentAlterationValues(reservation: AlterableReservation): Required<AlterationValues> {
+  return {
+    checkin_at: formatDateOnly(new Date(reservation.checkin_at)),
+    checkout_at: formatDateOnly(new Date(reservation.checkout_at)),
+    guests_count: Number(reservation.guests_count),
+  }
+}
+
+/**
+ * Decide o que uma alteração aceita muda na reserva. O pedido é tratado por
+ * seção (datas, hóspedes): seção cujo valor atual já é o pedido está aplicada;
+ * seção cujo valor atual é o original entra no patch; qualquer outro valor é
+ * divergência — o pedido não é desta reserva ou ela mudou por outro caminho,
+ * e nada é alterado sem revisão manual.
+ */
+export function buildAlterationPatch(
+  reservation: AlterableReservation,
+  request: Pick<AlterationRequest, 'original' | 'requested'>,
+): AlterationPatchResult {
+  const current = currentAlterationValues(reservation)
+  const sections: AlterationField[][] = [['checkin_at', 'checkout_at'], ['guests_count']]
+  const patch: AlterationValues = {}
+  const changedFields: AlterationField[] = []
+
+  for (const fields of sections) {
+    if (fields.every((field) => request.requested[field] === undefined)) continue
+
+    const alreadyApplied = fields.every((field) => request.requested[field] === current[field])
+    if (alreadyApplied) continue
+
+    const matchesOriginal = fields.every((field) => request.original[field] === current[field])
+    if (!matchesOriginal) return { outcome: 'mismatch' }
+
+    for (const field of fields) {
+      if (request.requested[field] === current[field]) continue
+      Object.assign(patch, { [field]: request.requested[field] })
+      changedFields.push(field)
+    }
+  }
+
+  return changedFields.length === 0
+    ? { outcome: 'already_applied' }
+    : { outcome: 'apply', patch, changedFields }
+}
+
+/**
+ * Efeitos colaterais de uma alteração aplicada: o payout novo não vem nos
+ * e-mails, então a reserva fica marcada para conferência; e, se o check-in
+ * mudou, o e-mail de check-in (que traz as datas) precisa sair de novo.
+ */
+export function resolveAlterationSideEffects(
+  reservation: Pick<Reservation, 'checkin_at' | 'email_sent'>,
+  patch: AlterationValues,
+): Pick<ReservationUpdate, 'email_sent' | 'payout_needs_review'> {
+  const effects: Pick<ReservationUpdate, 'email_sent' | 'payout_needs_review'> = {
+    payout_needs_review: true,
+  }
+
+  const checkinChanged = patch.checkin_at !== undefined
+    && patch.checkin_at !== formatDateOnly(new Date(reservation.checkin_at))
+  if (checkinChanged && reservation.email_sent) effects.email_sent = false
+
+  return effects
+}
 
 /**
  * Reserva cancelada não gera repasse, então a taxa de serviço do host é

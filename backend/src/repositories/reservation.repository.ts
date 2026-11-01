@@ -3,6 +3,24 @@ import type { Reservation, ReservationListFilters, ReservationWithGuest } from '
 
 type OccupancyReservation = Pick<Reservation, 'checkin_at' | 'checkout_at' | 'status'>
 
+// Datas aceitam string 'YYYY-MM-DD' (edição manual e e-mail de alteração) além de Date.
+export type ReservationUpdateData = Partial<
+  Pick<
+    Reservation,
+    | 'guests_count'
+    | 'host_payout'
+    | 'host_service_fee'
+    | 'host_service_status'
+    | 'email_sent'
+    | 'status'
+    | 'payout_needs_review'
+    | 'last_alteration_at'
+  > & {
+    checkin_at: Date | string
+    checkout_at: Date | string
+  }
+>
+
 export async function listReservations(
   filters: ReservationListFilters = {}
 ): Promise<ReservationWithGuest[]> {
@@ -136,7 +154,7 @@ export async function findReservationByConfirmationCode(
 }
 
 export async function createReservation(
-  data: Omit<Reservation, 'id' | 'created_at' | 'updated_at'>
+  data: Omit<Reservation, 'id' | 'created_at' | 'updated_at' | 'payout_needs_review' | 'last_alteration_at'>
 ): Promise<Reservation> {
   const [created] = await db<Reservation>('reservations')
     .insert(data)
@@ -146,13 +164,13 @@ export async function createReservation(
 
 export async function updateReservation(
   id: number,
-  data: Partial<Pick<Reservation, 'checkin_at' | 'checkout_at' | 'guests_count' | 'host_payout' | 'host_service_fee' | 'host_service_status' | 'email_sent' | 'status'>>
+  data: ReservationUpdateData
 ): Promise<Reservation | undefined> {
-  const [updated] = await db<Reservation>('reservations')
+  const [updated] = await db('reservations')
     .where({ id })
     .update(data)
     .returning('*')
-  return updated
+  return updated as Reservation | undefined
 }
 
 export async function deleteReservation(id: number): Promise<boolean> {

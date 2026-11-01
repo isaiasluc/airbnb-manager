@@ -1,5 +1,5 @@
 import { google, type gmail_v1 } from 'googleapis'
-import type { CreateReservationInput } from '../types'
+import type { AlterationRequest, AlterationValues, CreateReservationInput } from '../types'
 import { reservationExistsByEmailId } from '../repositories/reservation.repository'
 import { cancelReservationByConfirmationCode, createReservation } from './reservation.service'
 import { createGoogleOAuthClient, getAuthenticatedGmailAddress, loadGoogleToken } from './google-auth.service'
@@ -197,6 +197,151 @@ export function parseCancellationEmail(
   }
 
   throw new Error('Código de confirmação não encontrado no email de cancelamento')
+}
+
+// ─── Alterações de reserva ────────────────────────────────────────────────────
+//
+// Cada alteração aceita gera dois e-mails, cada um com metade da informação:
+// - pedido  "<Nome> wants to change their reservation": valores originais e
+//   pedidos (datas e/ou hóspedes), mas SEM o código de confirmação;
+// - aceite  "Reservation updated": só o código (no link do painel do host) e
+//   o nome do hóspede, sem nenhum valor.
+// Nenhum dos dois traz o payout novo.
+
+const reservationDetailsLinkPattern = /hosting\/reservations\/details\/([a-z0-9]{8,12})\b/i
+const alterationAcceptedNamePattern = /your reservation with\s+(.+?)\s+has been updated/i
+const alterationRequestSubjectPattern = /^(.+?)\s+wants to change (?:their|his|her) reservation/i
+
+const MONTHS: Record<string, number> = {
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+  jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
+}
+
+const rangeSeparator = String.raw`\s*(?:-|–|—|&ndash;|&mdash;|to)\s*`
+// "Nov 14, 2026 - Nov 21, 2026", "Nov 14 – 21, 2026", "Dec 30, 2026 – Jan 3, 2027"
+const dateRangePattern =
+  String.raw`([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:,\s*(\d{4}))?` +
+  rangeSeparator +
+  String.raw`(?:([A-Za-z]{3,9})\.?\s+)?(\d{1,2}),\s*(\d{4})`
+
+/** Primeira letra maiúscula, resto minúsculo: "ANDRÉ" → "André". */
+function capitalizeName(name: string): string {
+  return name
+    .trim()
+    .toLocaleLowerCase('pt-BR')
+    .replace(/(^|[\s-])(\p{L})/gu, (_, sep: string, letter: string) => sep + letter.toLocaleUpperCase('pt-BR'))
+}
+
+function toDateOnlyString(year: number, month: number, day: number): string {
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+function monthNumber(name: string): number {
+  const month = MONTHS[name.slice(0, 3).toLowerCase()]
+  if (!month) throw new Error(`Mês inválido no email de alteração: ${name}`)
+  return month
+}
+
+/** Converte um intervalo de datas do Airbnb em `checkin_at`/`checkout_at` ('YYYY-MM-DD'). */
+export function parseDateRange(raw: string): { checkin_at: string; checkout_at: string } {
+  const match = raw.match(new RegExp(dateRangePattern, 'i'))
+  if (!match) throw new Error(`Intervalo de datas inválido: ${raw}`)
+
+  const [, startMonthName, startDay, startYearRaw, endMonthName, endDay, endYearRaw] = match
+  const startMonth = monthNumber(startMonthName)
+  const endMonth = endMonthName ? monthNumber(endMonthName) : startMonth
+  const endYear = Number(endYearRaw)
+  // Sem ano no início ("Dec 30 – Jan 3, 2027"), o início é no ano anterior se o mês virou.
+  const startYear = startYearRaw
+    ? Number(startYearRaw)
+    : startMonth > endMonth ? endYear - 1 : endYear
+
+  return {
+    checkin_at: toDateOnlyString(startYear, startMonth, Number(startDay)),
+    checkout_at: toDateOnlyString(endYear, endMonth, Number(endDay)),
+  }
+}
+
+/**
+ * Extrai o código de confirmação e o primeiro nome do hóspede do e-mail
+ * "Reservation updated" (alteração aceita). O código vem do link do painel do
+ * host — procurado no corpo cru, porque o link fica no `href` e some quando as
+ * tags HTML são removidas.
+ */
+export function parseAlterationAcceptedEmail(
+  rawBody: string,
+  _subject: string,
+): { confirmation_code: string; guestFirstName?: string } {
+  const codeMatch = rawBody.match(reservationDetailsLinkPattern)
+  if (!codeMatch) throw new Error('Código de confirmação não encontrado no email de alteração')
+
+  const nameMatch = extractText(rawBody).match(alterationAcceptedNamePattern)
+
+  return {
+    confirmation_code: codeMatch[1].toUpperCase(),
+    guestFirstName: nameMatch ? capitalizeName(nameMatch[1]) : undefined,
+  }
+}
+
+/**
+ * Extrai o pedido de alteração ("<Nome> wants to change their reservation"):
+ * datas e/ou número de hóspedes, originais e pedidos. Cada seção é opcional,
+ * mas o pedido precisa ter ao menos uma.
+ */
+export function parseAlterationRequestEmail(
+  rawBody: string,
+  subject: string,
+): Omit<AlterationRequest, 'emailId' | 'receivedAt'> {
+  const nameMatch = subject.match(alterationRequestSubjectPattern)
+  if (!nameMatch) throw new Error('Nome do hóspede não encontrado no assunto do pedido de alteração')
+
+  const text = extractText(rawBody)
+  const original: AlterationValues = {}
+  const requested: AlterationValues = {}
+
+  const originalDates = text.match(new RegExp(`Original Dates\\s+(${dateRangePattern})`, 'i'))
+  const requestedDates = text.match(new RegExp(`Requested Dates\\s+(${dateRangePattern})`, 'i'))
+  if (originalDates && requestedDates) {
+    Object.assign(original, parseDateRange(originalDates[1]))
+    Object.assign(requested, parseDateRange(requestedDates[1]))
+  }
+
+  const originalGuests = text.match(/Original Guests\s+(\d+)\s+guests?/i)
+  const requestedGuests = text.match(/Requested Guests\s+(\d+)\s+guests?/i)
+  if (originalGuests && requestedGuests) {
+    original.guests_count = Number(originalGuests[1])
+    requested.guests_count = Number(requestedGuests[1])
+  }
+
+  if (Object.keys(requested).length === 0) {
+    throw new Error('Pedido de alteração sem datas nem hóspedes reconhecíveis')
+  }
+
+  return { guestFirstName: capitalizeName(nameMatch[1]), original, requested }
+}
+
+/** Nome comparável: sem acento, minúsculo, sem espaços nas pontas. */
+export function normalizeGuestName(name: string): string {
+  return name.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase()
+}
+
+/**
+ * Pedido de alteração que corresponde a um aceite: o mais recente do mesmo
+ * hóspede (primeiro nome, sem acento/caixa) recebido até o aceite.
+ */
+export function findAlterationRequest(
+  requests: AlterationRequest[],
+  guestFirstName: string,
+  acceptedAt: Date,
+): AlterationRequest | undefined {
+  const name = normalizeGuestName(guestFirstName)
+
+  return requests
+    .filter((request) =>
+      normalizeGuestName(request.guestFirstName) === name
+      && request.receivedAt.getTime() <= acceptedAt.getTime()
+    )
+    .sort((a, b) => b.receivedAt.getTime() - a.receivedAt.getTime())[0]
 }
 
 // ─── Sync principal ───────────────────────────────────────────────────────────

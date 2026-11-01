@@ -20,6 +20,8 @@ export interface Reservation {
   source_email_id: string
   email_sent: boolean
   status: 'confirmed' | 'in_progress' | 'cancelled' | 'completed'
+  payout_needs_review: boolean
+  last_alteration_at: Date | null
   created_at: Date
   updated_at: Date
 }
@@ -37,6 +39,22 @@ export type CreateReservationInput = {
   currency?: string
   source_email_id: string
   email_sent?: boolean
+}
+
+/** Valores de uma alteração (datas em 'YYYY-MM-DD'); cada seção é opcional. */
+export interface AlterationValues {
+  checkin_at?: string
+  checkout_at?: string
+  guests_count?: number
+}
+
+/** Pedido "<Nome> wants to change their reservation" do Airbnb. */
+export interface AlterationRequest {
+  emailId: string
+  guestFirstName: string
+  receivedAt: Date
+  original: AlterationValues
+  requested: AlterationValues
 }
 
 export interface ReservationWithGuest extends Reservation {
