@@ -398,6 +398,109 @@ export async function updateReservation(
   return updated
 }
 
+// ─── Edição manual ────────────────────────────────────────────────────────────
+
+/** Erro de entrada da edição manual — o controller responde 400. */
+export class ReservationValidationError extends Error {}
+
+const EDITABLE_FIELDS = [
+  'status',
+  'email_sent',
+  'checkin_at',
+  'checkout_at',
+  'guests_count',
+  'host_payout',
+  'host_service_status',
+  'payout_needs_review',
+] as const
+
+const RESERVATION_STATUSES: Reservation['status'][] = ['confirmed', 'in_progress', 'cancelled', 'completed']
+const HOST_SERVICE_STATUSES: Reservation['host_service_status'][] = ['pending', 'paid', 'cancelled']
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * Só os campos editáveis pelo painel passam; o resto do corpo (ex.:
+ * `confirmation_code`, `guest_id`, `source_email_id`) é descartado.
+ */
+export function pickEditableReservationFields(body: unknown): ReservationUpdate {
+  if (typeof body !== 'object' || body === null) return {}
+
+  const source = body as Record<string, unknown>
+  return Object.fromEntries(
+    EDITABLE_FIELDS
+      .filter((field) => source[field] !== undefined)
+      .map((field) => [field, source[field]])
+  ) as ReservationUpdate
+}
+
+function isValidDateOnly(value: unknown): value is string {
+  if (typeof value !== 'string' || !DATE_ONLY_PATTERN.test(value)) return false
+  const date = parseDateOnly(value)
+  return !Number.isNaN(date.getTime()) && formatDateOnly(date) === value
+}
+
+/**
+ * Valida uma edição manual contra as datas já gravadas. Retorna a mensagem de
+ * erro ou `null`. Como checkout_at é exclusivo, checkout igual ao check-in
+ * (zero noites) também é inválido.
+ */
+export function validateReservationEdit(
+  update: ReservationUpdate,
+  current: Pick<Reservation, 'checkin_at' | 'checkout_at'>,
+): string | null {
+  for (const field of ['checkin_at', 'checkout_at'] as const) {
+    if (update[field] !== undefined && !isValidDateOnly(update[field])) {
+      return `${field} deve estar no formato AAAA-MM-DD`
+    }
+  }
+
+  if (update.guests_count !== undefined
+    && (!Number.isInteger(update.guests_count) || update.guests_count < 1)) {
+    return 'guests_count deve ser um inteiro maior ou igual a 1'
+  }
+
+  if (update.host_payout !== undefined
+    && (typeof update.host_payout !== 'number' || !Number.isFinite(update.host_payout) || update.host_payout < 0)) {
+    return 'host_payout deve ser um número maior ou igual a 0'
+  }
+
+  if (update.status !== undefined && !RESERVATION_STATUSES.includes(update.status)) {
+    return 'status inválido'
+  }
+
+  if (update.host_service_status !== undefined && !HOST_SERVICE_STATUSES.includes(update.host_service_status)) {
+    return 'host_service_status inválido'
+  }
+
+  for (const field of ['email_sent', 'payout_needs_review'] as const) {
+    if (update[field] !== undefined && typeof update[field] !== 'boolean') {
+      return `${field} deve ser booleano`
+    }
+  }
+
+  const checkin = update.checkin_at !== undefined
+    ? String(update.checkin_at)
+    : formatDateOnly(new Date(current.checkin_at))
+  const checkout = update.checkout_at !== undefined
+    ? String(update.checkout_at)
+    : formatDateOnly(new Date(current.checkout_at))
+  if (checkout <= checkin) return 'checkout_at deve ser posterior a checkin_at'
+
+  return null
+}
+
+/** Edição manual pelo painel (`PATCH /reservations/:id`). */
+export async function editReservation(id: number, body: unknown): Promise<Reservation> {
+  const update = pickEditableReservationFields(body)
+  const current = await ReservationRepo.findReservationById(id)
+  if (!current) throw new Error(`Reserva ${id} não encontrada`)
+
+  const error = validateReservationEdit(update, current)
+  if (error) throw new ReservationValidationError(error)
+
+  return updateReservation(id, update)
+}
+
 export type ApplyAlterationResult =
   | { outcome: 'updated'; reservation: ReservationWithGuest; changedFields: (keyof AlterationValues)[] }
   | { outcome: 'already_applied'; reservation: ReservationWithGuest }

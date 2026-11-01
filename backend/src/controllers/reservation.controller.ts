@@ -114,13 +114,17 @@ export async function create(req: Request, res: Response) {
 
 export async function update(req: Request, res: Response) {
   try {
-    const reservation = await ReservationService.updateReservation(
+    const reservation = await ReservationService.editReservation(
       Number(req.params.id),
       req.body
     )
     res.json(reservation)
   } catch (err) {
-    res.status(400).json({ error: (err as Error).message })
+    const error = err as Error
+    const status = error instanceof ReservationService.ReservationValidationError
+      ? 400
+      : error.message.includes('não encontrada') ? 404 : 500
+    res.status(status).json({ error: error.message })
   }
 }
 

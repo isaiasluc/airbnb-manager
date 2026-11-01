@@ -15,7 +15,7 @@
 
 ## 3. Edição manual (backend)
 
-- [ ] 3.1 `pickEditableReservationFields` + `validateReservationEdit` (datas `AAAA-MM-DD`, checkout > check-in considerando os valores gravados, `guests_count` inteiro ≥ 1, `host_payout` ≥ 0) usados no `PATCH /reservations/:id`, com 400/404/200 + testes das funções puras
+- [x] 3.1 `pickEditableReservationFields` + `validateReservationEdit` (datas `AAAA-MM-DD`, checkout > check-in considerando os valores gravados, `guests_count` inteiro ≥ 1, `host_payout` ≥ 0) usados no `PATCH /reservations/:id`, com 400/404/200 + testes das funções puras
 
 ## 4. Frontend
 
