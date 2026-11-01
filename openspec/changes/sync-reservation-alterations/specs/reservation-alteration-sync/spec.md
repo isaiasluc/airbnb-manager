@@ -41,9 +41,13 @@ Datas SHALL ser `DATE` em GMT-03:00. Um pedido sem datas e sem hóspedes SHALL l
 
 ### Requirement: Casar a alteração aceita com o pedido
 
-Para cada "Reservation updated", o sistema SHALL usar o pedido de alteração mais recente
-recebido **antes** dele cujo primeiro nome coincida (sem diferenciar maiúsculas nem acentos)
-com o do e-mail de alteração aceita e com `guest_first_name` da reserva.
+Para cada "Reservation updated", o sistema SHALL considerar como candidatos os pedidos de
+alteração cujo primeiro nome (primeira palavra, sem diferenciar maiúsculas nem acentos)
+coincida com o do aceite e com `guest_first_name` da reserva, recebidos até o aceite e no
+máximo 7 dias antes dele, depois do `last_alteration_at` da reserva e ainda não usados por
+outro aceite na mesma rodada. Entre os candidatos cujos valores originais conferem com a
+reserva, SHALL usar o mais recente; se houver mais de um com valores pedidos diferentes, o
+aceite SHALL ir para `errors` como ambíguo, sem alterar a reserva.
 
 #### Scenario: Pedido e aceite da mesma noite
 - **WHEN** há o pedido de Eduardo às 21:32 e o "Reservation updated" de Eduardo às 22:41 do mesmo dia
@@ -52,6 +56,14 @@ com o do e-mail de alteração aceita e com `guest_first_name` da reserva.
 #### Scenario: Pedido de outro hóspede no meio
 - **WHEN** há pedido de Eduardo às 21:32, pedido de Maria às 22:00 e o aceite de Eduardo às 22:41
 - **THEN** o aceite de Eduardo é casado com o pedido de Eduardo, não com o de Maria
+
+#### Scenario: Homônimos com pedidos diferentes
+- **WHEN** há um pedido de Eduardo às 10h (datas 14–21/11 → 12–17/02) e outro de um Eduardo diferente às 11h (2 → 4 hóspedes), ambos conferem com a reserva, e o aceite chega às 12h
+- **THEN** a reserva não é alterada e o e-mail entra em `errors` como "Mais de um pedido de alteração possível"
+
+#### Scenario: Pedido antigo ou recusado
+- **WHEN** o único pedido do hóspede foi recebido 10 dias antes do aceite, ou antes do `last_alteration_at` da reserva
+- **THEN** ele não é usado e o aceite entra em `errors` com "Pedido de alteração não encontrado"
 
 #### Scenario: Nome composto no e-mail
 - **WHEN** o pedido tem assunto "Thais Luiza wants to change their reservation" e a reserva tem `guest_first_name = "Thais"`

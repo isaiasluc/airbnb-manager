@@ -4,6 +4,7 @@ import {
   buildAlterationPatch,
   calculateHostServiceFee,
   resolveAlterationSideEffects,
+  resolveManualEditEmailReset,
   shouldClearPayoutReview,
 } from '../src/services/reservation.service'
 
@@ -100,4 +101,21 @@ test('payout_needs_review explícito tem prioridade', () => {
 
 test('update sem payout não mexe no aviso', () => {
   assert.equal(shouldClearPayoutReview({ guests_count: 3 }), false)
+})
+
+test('seção repetida sem mudança no pedido não vira divergência', () => {
+  // Hóspedes 2 → 2 junto com mudança de datas, mas a reserva tem 1 hóspede gravado.
+  const result = buildAlterationPatch({ ...eduardo, guests_count: 1 }, {
+    original: { ...datesRequest.original, guests_count: 2 },
+    requested: { ...datesRequest.requested, guests_count: 2 },
+  })
+  assert.equal(result.outcome, 'apply')
+})
+
+test('edição manual do check-in volta o e-mail de check-in a pendente', () => {
+  const current = { checkin_at: eduardo.checkin_at, email_sent: true }
+  assert.deepEqual(resolveManualEditEmailReset(current, { checkin_at: '2026-11-15' }), { email_sent: false })
+  assert.deepEqual(resolveManualEditEmailReset(current, { checkin_at: '2026-11-14' }), {})
+  assert.deepEqual(resolveManualEditEmailReset(current, { checkout_at: '2026-11-22' }), {})
+  assert.deepEqual(resolveManualEditEmailReset(current, { checkin_at: '2026-11-15', email_sent: true }), {})
 })

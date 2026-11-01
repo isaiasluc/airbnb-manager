@@ -14,6 +14,7 @@ export default function ReservationFinancials({
   onChangeHostServiceStatus,
   onEditPayout,
   onDismissPayoutReview,
+  payoutReviewError,
 }: {
   reservation: Reservation
   nights: number
@@ -23,6 +24,7 @@ export default function ReservationFinancials({
   ) => void
   onEditPayout: () => void
   onDismissPayoutReview: () => void
+  payoutReviewError: string | null
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-t-2 border-line border-t-accent bg-surface transition-colors dark:border-line-dark dark:border-t-accent-dark dark:bg-surface-dark">
@@ -53,6 +55,11 @@ export default function ReservationFinancials({
               Payout está certo
             </button>
           </div>
+          {payoutReviewError && (
+            <p role="alert" className="basis-full text-rose-600 dark:text-rose-400">
+              {payoutReviewError}
+            </p>
+          )}
         </div>
       )}
       <div className="grid grid-cols-1 divide-y divide-line sm:grid-cols-2 sm:divide-x sm:divide-y-0 dark:divide-line-dark">

@@ -1,11 +1,12 @@
 import { google, type gmail_v1 } from 'googleapis'
-import type { AlterationRequest, AlterationValues, CreateReservationInput } from '../types'
+import type { AlterationRequest, AlterationValues, CreateReservationInput, Reservation } from '../types'
 import {
   findReservationByConfirmationCode,
   reservationExistsByEmailId,
 } from '../repositories/reservation.repository'
 import {
   applyReservationAlteration,
+  buildAlterationPatch,
   cancelReservationByConfirmationCode,
   createReservation,
 } from './reservation.service'
@@ -342,21 +343,60 @@ export function isSameGuestFirstName(a: string, b: string): boolean {
   return firstWord(a) !== '' && firstWord(a) === firstWord(b)
 }
 
+/** Pedido só vale para aceites até 7 dias depois dele (pedidos antigos/recusados ficam de fora). */
+export const ALTERATION_REQUEST_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+
+export type AlterationRequestSelection =
+  | { outcome: 'found'; request: AlterationRequest }
+  | { outcome: 'not_found' }
+  | { outcome: 'mismatch' }
+  | { outcome: 'ambiguous'; count: number }
+
 /**
- * Pedido de alteração que corresponde a um aceite: o mais recente do mesmo
- * hóspede (primeiro nome, sem acento/caixa) recebido até o aceite.
+ * Escolhe o pedido de alteração de um aceite. Candidatos: mesmo hóspede
+ * (primeira palavra do nome), recebidos até o aceite e no máximo 7 dias antes
+ * dele, depois da última alteração já aplicada na reserva e ainda não usados
+ * nesta rodada. Entre eles, só valem os cujos valores originais conferem com a
+ * reserva; se sobrar mais de um com valores pedidos diferentes (ex.: homônimos,
+ * ou um pedido recusado e outro aceito), é ambíguo e vai para revisão manual —
+ * nunca uma alteração silenciosa errada.
  */
-export function findAlterationRequest(
+export function selectAlterationRequest(
   requests: AlterationRequest[],
-  guestFirstName: string,
-  acceptedAt: Date,
-): AlterationRequest | undefined {
-  return requests
-    .filter((request) =>
-      isSameGuestFirstName(request.guestFirstName, guestFirstName)
-      && request.receivedAt.getTime() <= acceptedAt.getTime()
-    )
-    .sort((a, b) => b.receivedAt.getTime() - a.receivedAt.getTime())[0]
+  context: {
+    guestFirstName: string
+    acceptedAt: Date
+    reservation: Pick<Reservation, 'checkin_at' | 'checkout_at' | 'guests_count' | 'last_alteration_at'>
+    consumedEmailIds?: ReadonlySet<string>
+  },
+): AlterationRequestSelection {
+  const acceptedAt = context.acceptedAt.getTime()
+  const notBefore = context.reservation.last_alteration_at
+    ? new Date(context.reservation.last_alteration_at).getTime()
+    : null
+
+  const candidates = requests
+    .filter((request) => {
+      const receivedAt = request.receivedAt.getTime()
+      return isSameGuestFirstName(request.guestFirstName, context.guestFirstName)
+        && receivedAt <= acceptedAt
+        && acceptedAt - receivedAt <= ALTERATION_REQUEST_WINDOW_MS
+        && (notBefore === null || receivedAt > notBefore)
+        && !context.consumedEmailIds?.has(request.emailId)
+    })
+    .sort((a, b) => b.receivedAt.getTime() - a.receivedAt.getTime())
+
+  if (candidates.length === 0) return { outcome: 'not_found' }
+
+  const viable = candidates.filter(
+    (request) => buildAlterationPatch(context.reservation, request).outcome !== 'mismatch',
+  )
+  if (viable.length === 0) return { outcome: 'mismatch' }
+
+  const distinctRequests = new Set(viable.map((request) => JSON.stringify(request.requested)))
+  if (distinctRequests.size > 1) return { outcome: 'ambiguous', count: viable.length }
+
+  return { outcome: 'found', request: viable[0] }
 }
 
 // ─── Sync principal ───────────────────────────────────────────────────────────
@@ -406,12 +446,12 @@ async function listMessageIds(gmail: gmail_v1.Gmail, query: string): Promise<str
   let pageToken: string | undefined
 
   do {
-    const listRes = await gmail.users.messages.list({
+    const listRes = await withRateLimitRetry(() => gmail.users.messages.list({
       userId: 'me',
       q: query,
       maxResults: 100,
       pageToken,
-    })
+    }))
     messages.push(...(listRes.data.messages ?? []))
     pageToken = listRes.data.nextPageToken ?? undefined
   } while (pageToken)
@@ -434,21 +474,67 @@ export function isGmailRateLimitError(err: unknown): boolean {
 }
 
 const RATE_LIMIT_RETRY_DELAYS_MS = [5_000, 15_000, 45_000]
+/** Teto de espera somada por rodada — sem ele, cota diária estourada travaria o sync por horas. */
+const RATE_LIMIT_MAX_TOTAL_WAIT_MS = 120_000
+
+/** Orçamento de espera por cota, compartilhado por todas as chamadas de uma rodada do sync. */
+export interface RateLimitBudget {
+  waitedMs: number
+  exhausted: boolean
+}
+
+export function createRateLimitBudget(): RateLimitBudget {
+  return { waitedMs: 0, exhausted: false }
+}
+
+/** Espera antes da próxima tentativa, ou `null` para desistir (sem tentativas ou sem orçamento). */
+export function nextRateLimitDelay(budget: RateLimitBudget, attempt: number): number | null {
+  const delay = RATE_LIMIT_RETRY_DELAYS_MS[attempt]
+  if (budget.exhausted || delay === undefined || budget.waitedMs + delay > RATE_LIMIT_MAX_TOTAL_WAIT_MS) {
+    budget.exhausted = true
+    return null
+  }
+  return delay
+}
+
+// O sync roda uma rodada por vez (`sync-status.service` barra execuções em paralelo).
+let rateLimitBudget = createRateLimitBudget()
 
 /**
  * A cota da Gmail API é por minuto: com três passos lendo e-mails na mesma
- * rodada, ela pode estourar. Espera e tenta de novo em vez de perder o item.
+ * rodada, ela pode estourar. Espera e tenta de novo em vez de perder o item,
+ * até o orçamento da rodada acabar — daí em diante falha na hora.
  */
 async function withRateLimitRetry<T>(call: () => Promise<T>): Promise<T> {
   for (let attempt = 0; ; attempt++) {
     try {
       return await call()
     } catch (err) {
-      const delay = RATE_LIMIT_RETRY_DELAYS_MS[attempt]
-      if (delay === undefined || !isGmailRateLimitError(err)) throw err
+      if (!isGmailRateLimitError(err)) throw err
+      const delay = nextRateLimitDelay(rateLimitBudget, attempt)
+      if (delay === null) throw err
+      rateLimitBudget.waitedMs += delay
       console.warn(`[gmail-sync] Cota da Gmail API estourada; nova tentativa em ${delay / 1000}s`)
       await new Promise((resolve) => setTimeout(resolve, delay))
     }
+  }
+}
+
+/**
+ * Lista os e-mails de um passo sem derrubar o sync: falha na listagem vira um
+ * erro do passo e os outros passos (e o resultado da rodada) seguem.
+ */
+async function listMessageIdsForStep(
+  gmail: gmail_v1.Gmail,
+  query: string,
+  step: string,
+  result: SyncResult,
+): Promise<string[]> {
+  try {
+    return await listMessageIds(gmail, query)
+  } catch (err) {
+    result.errors.push({ emailId: `list:${step}`, reason: describeError(err) })
+    return []
   }
 }
 
@@ -482,7 +568,7 @@ async function importConfirmedReservations(
   gmail: gmail_v1.Gmail,
   result: SyncResult,
 ): Promise<void> {
-  for (const emailId of await listMessageIds(gmail, CONFIRMATION_QUERY)) {
+  for (const emailId of await listMessageIdsForStep(gmail, CONFIRMATION_QUERY, 'confirmações', result)) {
     try {
       const { subject, body, receivedAt } = await fetchEmail(gmail, emailId)
 
@@ -527,7 +613,7 @@ async function cancelReservationsFromEmails(
   gmail: gmail_v1.Gmail,
   result: SyncResult,
 ): Promise<void> {
-  for (const emailId of await listMessageIds(gmail, CANCELLATION_QUERY)) {
+  for (const emailId of await listMessageIdsForStep(gmail, CANCELLATION_QUERY, 'cancelamentos', result)) {
     try {
       const { subject, body } = await fetchEmail(gmail, emailId)
       const { confirmation_code } = parseCancellationEmail(body ?? '', subject)
@@ -583,7 +669,7 @@ async function loadAlterationRequests(
 ): Promise<AlterationRequest[]> {
   const requests: AlterationRequest[] = []
 
-  for (const emailId of await listMessageIds(gmail, ALTERATION_REQUEST_QUERY)) {
+  for (const emailId of await listMessageIdsForStep(gmail, ALTERATION_REQUEST_QUERY, 'pedidos de alteração', result)) {
     try {
       const { subject, body, receivedAt } = await fetchEmail(gmail, emailId)
       requests.push({ ...parseAlterationRequestEmail(body ?? '', subject), emailId, receivedAt })
@@ -609,10 +695,14 @@ async function applyReservationAlterationsFromEmails(
   gmail: gmail_v1.Gmail,
   result: SyncResult,
 ): Promise<void> {
-  const acceptedIds = await listMessageIds(gmail, ALTERATION_ACCEPTED_QUERY)
+  const acceptedIds = await listMessageIdsForStep(gmail, ALTERATION_ACCEPTED_QUERY, 'alterações aceitas', result)
   if (acceptedIds.length === 0) return
 
-  const requests = await loadAlterationRequests(gmail, result)
+  // Os pedidos só são baixados se algum aceite ainda precisar deles — em
+  // rodadas normais todos já foram processados e isso poupa cota da Gmail.
+  let requests: AlterationRequest[] | null = null
+  const getRequests = async () => (requests ??= await loadAlterationRequests(gmail, result))
+  const consumedEmailIds = new Set<string>()
   const accepted: (EmailContent & { emailId: string })[] = []
 
   for (const emailId of acceptedIds) {
@@ -647,13 +737,40 @@ async function applyReservationAlterationsFromEmails(
         continue
       }
 
-      const request = findAlterationRequest(requests, name, receivedAt)
-      if (!request) {
-        result.errors.push({ emailId, reason: `Pedido de alteração não encontrado para ${confirmation_code}` })
+      if (reservation.status === 'cancelled') {
+        result.skipped++
+        result.skippedItems.push({ ...item, guestName: guestNameOf(reservation), reason: 'Reserva cancelada' })
         continue
       }
 
-      const alteration = await applyReservationAlteration(confirmation_code, request, receivedAt)
+      const lastAlterationAt = reservation.last_alteration_at
+        ? new Date(reservation.last_alteration_at).getTime()
+        : null
+      if (lastAlterationAt !== null && receivedAt.getTime() <= lastAlterationAt) {
+        result.skipped++
+        result.skippedItems.push({ ...item, guestName: guestNameOf(reservation), reason: 'Já atualizada' })
+        continue
+      }
+
+      const selection = selectAlterationRequest(await getRequests(), {
+        guestFirstName: name,
+        acceptedAt: receivedAt,
+        reservation,
+        consumedEmailIds,
+      })
+
+      if (selection.outcome !== 'found') {
+        const reason = {
+          not_found: `Pedido de alteração não encontrado para ${confirmation_code}`,
+          mismatch: `Pedido de alteração não confere com a reserva ${confirmation_code}`,
+          ambiguous: `Mais de um pedido de alteração possível para ${confirmation_code} — conferir no Airbnb`,
+        }[selection.outcome]
+        result.errors.push({ emailId, reason })
+        continue
+      }
+
+      consumedEmailIds.add(selection.request.emailId)
+      const alteration = await applyReservationAlteration(confirmation_code, selection.request, receivedAt)
 
       switch (alteration.outcome) {
         case 'not_found':
@@ -696,6 +813,7 @@ export async function syncGmailReservations(): Promise<SyncResult> {
   }
 
   const gmail  = google.gmail({ version: 'v1', auth: client })
+  rateLimitBudget = createRateLimitBudget()
   const result: SyncResult = {
     imported: 0,
     skipped: 0,

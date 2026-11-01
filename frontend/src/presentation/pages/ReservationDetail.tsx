@@ -52,6 +52,7 @@ export default function ReservationDetail() {
     saveDetails,
     clearEditError,
     dismissPayoutReview,
+    payoutReviewError,
     toggleEmailSent,
     handleSendEmail,
     changeStatus,
@@ -124,6 +125,7 @@ export default function ReservationDetail() {
                 onChangeHostServiceStatus={changeHostServiceStatus}
                 onEditPayout={startEditing}
                 onDismissPayoutReview={() => void dismissPayoutReview()}
+                payoutReviewError={payoutReviewError}
               />
             </div>
           </div>

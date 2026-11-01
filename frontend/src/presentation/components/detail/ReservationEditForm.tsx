@@ -16,7 +16,7 @@ export interface ReservationEditValues {
   host_payout: number
 }
 
-/** A API devolve a coluna DATE como ISO à meia-noite UTC; o input quer 'AAAA-MM-DD'. */
+/** A API devolve a coluna DATE como ISO (data no início); o input quer 'AAAA-MM-DD'. */
 function toDateInput(value: string): string {
   return value.slice(0, 10)
 }

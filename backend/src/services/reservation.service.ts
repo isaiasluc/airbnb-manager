@@ -312,6 +312,8 @@ export function buildAlterationPatch(
 
   for (const fields of sections) {
     if (fields.every((field) => request.requested[field] === undefined)) continue
+    // Seção que o pedido repete sem mudar (original = pedido) não decide nada.
+    if (fields.every((field) => request.requested[field] === request.original[field])) continue
 
     const alreadyApplied = fields.every((field) => request.requested[field] === current[field])
     if (alreadyApplied) continue
@@ -491,6 +493,8 @@ export function validateReservationEdit(
 
 /** Edição manual pelo painel (`PATCH /reservations/:id`). */
 export async function editReservation(id: number, body: unknown): Promise<Reservation> {
+  if (!Number.isInteger(id) || id < 1) throw new Error(`Reserva ${id} não encontrada`)
+
   const update = pickEditableReservationFields(body)
   const current = await ReservationRepo.findReservationById(id)
   if (!current) throw new Error(`Reserva ${id} não encontrada`)
@@ -498,7 +502,21 @@ export async function editReservation(id: number, body: unknown): Promise<Reserv
   const error = validateReservationEdit(update, current)
   if (error) throw new ReservationValidationError(error)
 
-  return updateReservation(id, update)
+  return updateReservation(id, { ...update, ...resolveManualEditEmailReset(current, update) })
+}
+
+/**
+ * Mudar o check-in à mão depois do e-mail de check-in enviado faz o e-mail
+ * sair de novo com a data nova (mesma regra da alteração vinda do Airbnb).
+ * Um `email_sent` explícito no mesmo update tem prioridade.
+ */
+export function resolveManualEditEmailReset(
+  current: Pick<Reservation, 'checkin_at' | 'email_sent'>,
+  update: ReservationUpdate,
+): Pick<ReservationUpdate, 'email_sent'> {
+  if (update.email_sent !== undefined || update.checkin_at === undefined) return {}
+  const { email_sent } = resolveAlterationSideEffects(current, { checkin_at: String(update.checkin_at) })
+  return email_sent === undefined ? {} : { email_sent }
 }
 
 export type ApplyAlterationResult =

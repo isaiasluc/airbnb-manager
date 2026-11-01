@@ -101,10 +101,15 @@ Config via `.env` (não versionado). Variáveis principais: `DATABASE_URL`,
   (`<Nome> wants to change their reservation`: datas "Nov 14, 2026 - Nov 21, 2026" e/ou
   "Original Guests 1 guest / Requested Guests 4 guests", **sem código**) e o aceite
   (`Reservation updated`: só o código, no `href` `hosting/reservations/details/<CODIGO>`
-  — por isso o parser lê o HTML cru). O aceite é casado com o pedido mais recente do
-  mesmo primeiro nome (sem acento/caixa) recebido antes dele (`findAlterationRequest`), e
-  os valores **originais** do pedido precisam bater com a reserva (`buildAlterationPatch`;
-  divergência vira erro do item, nunca alteração silenciosa). Aplica via
+  — por isso o parser lê o HTML cru). O aceite é casado com um pedido por
+  `selectAlterationRequest`: mesmo primeiro nome (primeira palavra, sem acento/caixa),
+  recebido até 7 dias antes do aceite, depois do `last_alteration_at` e não usado na
+  rodada, com os valores **originais** batendo com a reserva (`buildAlterationPatch`).
+  Divergência ou mais de um pedido possível vira erro do item, nunca alteração
+  silenciosa. Os pedidos só são baixados se algum aceite ainda não processado precisar.
+  A leitura da Gmail tenta de novo quando a cota por minuto estoura, com teto de 120 s de
+  espera somada por rodada; falha na listagem de um passo vira erro `list:<passo>` sem
+  derrubar os outros. Aplica via
   `updateReservation` (recalcula a taxa), volta `email_sent` para `false` se o check-in
   mudou, liga `payout_needs_review` e grava `last_alteration_at`. Não muda o status; ignora
   reserva `cancelled`; corrige também `completed`. Pedido recusado não gera aceite, então

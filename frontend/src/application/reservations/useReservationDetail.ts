@@ -15,6 +15,7 @@ export function useReservationDetail(id: string | undefined) {
   const [emailError, setEmailError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
+  const [payoutReviewError, setPayoutReviewError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchReservation(Number(id))
@@ -56,8 +57,13 @@ export function useReservationDetail(id: string | undefined) {
     setEditError(null)
   }
 
-  function dismissPayoutReview() {
-    return patch({ payout_needs_review: false })
+  async function dismissPayoutReview() {
+    setPayoutReviewError(null)
+    try {
+      await patch({ payout_needs_review: false })
+    } catch (error) {
+      setPayoutReviewError((error as Error).message)
+    }
   }
 
   async function toggleEmailSent() {
@@ -113,6 +119,7 @@ export function useReservationDetail(id: string | undefined) {
     saveDetails,
     clearEditError,
     dismissPayoutReview,
+    payoutReviewError,
     toggleEmailSent,
     handleSendEmail,
     changeStatus,

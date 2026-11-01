@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
-  findAlterationRequest,
+  createRateLimitBudget,
   isGmailRateLimitError,
   isSameGuestFirstName,
+  nextRateLimitDelay,
+  selectAlterationRequest,
   parseAlterationAcceptedEmail,
   parseAlterationRequestEmail,
   parseDateRange,
@@ -107,45 +109,103 @@ test('intervalo de datas: formatos do Airbnb', () => {
 
 // ─── Casamento aceite ↔ pedido ────────────────────────────────────────────────
 
-function request(guestFirstName: string, receivedAt: string, emailId = guestFirstName): AlterationRequest {
+// Reserva com 2 hóspedes e 14–21/11/2026, como o pg devolve (DATE à meia-noite).
+const reservation = {
+  checkin_at: new Date('2026-11-14T00:00:00.000Z'),
+  checkout_at: new Date('2026-11-21T00:00:00.000Z'),
+  guests_count: 2,
+  last_alteration_at: null,
+}
+
+function request(
+  guestFirstName: string,
+  receivedAt: string,
+  options: Partial<Pick<AlterationRequest, 'emailId' | 'original' | 'requested'>> = {},
+): AlterationRequest {
   return {
-    emailId,
+    emailId: options.emailId ?? `${guestFirstName}-${receivedAt}`,
     guestFirstName,
     receivedAt: new Date(receivedAt),
-    original: { guests_count: 1 },
-    requested: { guests_count: 2 },
+    original: options.original ?? { checkin_at: '2026-11-14', checkout_at: '2026-11-21' },
+    requested: options.requested ?? { checkin_at: '2027-02-12', checkout_at: '2027-02-17' },
   }
 }
 
+function select(requests: AlterationRequest[], acceptedAt: string, extra: Partial<Parameters<typeof selectAlterationRequest>[1]> = {}) {
+  return selectAlterationRequest(requests, {
+    guestFirstName: 'Eduardo',
+    acceptedAt: new Date(acceptedAt),
+    reservation,
+    ...extra,
+  })
+}
+
 test('casamento: pedido e aceite da mesma noite', () => {
-  const requests = [request('Eduardo', '2026-10-21T21:32:01Z')]
-  const found = findAlterationRequest(requests, 'Eduardo', new Date('2026-10-21T22:41:44Z'))
-  assert.equal(found?.guestFirstName, 'Eduardo')
+  const eduardo = request('Eduardo', '2026-10-21T21:32:01Z')
+  assert.deepEqual(select([eduardo], '2026-10-21T22:41:44Z'), { outcome: 'found', request: eduardo })
 })
 
 test('casamento: pedido de outro hóspede no meio', () => {
-  const requests = [
-    request('Eduardo', '2026-10-21T21:32:01Z'),
-    request('Maria', '2026-10-21T22:00:00Z'),
-  ]
-  const found = findAlterationRequest(requests, 'Eduardo', new Date('2026-10-21T22:41:44Z'))
-  assert.equal(found?.guestFirstName, 'Eduardo')
+  const eduardo = request('Eduardo', '2026-10-21T21:32:01Z')
+  const maria = request('Maria', '2026-10-21T22:00:00Z')
+  assert.deepEqual(select([eduardo, maria], '2026-10-21T22:41:44Z'), { outcome: 'found', request: eduardo })
 })
 
-test('casamento: usa o pedido mais recente antes do aceite e ignora os posteriores', () => {
-  const requests = [
-    request('Eduardo', '2026-10-01T10:00:00Z', 'antigo'),
-    request('Eduardo', '2026-10-21T21:32:01Z', 'recente'),
-    request('Eduardo', '2026-10-25T10:00:00Z', 'depois'),
-  ]
-  const found = findAlterationRequest(requests, 'Eduardo', new Date('2026-10-21T22:41:44Z'))
-  assert.equal(found?.emailId, 'recente')
+test('casamento: ignora pedidos depois do aceite e fora da janela de 7 dias', () => {
+  const old = request('Eduardo', '2026-10-01T10:00:00Z')
+  const later = request('Eduardo', '2026-10-25T10:00:00Z')
+  assert.deepEqual(select([old, later], '2026-10-21T22:41:44Z'), { outcome: 'not_found' })
+})
+
+test('casamento: ignora pedidos anteriores à última alteração aplicada', () => {
+  const eduardo = request('Eduardo', '2026-10-21T21:32:01Z')
+  const result = select([eduardo], '2026-10-23T10:00:00Z', {
+    reservation: { ...reservation, last_alteration_at: new Date('2026-10-21T22:41:44Z') },
+  })
+  assert.deepEqual(result, { outcome: 'not_found' })
+})
+
+test('casamento: pedido já usado nesta rodada não serve para outro aceite', () => {
+  const eduardo = request('Eduardo', '2026-10-21T21:32:01Z', { emailId: 'p1' })
+  const result = select([eduardo], '2026-10-21T22:41:44Z', { consumedEmailIds: new Set(['p1']) })
+  assert.deepEqual(result, { outcome: 'not_found' })
+})
+
+test('casamento: homônimos com pedidos diferentes que conferem viram ambíguo', () => {
+  // João de R1 pede datas; outro João (R2) pede 2 → 4 hóspedes depois.
+  const dates = request('Eduardo', '2026-10-21T10:00:00Z')
+  const guests = request('Eduardo', '2026-10-21T11:00:00Z', {
+    original: { guests_count: 2 },
+    requested: { guests_count: 4 },
+  })
+  assert.deepEqual(select([dates, guests], '2026-10-21T12:00:00Z'), { outcome: 'ambiguous', count: 2 })
+})
+
+test('casamento: pedido mais novo que não confere cai para o que confere', () => {
+  const ok = request('Eduardo', '2026-10-21T10:00:00Z')
+  const other = request('Eduardo', '2026-10-21T11:00:00Z', {
+    original: { checkin_at: '2026-12-01', checkout_at: '2026-12-05' },
+    requested: { checkin_at: '2026-12-02', checkout_at: '2026-12-06' },
+  })
+  assert.deepEqual(select([ok, other], '2026-10-21T12:00:00Z'), { outcome: 'found', request: ok })
+})
+
+test('casamento: nenhum candidato confere com a reserva', () => {
+  const other = request('Eduardo', '2026-10-21T11:00:00Z', {
+    original: { checkin_at: '2026-12-01', checkout_at: '2026-12-05' },
+  })
+  assert.deepEqual(select([other], '2026-10-21T12:00:00Z'), { outcome: 'mismatch' })
+})
+
+test('casamento: e-mail de pedido duplicado não é ambíguo', () => {
+  const first = request('Eduardo', '2026-10-21T21:00:00Z', { emailId: 'a' })
+  const copy = request('Eduardo', '2026-10-21T21:30:00Z', { emailId: 'b' })
+  assert.deepEqual(select([first, copy], '2026-10-21T22:41:44Z'), { outcome: 'found', request: copy })
 })
 
 test('casamento: ignora acento e caixa no nome', () => {
-  const requests = [request('André', '2026-08-03T23:29:46Z')]
-  const found = findAlterationRequest(requests, 'ANDRE', new Date('2026-08-03T23:31:10Z'))
-  assert.equal(found?.guestFirstName, 'André')
+  const andre = request('André', '2026-08-03T23:29:46Z')
+  assert.equal(select([andre], '2026-08-03T23:31:10Z', { guestFirstName: 'ANDRE' }).outcome, 'found')
 })
 
 test('casamento: nome composto do Airbnb casa com o primeiro nome da reserva', () => {
@@ -154,15 +214,16 @@ test('casamento: nome composto do Airbnb casa com o primeiro nome da reserva', (
   assert.equal(isSameGuestFirstName('Thais', 'Thiago'), false)
   assert.equal(isSameGuestFirstName('', ''), false)
 
-  const requests = [request('Thais Luiza', '2024-09-05T10:00:00Z')]
-  const found = findAlterationRequest(requests, 'Thais', new Date('2024-09-05T12:00:00Z'))
-  assert.equal(found?.guestFirstName, 'Thais Luiza')
+  const thais = request('Thais Luiza', '2024-09-05T10:00:00Z')
+  assert.equal(select([thais], '2024-09-05T12:00:00Z', { guestFirstName: 'Thais' }).outcome, 'found')
 })
 
 test('casamento: aceite sem pedido', () => {
-  const requests = [request('Maria', '2026-10-21T21:00:00Z')]
-  assert.equal(findAlterationRequest(requests, 'Eduardo', new Date('2026-10-21T22:41:44Z')), undefined)
+  const maria = request('Maria', '2026-10-21T21:00:00Z')
+  assert.deepEqual(select([maria], '2026-10-21T22:41:44Z'), { outcome: 'not_found' })
 })
+
+// ─── Cota da Gmail API ────────────────────────────────────────────────────────
 
 test('reconhece estouro de cota da Gmail API', () => {
   assert.equal(isGmailRateLimitError({ code: 429 }), true)
@@ -172,4 +233,18 @@ test('reconhece estouro de cota da Gmail API', () => {
   )
   assert.equal(isGmailRateLimitError(new Error('invalid_grant')), false)
   assert.equal(isGmailRateLimitError({ code: 404 }), false)
+})
+
+test('orçamento de espera da cota acaba e passa a falhar na hora', () => {
+  const budget = createRateLimitBudget()
+  assert.equal(nextRateLimitDelay(budget, 0), 5_000)
+  budget.waitedMs = 110_000
+  assert.equal(nextRateLimitDelay(budget, 1), null) // 110s + 15s > 120s
+  assert.equal(budget.exhausted, true)
+  // Esgotado na rodada: até a primeira tentativa de outro e-mail desiste.
+  assert.equal(nextRateLimitDelay(budget, 0), null)
+})
+
+test('sem mais tentativas para o mesmo e-mail', () => {
+  assert.equal(nextRateLimitDelay(createRateLimitBudget(), 3), null)
 })

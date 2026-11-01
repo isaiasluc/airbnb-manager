@@ -27,10 +27,12 @@ novo automaticamente, criação manual de reserva, mudar o status pelo passo de 
 ## Decisions
 
 1. **Casar aceite ↔ pedido pelo primeiro nome + tempo, conferindo os valores originais.**
-   O pedido não tem código; o aceite não tem valores. Pega o pedido mais recente do mesmo
-   primeiro nome (normalizado sem acento/caixa) recebido antes do aceite e exige que os valores
-   *originais* do pedido batam com a reserva do código. A conferência protege contra homônimos
-   e contra pedidos antigos. *Alternativa:* seguir o link `reservation/alteration/<id>` —
+   O pedido não tem código; o aceite não tem valores. `selectAlterationRequest` filtra os
+   pedidos do mesmo primeiro nome (primeira palavra, sem acento/caixa) recebidos até o aceite,
+   no máximo 7 dias antes, depois do `last_alteration_at` e não usados na rodada; fica com o
+   mais recente cujos valores *originais* batem com a reserva. Mais de um candidato válido com
+   valores diferentes (homônimos, pedido recusado + pedido aceito) é **ambíguo** e vai para
+   revisão manual — a conferência só pelos originais é fraca quando o pedido é só de hóspedes. *Alternativa:* seguir o link `reservation/alteration/<id>` —
    exige sessão logada no Airbnb, descartada.
 2. **Ordem do sync:** importar → cancelar → alterar. Alterar por último garante que a reserva
    exista (confirmação no mesmo ciclo) e que uma reserva cancelada não seja mexida.
