@@ -1,7 +1,14 @@
 import { google, type gmail_v1 } from 'googleapis'
 import type { AlterationRequest, AlterationValues, CreateReservationInput } from '../types'
-import { reservationExistsByEmailId } from '../repositories/reservation.repository'
-import { cancelReservationByConfirmationCode, createReservation } from './reservation.service'
+import {
+  findReservationByConfirmationCode,
+  reservationExistsByEmailId,
+} from '../repositories/reservation.repository'
+import {
+  applyReservationAlteration,
+  cancelReservationByConfirmationCode,
+  createReservation,
+} from './reservation.service'
 import { createGoogleOAuthClient, getAuthenticatedGmailAddress, loadGoogleToken } from './google-auth.service'
 import { getAllowedSyncEmail } from '../middlewares/require-sync-email'
 
@@ -350,6 +357,9 @@ const CONFIRMATION_QUERY = 'from:automated@airbnb.com subject:"Reservation confi
 // O Airbnb usa "Canceled" (en-US); aceitamos as duas grafias por segurança.
 const CANCELLATION_QUERY =
   'from:automated@airbnb.com subject:Reservation (subject:canceled OR subject:cancelled)'
+// Alteração: aceite (só o código) + pedido (só os valores) — ver parsers acima.
+const ALTERATION_ACCEPTED_QUERY = 'from:automated@airbnb.com subject:"Reservation updated"'
+const ALTERATION_REQUEST_QUERY = 'from:automated@airbnb.com subject:"wants to change"'
 
 export interface SyncResult {
   imported: number
@@ -358,6 +368,8 @@ export interface SyncResult {
   importedItems: SyncItem[]
   skippedItems:  SyncItem[]
   cancelledItems: SyncItem[]
+  updated: number
+  updatedItems: SyncItem[]
   errors:   { emailId: string; reason: string }[]
 }
 
@@ -367,6 +379,8 @@ export interface SyncItem {
   guestName?: string
   confirmationCode?: string
   reason?: string
+  /** Campos alterados por um e-mail de alteração (só em `updatedItems`). */
+  changedFields?: string[]
 }
 
 function getGuestNameFromSubject(subject: string): string | undefined {
@@ -527,6 +541,116 @@ async function cancelReservationsFromEmails(
   }
 }
 
+/** Lê todos os pedidos de alteração uma vez por rodada; pedido ilegível vira erro do item. */
+async function loadAlterationRequests(
+  gmail: gmail_v1.Gmail,
+  result: SyncResult,
+): Promise<AlterationRequest[]> {
+  const requests: AlterationRequest[] = []
+
+  for (const emailId of await listMessageIds(gmail, ALTERATION_REQUEST_QUERY)) {
+    try {
+      const { subject, body, receivedAt } = await fetchEmail(gmail, emailId)
+      requests.push({ ...parseAlterationRequestEmail(body ?? '', subject), emailId, receivedAt })
+    } catch (err) {
+      result.errors.push({ emailId, reason: describeError(err) })
+    }
+  }
+
+  return requests
+}
+
+function guestNameOf(reservation: { guest_first_name: string; guest_last_name: string }): string {
+  return [reservation.guest_first_name, reservation.guest_last_name].filter(Boolean).join(' ')
+}
+
+/**
+ * Aplica as alterações aceitas ("Reservation updated") com os valores do
+ * pedido correspondente. Os aceites vão do mais antigo para o mais novo, para
+ * alterações em sequência da mesma reserva chegarem ao estado final. É
+ * idempotente: aceite já processado ou já refletido na reserva só é ignorado.
+ */
+async function applyReservationAlterationsFromEmails(
+  gmail: gmail_v1.Gmail,
+  result: SyncResult,
+): Promise<void> {
+  const acceptedIds = await listMessageIds(gmail, ALTERATION_ACCEPTED_QUERY)
+  if (acceptedIds.length === 0) return
+
+  const requests = await loadAlterationRequests(gmail, result)
+  const accepted: (EmailContent & { emailId: string })[] = []
+
+  for (const emailId of acceptedIds) {
+    try {
+      accepted.push({ ...(await fetchEmail(gmail, emailId)), emailId })
+    } catch (err) {
+      result.errors.push({ emailId, reason: describeError(err) })
+    }
+  }
+
+  accepted.sort((a, b) => a.receivedAt.getTime() - b.receivedAt.getTime())
+
+  for (const { emailId, subject, body, receivedAt } of accepted) {
+    try {
+      const { confirmation_code, guestFirstName } = parseAlterationAcceptedEmail(body ?? '', subject)
+      const item: SyncItem = { emailId, subject, confirmationCode: confirmation_code }
+
+      const reservation = await findReservationByConfirmationCode(confirmation_code)
+      if (!reservation) {
+        result.skipped++
+        result.skippedItems.push({ ...item, guestName: guestFirstName, reason: 'Alteração sem reserva importada' })
+        continue
+      }
+
+      // O nome do aceite precisa ser o da reserva; sem nome no aceite, vale o da reserva.
+      const name = guestFirstName ?? reservation.guest_first_name
+      if (normalizeGuestName(name) !== normalizeGuestName(reservation.guest_first_name)) {
+        result.errors.push({
+          emailId,
+          reason: `Hóspede do aceite (${name}) não confere com a reserva ${confirmation_code} (${reservation.guest_first_name})`,
+        })
+        continue
+      }
+
+      const request = findAlterationRequest(requests, name, receivedAt)
+      if (!request) {
+        result.errors.push({ emailId, reason: `Pedido de alteração não encontrado para ${confirmation_code}` })
+        continue
+      }
+
+      const alteration = await applyReservationAlteration(confirmation_code, request, receivedAt)
+
+      switch (alteration.outcome) {
+        case 'not_found':
+          result.skipped++
+          result.skippedItems.push({ ...item, guestName: name, reason: 'Alteração sem reserva importada' })
+          break
+        case 'cancelled':
+          result.skipped++
+          result.skippedItems.push({ ...item, guestName: guestNameOf(alteration.reservation), reason: 'Reserva cancelada' })
+          break
+        case 'already_applied':
+          result.skipped++
+          result.skippedItems.push({ ...item, guestName: guestNameOf(alteration.reservation), reason: 'Já atualizada' })
+          break
+        case 'mismatch':
+          result.errors.push({ emailId, reason: `Pedido de alteração não confere com a reserva ${confirmation_code}` })
+          break
+        case 'updated':
+          result.updated++
+          result.updatedItems.push({
+            ...item,
+            guestName: guestNameOf(alteration.reservation),
+            changedFields: alteration.changedFields,
+          })
+          break
+      }
+    } catch (err) {
+      result.errors.push({ emailId, reason: describeError(err) })
+    }
+  }
+}
+
 export async function syncGmailReservations(): Promise<SyncResult> {
   const client = createGoogleOAuthClient()
   await loadGoogleToken(client)
@@ -544,6 +668,8 @@ export async function syncGmailReservations(): Promise<SyncResult> {
     importedItems: [],
     skippedItems: [],
     cancelledItems: [],
+    updated: 0,
+    updatedItems: [],
     errors: [],
   }
 
@@ -551,6 +677,9 @@ export async function syncGmailReservations(): Promise<SyncResult> {
   // ciclo já encontra a reserva criada e a cancela na mesma rodada.
   await importConfirmedReservations(gmail, result)
   await cancelReservationsFromEmails(gmail, result)
+  // Alterações por último: a reserva já existe (mesmo se confirmada neste
+  // ciclo) e uma reserva cancelada nesta rodada não é mexida.
+  await applyReservationAlterationsFromEmails(gmail, result)
 
   return result
 }

@@ -360,6 +360,14 @@ export function shouldCancelHostService(update: ReservationUpdate): boolean {
   return update.status === 'cancelled' && update.host_service_status === undefined
 }
 
+/**
+ * Ajustar o payout à mão resolve o aviso "conferir payout" deixado por uma
+ * alteração. Um `payout_needs_review` explícito no mesmo update tem prioridade.
+ */
+export function shouldClearPayoutReview(update: ReservationUpdate): boolean {
+  return update.host_payout !== undefined && update.payout_needs_review === undefined
+}
+
 export async function updateReservation(
   id: number,
   data: ReservationUpdate
@@ -368,6 +376,10 @@ export async function updateReservation(
 
   if (shouldCancelHostService(updateData)) {
     updateData.host_service_status = 'cancelled'
+  }
+
+  if (shouldClearPayoutReview(updateData)) {
+    updateData.payout_needs_review = false
   }
 
   if (updateData.host_payout !== undefined || updateData.checkin_at !== undefined) {
@@ -384,6 +396,52 @@ export async function updateReservation(
   const updated = await ReservationRepo.updateReservation(id, updateData)
   if (!updated) throw new Error(`Reserva ${id} não encontrada`)
   return updated
+}
+
+export type ApplyAlterationResult =
+  | { outcome: 'updated'; reservation: ReservationWithGuest; changedFields: (keyof AlterationValues)[] }
+  | { outcome: 'already_applied'; reservation: ReservationWithGuest }
+  | { outcome: 'cancelled'; reservation: ReservationWithGuest }
+  | { outcome: 'mismatch'; reservation: ReservationWithGuest }
+  | { outcome: 'not_found' }
+
+/**
+ * Aplica uma alteração aceita no Airbnb ("Reservation updated") usando os
+ * valores do pedido correspondente. Idempotente: aceites já processados
+ * (recebidos até `last_alteration_at`) ou cujos valores já estão na reserva
+ * não mudam nada. Reserva cancelada nunca é mexida; o status não muda aqui —
+ * o cron de status reavalia depois.
+ */
+export async function applyReservationAlteration(
+  confirmation_code: string,
+  request: Pick<AlterationRequest, 'original' | 'requested'>,
+  acceptedAt: Date,
+): Promise<ApplyAlterationResult> {
+  const reservation = await ReservationRepo.findReservationByConfirmationCode(confirmation_code)
+  if (!reservation) return { outcome: 'not_found' }
+  if (reservation.status === 'cancelled') return { outcome: 'cancelled', reservation }
+
+  const lastAlterationAt = reservation.last_alteration_at
+    ? new Date(reservation.last_alteration_at).getTime()
+    : null
+  if (lastAlterationAt !== null && acceptedAt.getTime() <= lastAlterationAt) {
+    return { outcome: 'already_applied', reservation }
+  }
+
+  const result = buildAlterationPatch(reservation, request)
+  if (result.outcome !== 'apply') return { outcome: result.outcome, reservation }
+
+  const updated = await updateReservation(reservation.id, {
+    ...result.patch,
+    ...resolveAlterationSideEffects(reservation, result.patch),
+    last_alteration_at: acceptedAt,
+  })
+
+  return {
+    outcome: 'updated',
+    reservation: { ...reservation, ...updated },
+    changedFields: result.changedFields,
+  }
 }
 
 export async function sendReservationEmail(id: number): Promise<void> {

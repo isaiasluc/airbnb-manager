@@ -8,10 +8,10 @@
 
 ## 2. Passo de alterações no sync (backend)
 
-- [ ] 2.1 `applyReservationAlteration(code, request, acceptedAt)` em `reservation.service.ts`: busca por código, ignora `cancelled`, ignora `acceptedAt ≤ last_alteration_at`, aplica via `updateReservation` com os efeitos colaterais e grava `last_alteration_at`; retorna `outcome` tipado como `cancelReservationByConfirmationCode`
-- [ ] 2.2 `updateReservation` desliga `payout_needs_review` quando recebe `host_payout` sem `payout_needs_review` explícito (função pura `shouldClearPayoutReview` + teste)
-- [ ] 2.3 Passo `applyReservationAlterationsFromEmails` em `gmail.service.ts` (queries `from:automated@airbnb.com subject:"Reservation updated"` e `subject:"wants to change their reservation"`, aceites em ordem de recebimento, erro por e-mail em `errors`), rodando depois do cancelamento; `SyncResult` ganha `updated`/`updatedItems` (com `changedFields`)
-- [ ] 2.4 Conferir `sync-status.service.ts`/logs do cron para incluir `updated` no resumo da rodada
+- [x] 2.1 `applyReservationAlteration(code, request, acceptedAt)` em `reservation.service.ts`: busca por código, ignora `cancelled`, ignora `acceptedAt ≤ last_alteration_at`, aplica via `updateReservation` com os efeitos colaterais e grava `last_alteration_at`; retorna `outcome` tipado como `cancelReservationByConfirmationCode`
+- [x] 2.2 `updateReservation` desliga `payout_needs_review` quando recebe `host_payout` sem `payout_needs_review` explícito (função pura `shouldClearPayoutReview` + teste)
+- [x] 2.3 Passo `applyReservationAlterationsFromEmails` em `gmail.service.ts` (queries `from:automated@airbnb.com subject:"Reservation updated"` e `subject:"wants to change their reservation"`, aceites em ordem de recebimento, erro por e-mail em `errors`), rodando depois do cancelamento; `SyncResult` ganha `updated`/`updatedItems` (com `changedFields`)
+- [x] 2.4 Conferir `sync-status.service.ts`/logs do cron para incluir `updated` no resumo da rodada
 
 ## 3. Edição manual (backend)
 

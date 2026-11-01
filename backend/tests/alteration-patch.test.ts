@@ -4,6 +4,7 @@ import {
   buildAlterationPatch,
   calculateHostServiceFee,
   resolveAlterationSideEffects,
+  shouldClearPayoutReview,
 } from '../src/services/reservation.service'
 
 // Datas como o pg devolve uma coluna DATE (meia-noite).
@@ -87,4 +88,16 @@ test('check-in mudou com e-mail ainda não enviado: nada a resetar', () => {
     { checkin_at: '2027-02-12' },
   )
   assert.deepEqual(effects, { payout_needs_review: true })
+})
+
+test('ajustar o payout à mão limpa o aviso "conferir payout"', () => {
+  assert.equal(shouldClearPayoutReview({ host_payout: 1500 }), true)
+})
+
+test('payout_needs_review explícito tem prioridade', () => {
+  assert.equal(shouldClearPayoutReview({ host_payout: 1500, payout_needs_review: true }), false)
+})
+
+test('update sem payout não mexe no aviso', () => {
+  assert.equal(shouldClearPayoutReview({ guests_count: 3 }), false)
 })

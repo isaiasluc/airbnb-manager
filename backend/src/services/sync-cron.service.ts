@@ -12,7 +12,8 @@ export function startGmailSyncCron(): void {
       const result = await runGmailSync('cron')
       console.log(
         `[gmail-sync-cron] Última sincronização: ${new Date().toISOString()} ` +
-        `imported=${result.imported} skipped=${result.skipped} errors=${result.errors.length}`
+        `imported=${result.imported} cancelled=${result.cancelled} updated=${result.updated} ` +
+        `skipped=${result.skipped} errors=${result.errors.length}`
       )
     } catch (err) {
       console.error('[gmail-sync-cron] Falha na sincronização:', (err as Error).message)
