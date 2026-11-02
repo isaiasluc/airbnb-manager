@@ -157,7 +157,9 @@ Endpoints `/cron/*` exigem header `x-cron-secret` == `CRON_SECRET` (para agendad
   account tem `secretmanager.secretVersionManager` **escopado a esse secret** para poder
   destruir versões.
 - **`checkout_at` é exclusivo** em toda a lógica de ocupação e datas.
-- **Ocupação** considera `confirmed`, `in_progress` e `completed` (não `cancelled`).
+- **Ocupação** considera `confirmed`, `in_progress` e `completed` (não `cancelled`). A fonte da
+  regra é `OCCUPYING_STATUSES` (`backend/src/types/index.ts`), usada por
+  `calculateOccupancyStats` e pelas queries `listReservationsForOccupancy`/`getOccupancyDateBounds`.
 - **Testes não tocam o banco** — testam funções puras. Ao adicionar lógica, extraia a
   regra pura (ex.: `resolveReservationStatus`) para poder testar sem DB.
 - Sync restrito ao e-mail em `VITE_SYNC_ALLOWED_EMAIL` (middleware `require-sync-email`).

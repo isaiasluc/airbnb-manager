@@ -5,4 +5,4 @@
 
 ## 2. Fechamento
 
-- [ ] 2.1 Conferir que o `CLAUDE.md` continua correto ("Ocupação considera `confirmed`, `in_progress` e `completed`") e citar `OCCUPYING_STATUSES` como fonte da regra
+- [x] 2.1 Conferir que o `CLAUDE.md` continua correto ("Ocupação considera `confirmed`, `in_progress` e `completed`") e citar `OCCUPYING_STATUSES` como fonte da regra
