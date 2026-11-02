@@ -78,3 +78,39 @@ test('returns zero occupancy for an empty period result', () => {
   assert.equal(stats.totalNights, 30)
   assert.equal(stats.occupancyRate, 0)
 })
+
+test('counts the stay in progress as occupied', () => {
+  const stats = calculateOccupancyStats([
+    reservation('2026-06-10', '2026-06-13', 'in_progress'),
+  ], { from: '2026-06-01', to: '2026-06-30' })
+
+  assert.equal(stats.occupiedNights, 3)
+  assert.equal(stats.occupancyRate, 10)
+})
+
+test('sums completed, in progress and confirmed reservations', () => {
+  const stats = calculateOccupancyStats([
+    reservation('2026-06-01', '2026-06-03', 'completed'),
+    reservation('2026-06-10', '2026-06-13', 'in_progress'),
+    reservation('2026-06-20', '2026-06-25', 'confirmed'),
+  ], { from: '2026-06-01', to: '2026-06-30' })
+
+  assert.equal(stats.occupiedNights, 10)
+  assert.equal(stats.occupancyRate, 33.33)
+})
+
+test('counts an in-progress stay crossing the end of the period only inside it', () => {
+  const stats = calculateOccupancyStats([
+    reservation('2026-06-28', '2026-07-03', 'in_progress'),
+  ], { from: '2026-06-01', to: '2026-06-30' })
+
+  assert.equal(stats.occupiedNights, 3)
+})
+
+test('a checkout on the first day of the period adds no night (checkout is exclusive)', () => {
+  const stats = calculateOccupancyStats([
+    reservation('2026-05-27', '2026-06-01', 'completed'),
+  ], { from: '2026-06-01', to: '2026-06-30' })
+
+  assert.equal(stats.occupiedNights, 0)
+})
