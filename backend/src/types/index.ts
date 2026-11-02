@@ -26,6 +26,12 @@ export interface Reservation {
   updated_at: Date
 }
 
+/**
+ * Status em que a reserva ocupa o imóvel: entram na taxa de ocupação e nos
+ * limites do período. Fonte única para a regra pura e para as queries.
+ */
+export const OCCUPYING_STATUSES: readonly Reservation['status'][] = ['confirmed', 'in_progress', 'completed']
+
 export type CreateReservationInput = {
   guest: {
     first_name: string

@@ -1,5 +1,6 @@
 import * as GuestRepo from '../repositories/guest.repository'
 import * as ReservationRepo from '../repositories/reservation.repository'
+import { OCCUPYING_STATUSES } from '../types'
 import { sendCheckinEmail } from './reservation-email.service'
 import type {
   AlterationRequest,
@@ -130,7 +131,7 @@ export function calculateOccupancyStats(
   const exclusiveTo = addDays(period.to, 1)
   const totalNights = countDays(period.from, exclusiveTo)
   const occupiableReservations = reservations.filter((reservation) =>
-    reservation.status === 'confirmed' || reservation.status === 'completed'
+    OCCUPYING_STATUSES.includes(reservation.status)
   )
   const occupiedNights = totalNights === 0
     ? 0

@@ -1,4 +1,5 @@
 import db from '../db'
+import { OCCUPYING_STATUSES } from '../types'
 import type { Reservation, ReservationListFilters, ReservationWithGuest } from '../types'
 
 type OccupancyReservation = Pick<Reservation, 'checkin_at' | 'checkout_at' | 'status'>
@@ -100,7 +101,7 @@ export async function listReservationsForOccupancy(
 ): Promise<OccupancyReservation[]> {
   return db<Reservation>('reservations')
     .select('checkin_at', 'checkout_at', 'status')
-    .whereIn('status', ['confirmed', 'in_progress', 'completed'])
+    .whereIn('status', [...OCCUPYING_STATUSES])
     .where('checkout_at', '>', from)
     .where('checkin_at', '<=', to)
     .orderBy('checkin_at', 'asc')
@@ -111,7 +112,7 @@ export async function getOccupancyDateBounds(): Promise<{
   maxCheckout: Date | string | null
 }> {
   const row = await db('reservations')
-    .whereIn('status', ['confirmed', 'in_progress', 'completed'])
+    .whereIn('status', [...OCCUPYING_STATUSES])
     .first<
       { minCheckin: Date | string | null; maxCheckout: Date | string | null } | undefined
     >(
